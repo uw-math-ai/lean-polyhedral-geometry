@@ -64,75 +64,29 @@ def Polytope (s : Set V) : Prop :=
   Polyhedron s ∧ Bornology.IsBounded s
 
 def Cone (s : Set V) : Prop :=
-  Nonempty s ∧ ∀ c ≥ (0 : ℝ), ∀ x ∈ s, c • x ∈ s
+  Nonempty s ∧ ∀ c ≥ 0, ∀ x ∈ s, c • x ∈ s
 
 def PolyhedralCone (s : Set V) : Prop :=
   Polyhedron s ∧ Cone s
 
 example (s : Set V) : PolyhedralCone s → ∃ s' : ConvexCone ℝ V, s'.carrier = s := sorry
 
-
-lemma l_1_2_2 (s : Set V) (f : V →ₗ[ℝ] ℝ) (c : ℝ) : Cone s → (∀ x ∈ s, f x ≤ c) → c ≥ 0 ∧ ∀ x ∈ s, f x ≤ 0 := by
+example (s : Set V) (f : V →ₗ[ℝ] ℝ) (c : ℝ) : Cone s → (∀ x ∈ s, f x ≤ c) → c ≥ 0 ∧ ∀ x ∈ s, f x ≤ 0 := by
   intro h_s_cone h_s_fc
   constructor
-  · revert h_s_fc
+  . revert h_s_fc
     contrapose!
     intro h_c_lt_0
     use 0
     constructor
-    · unfold Cone at h_s_cone
-      obtain ⟨x, hx⟩ := h_s_cone.left
-      have h₀ : (0 : ℝ) • x ∈ s := h_s_cone.right (0 : ℝ) (by norm_num) x hx
-      rw [Module.zero_smul x] at h₀
-      exact h₀
-    · rw [LinearMap.map_zero f]
+    . sorry
+    . rw [LinearMap.map_zero f]
       exact h_c_lt_0
-
-  · intro x₀ x_in_s
-    apply not_lt.mp
-    intro assump_0_le_fx
-    have h_0_le_inv_fx : 0 < (f x₀)⁻¹ := by exact inv_pos_of_pos assump_0_le_fx
-    unfold Cone at h_s_cone
-    have lt_c : f x₀ ≤ c := h_s_fc x₀ x_in_s
-    have ge_0_c : 0 < c := lt_of_lt_of_le assump_0_le_fx lt_c
-    have gq_2c_fxinv : 0 < 2 * c * (f x₀)⁻¹ := by
-      apply mul_pos
-      norm_num
-      apply ge_0_c
-      norm_num
-      apply assump_0_le_fx
-
-    have : (2 * c * (f x₀)⁻¹) • x₀ ∈ s := h_s_cone.right (2 * c * (f x₀)⁻¹) (by linarith) x₀ x_in_s
-    have le_c : f ((2 * c * (f x₀)⁻¹) • x₀) ≤ c := h_s_fc ((2 * c * (f x₀)⁻¹) • x₀) this
-
-    simp_arith [Ne.symm (ne_of_lt assump_0_le_fx)] at le_c
-    show False
-    linarith
-
-
-
-
-
-
-
-
-  -- intro h_s_cone h_s_fc
-  -- constructor
-  -- . revert h_s_fc
-  --   contrapose!
-  --   intro h_c_lt_0
-  --   use 0
-  --   constructor
-  --   .
-  --   . rw [LinearMap.map_zero f]
-  --     exact h_c_lt_0
-  -- . sorry
-  -- -- contrapose
-  -- -- push_neg
-  -- -- intro h
-
-
-
+  . sorry
+  -- contrapose
+  -- push_neg
+  -- intro h
+  
 variable [FiniteDimensional ℝ V] {ι : Type*} [Finite ι] (B : Basis ι ℝ V)
 
 
