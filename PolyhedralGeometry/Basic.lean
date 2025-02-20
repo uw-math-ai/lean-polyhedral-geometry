@@ -64,15 +64,15 @@ def Polytope (s : Set V) : Prop :=
   Polyhedron s ∧ Bornology.IsBounded s
 
 def Cone (s : Set V) : Prop :=
-  Nonempty s ∧ ∀ c ≥ (0 : ℝ), ∀ x ∈ s, c • x ∈ s
+  s.Nonempty ∧ ∀ c ≥ (0 : ℝ), ∀ x ∈ s, c • x ∈ s
 
 def PolyhedralCone (s : Set V) : Prop :=
   Polyhedron s ∧ Cone s
 
 example (s : Set V) : PolyhedralCone s → ∃ s' : ConvexCone ℝ V, s'.carrier = s := sorry
 
-
-lemma l_1_2_2 (s : Set V) (f : V →ₗ[ℝ] ℝ) (c : ℝ) : Cone s → (∀ x ∈ s, f x ≤ c) → c ≥ 0 ∧ ∀ x ∈ s, f x ≤ 0 := by
+--lemma 1.2.2
+example (s : Set V) (f : V →ₗ[ℝ] ℝ) (c : ℝ) : Cone s → (∀ x ∈ s, f x ≤ c) → c ≥ 0 ∧ ∀ x ∈ s, f x ≤ 0 := by
   intro h_s_cone h_s_fc
   constructor
   · revert h_s_fc
@@ -87,7 +87,6 @@ lemma l_1_2_2 (s : Set V) (f : V →ₗ[ℝ] ℝ) (c : ℝ) : Cone s → (∀ x 
       exact h₀
     · rw [LinearMap.map_zero f]
       exact h_c_lt_0
-
   · intro x₀ x_in_s
     apply not_lt.mp
     intro assump_0_le_fx
@@ -101,41 +100,20 @@ lemma l_1_2_2 (s : Set V) (f : V →ₗ[ℝ] ℝ) (c : ℝ) : Cone s → (∀ x 
       apply ge_0_c
       norm_num
       apply assump_0_le_fx
-
     have : (2 * c * (f x₀)⁻¹) • x₀ ∈ s := h_s_cone.right (2 * c * (f x₀)⁻¹) (by linarith) x₀ x_in_s
     have le_c : f ((2 * c * (f x₀)⁻¹) • x₀) ≤ c := h_s_fc ((2 * c * (f x₀)⁻¹) • x₀) this
-
-    simp_arith [Ne.symm (ne_of_lt assump_0_le_fx)] at le_c
+    have : f x₀ ≠ 0 := Ne.symm (ne_of_lt assump_0_le_fx)
+    rw [LinearMap.map_smul] at le_c
+    dsimp at le_c
+    rw [mul_assoc, inv_mul_cancel₀ this, mul_one] at le_c
     show False
     linarith
 
-
-
-
-
-
-
-
-  -- intro h_s_cone h_s_fc
-  -- constructor
-  -- . revert h_s_fc
-  --   contrapose!
-  --   intro h_c_lt_0
-  --   use 0
-  --   constructor
-  --   .
-  --   . rw [LinearMap.map_zero f]
-  --     exact h_c_lt_0
-  -- . sorry
-  -- -- contrapose
-  -- -- push_neg
-  -- -- intro h
-
-
-
-variable [FiniteDimensional ℝ V] {ι : Type*} [Finite ι] (B : Basis ι ℝ V)
-
-
-
 --todo:
+--define conical hulls
+--define conical combination
+variable [FiniteDimensional ℝ V] {ι : Type*} [Finite ι] (B : Basis ι ℝ V)
+--state our version of Caratheodory's theorem
+--prove it, either by hand or by using mathlib's version
+
 --make alt defs of polyhedron and polytope in terms of convex hulls
