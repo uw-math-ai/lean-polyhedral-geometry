@@ -111,9 +111,42 @@ example (s : Set V) (f : V →ₗ[ℝ] ℝ) (c : ℝ) : Cone s → (∀ x ∈ s,
 
 --todo:
 --define conical hulls
+--smallest conic set that contains s
+
+open Lean.Parser.Module.prelude
+#check convexHull
+
+-- def LinearCombo [Finite I] {n : ℕ} (I : Type) (vecs : I → Set V) (scals : I → ℝ) : V := ∑ i ∈ (Finset.univ I), (scals i) • (vecs i)
+
+def LinearCombo (x : V) : Prop :=
+  ∃ (I : Finset) (vecs : I → V) (scal)
+
+
+def conicHull (s : Set V) :  Set V :=
+  { x : V | ∃ (n : ℕ) (v : Fin n → V) (a : Fin n → ℝ),
+  (∀ i, 0 ≤ a i) ∧ (∀ i, v i ∈ s)
+  ∧ (x = ∑ i ∈ (Finset.univ : Finset (Fin n)), a i • v i) }
+
 --define conical combination
 variable [FiniteDimensional ℝ V] {ι : Type*} [Finite ι] (B : Basis ι ℝ V)
 --state our version of Caratheodory's theorem
+
+-- theorem caratheordory_theorem (s : Set V) : (x ∈ (convexHull s) → ∃ (b : V)) ∧ (x ∈ (conicHull s) → )
+
+theorem caratheordory_theorem
+  {d : Nat}
+  (s : Set V)
+  (x : V)
+  (hx : x ∈ conicHull s)
+  : (∃ (T : Finset V),
+      T ⊆ S ∧            -- T is a subset of S
+      T.card ≤ d + 1 ∧    -- T has at most d+1 elements
+      x ∈ conicHull T)
+  := sorry
+
 --prove it, either by hand or by using mathlib's version
 
 --make alt defs of polyhedron and polytope in terms of convex hulls
+
+
+theorem noGreatestNumber : (∀ (x : ℝ), ∃ y, y > x)
