@@ -110,43 +110,40 @@ example (s : Set V) (f : V →ₗ[ℝ] ℝ) (c : ℝ) : Cone s → (∀ x ∈ s,
     linarith
 
 --todo:
---define conical hulls
---smallest conic set that contains s
 
-open Lean.Parser.Module.prelude
 #check convexHull
 
--- def LinearCombo [Finite I] {n : ℕ} (I : Type) (vecs : I → Set V) (scals : I → ℝ) : V := ∑ i ∈ (Finset.univ I), (scals i) • (vecs i)
-
-def LinearCombo (x : V) : Prop :=
-  ∃ (I : Finset) (vecs : I → V) (scal)
-
-
-def conicHull (s : Set V) :  Set V :=
-  { x : V | ∃ (n : ℕ) (v : Fin n → V) (a : Fin n → ℝ),
+def conicalHull (s : Set V) : Set V :=
+  { x : V | ∃ (I : Finset ℕ) (v : ℕ → V) (a : ℕ → ℝ),
   (∀ i, 0 ≤ a i) ∧ (∀ i, v i ∈ s)
-  ∧ (x = ∑ i ∈ (Finset.univ : Finset (Fin n)), a i • v i) }
+  ∧ (x = ∑ i ∈ I, a i • v i) }
 
---define conical combination
+#check convexHull
+
+def conicalCombo_cards (s : Set V) (x : V) : Set ℕ := Finset.card '' { I : Finset ℕ | ∃ (v : ℕ → V) (a : ℕ → ℝ), (∀ i, 0 ≤ a i) ∧ (∀ i, v i ∈ s) ∧ (x = ∑ i ∈ I, a i • v i) }
+
+lemma conicalCombo_cards_nonempty (s : Set V) (x : V) : x ∈ conicalHull s → (conicalCombo_cards s x).Nonempty := by
+  sorry
+
+theorem min_elt (s : Set ℕ) (h_s_nonempty : s.Nonempty) : ∃ n ∈ s, ∀ m < n, m ∉ s := by
+  rcases h_s_nonempty with ⟨n, h⟩
+  induction' n using Nat.strong_induction_on with n ih
+  by_cases h' : ∀ m < n, m ∉ s
+  . use n
+  . push_neg at h'
+    rcases h' with ⟨n', h₁, h₂⟩
+    exact ih n' h₁ h₂
+
 variable [FiniteDimensional ℝ V] {ι : Type*} [Finite ι] (B : Basis ι ℝ V)
---state our version of Caratheodory's theorem
 
--- theorem caratheordory_theorem (s : Set V) : (x ∈ (convexHull s) → ∃ (b : V)) ∧ (x ∈ (conicHull s) → )
-
-theorem caratheordory_theorem
-  {d : Nat}
-  (s : Set V)
-  (x : V)
-  (hx : x ∈ conicHull s)
-  : (∃ (T : Finset V),
-      T ⊆ S ∧            -- T is a subset of S
-      T.card ≤ d + 1 ∧    -- T has at most d+1 elements
-      x ∈ conicHull T)
-  := sorry
+-- theorem 1.3.2(b)
+theorem caratheordory (s : Set V) (x : V) (h : x ∈ conicalHull s) :
+  ∃ (t : Finset V), ↑t ⊆ s ∧ t.card ≤ Module.rank V ∧ x ∈ conicalHull t := by
+  have := min_elt (conicalCombo_cards s x) (conicalCombo_cards_nonempty s x h)
+  sorry
 
 --prove it, either by hand or by using mathlib's version
 
 --make alt defs of polyhedron and polytope in terms of convex hulls
+--figure out how closure operators work (to define conicalHull like mathlib's convexHull)
 
-
-theorem noGreatestNumber : (∀ (x : ℝ), ∃ y, y > x)
