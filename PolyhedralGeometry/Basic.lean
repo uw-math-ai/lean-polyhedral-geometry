@@ -123,7 +123,17 @@ def conicalHull (s : Set V) : Set V :=
 def conicalCombo_cards (s : Set V) (x : V) : Set ℕ := Finset.card '' { I : Finset ℕ | ∃ (v : ℕ → V) (a : ℕ → ℝ), (∀ i, 0 ≤ a i) ∧ (∀ i, v i ∈ s) ∧ (x = ∑ i ∈ I, a i • v i) }
 
 lemma conicalCombo_cards_nonempty (s : Set V) (x : V) : x ∈ conicalHull s → (conicalCombo_cards s x).Nonempty := by
-  sorry
+  intro ⟨I,h⟩
+  use I.card
+  exists I
+
+  -- This is my previous proof, which is also fine
+  -- intro hx_in_s
+  -- obtain ⟨I,h⟩ := hx_in_s.out
+  -- use Finset.card I;
+  -- unfold conicalCombo_cards
+  -- use I
+  -- exact ⟨h,rfl⟩
 
 theorem min_elt (s : Set ℕ) (h_s_nonempty : s.Nonempty) : ∃ n ∈ s, ∀ m < n, m ∉ s := by
   rcases h_s_nonempty with ⟨n, h⟩
@@ -146,4 +156,3 @@ theorem caratheordory (s : Set V) (x : V) (h : x ∈ conicalHull s) :
 
 --make alt defs of polyhedron and polytope in terms of convex hulls
 --figure out how closure operators work (to define conicalHull like mathlib's convexHull)
-
