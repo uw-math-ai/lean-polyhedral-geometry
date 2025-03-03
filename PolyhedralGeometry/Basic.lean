@@ -114,26 +114,17 @@ example (s : Set V) (f : V →ₗ[ℝ] ℝ) (c : ℝ) : Cone s → (∀ x ∈ s,
 #check convexHull
 
 def conicalHull (s : Set V) : Set V :=
-  { x : V | ∃ (I : Finset ℕ) (v : ℕ → V) (a : ℕ → ℝ),
-  (∀ i, 0 ≤ a i) ∧ (∀ i, v i ∈ s)
-  ∧ (x = ∑ i ∈ I, a i • v i) }
+  { x | ∃ (t : Finset V) (a : V → ℝ),
+    (∀ v ∈ t, 0 ≤ a v) ∧ ↑t ⊆ s ∧ x = ∑ v in t, a v • v }
 
 #check convexHull
 
-def conicalCombo_cards (s : Set V) (x : V) : Set ℕ := Finset.card '' { I : Finset ℕ | ∃ (v : ℕ → V) (a : ℕ → ℝ), (∀ i, 0 ≤ a i) ∧ (∀ i, v i ∈ s) ∧ (x = ∑ i ∈ I, a i • v i) }
+def conicalCombo_cards (s : Set V) (x : V) : Set ℕ := Finset.card '' { (t : Finset V) | ∃ (a : V → ℝ), (∀ v ∈ t, 0 ≤ a v) ∧ ↑t ⊆ s ∧ x = ∑ v in t, a v • v}
 
 lemma conicalCombo_cards_nonempty (s : Set V) (x : V) : x ∈ conicalHull s → (conicalCombo_cards s x).Nonempty := by
-  intro ⟨I,h⟩
-  use I.card
-  exists I
-
-  -- This is my previous proof, which is also fine
-  -- intro hx_in_s
-  -- obtain ⟨I,h⟩ := hx_in_s.out
-  -- use Finset.card I;
-  -- unfold conicalCombo_cards
-  -- use I
-  -- exact ⟨h,rfl⟩
+  intro ⟨vectors,h⟩
+  use vectors.card
+  exists vectors
 
 theorem min_elt (s : Set ℕ) (h_s_nonempty : s.Nonempty) : ∃ n ∈ s, ∀ m < n, m ∉ s := by
   rcases h_s_nonempty with ⟨n, h⟩
