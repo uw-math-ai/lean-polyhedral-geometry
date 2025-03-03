@@ -126,6 +126,7 @@ lemma conicalCombo_cards_nonempty (s : Set V) (x : V) : x ∈ conicalHull s → 
   use vectors.card
   exists vectors
 
+--maybe don't need this?
 theorem min_elt (s : Set ℕ) (h_s_nonempty : s.Nonempty) : ∃ n ∈ s, ∀ m < n, m ∉ s := by
   rcases h_s_nonempty with ⟨n, h⟩
   induction' n using Nat.strong_induction_on with n ih
@@ -139,8 +140,12 @@ variable [FiniteDimensional ℝ V] {ι : Type*} [Finite ι] (B : Basis ι ℝ V)
 
 -- theorem 1.3.2(b)
 theorem caratheordory (s : Set V) (x : V) (h : x ∈ conicalHull s) :
-  ∃ (t : Finset V), ↑t ⊆ s ∧ t.card ≤ Module.rank V ∧ x ∈ conicalHull t := by
-  have := min_elt (conicalCombo_cards s x) (conicalCombo_cards_nonempty s x h)
+  ∃ (t : Finset V), ↑t ⊆ s ∧ t.card ≤ Module.finrank ℝ V ∧ x ∈ conicalHull t := by
+  -- have := min_elt (conicalCombo_cards s x) (conicalCombo_cards_nonempty s x h)
+  rcases h with ⟨t, a, h_a_nonneg, h_t_subset, h_x_combo⟩
+  rcases le_or_gt t.card (Module.finrank ℝ V) with h_t_card | h_t_card
+  . use t, h_t_subset, h_t_card, t, a  
+  induction' t.card using Nat.strong_induction_on with n ih
   sorry
 
 --prove it, either by hand or by using mathlib's version
