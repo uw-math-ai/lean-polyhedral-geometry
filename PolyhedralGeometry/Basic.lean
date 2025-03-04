@@ -141,12 +141,18 @@ variable [FiniteDimensional ℝ V] {ι : Type*} [Finite ι] (B : Basis ι ℝ V)
 -- theorem 1.3.2(b)
 theorem caratheordory (s : Set V) (x : V) (h : x ∈ conicalHull s) :
   ∃ (t : Finset V), ↑t ⊆ s ∧ t.card ≤ Module.finrank ℝ V ∧ x ∈ conicalHull t := by
-  -- have := min_elt (conicalCombo_cards s x) (conicalCombo_cards_nonempty s x h)
-  rcases h with ⟨t, a, h_a_nonneg, h_t_subset, h_x_combo⟩
+  -- rcases h with ⟨u, a, h_a_nonneg, h_u_subset, h_x_combo⟩
+  -- rcases le_or_gt u.card (Module.finrank ℝ V) with h_u_card | h_u_card
+  -- . use u, h_u_subset, h_u_card, u, a
+  -- induction' u using Finset.induction_on with v u h_v_nin_u ih
+  -- . sorry
+  -- . sorry
+  rcases min_elt (conicalCombo_cards s x) (conicalCombo_cards_nonempty s x h) with ⟨n, h₁, h₂⟩
+  rcases h₁ with ⟨t, ⟨a, h_a_nonneg, h_t_subset, h_x_combo⟩, rfl⟩
   rcases le_or_gt t.card (Module.finrank ℝ V) with h_t_card | h_t_card
-  . use t, h_t_subset, h_t_card, t, a  
-  induction' t.card using Nat.strong_induction_on with n ih
-  sorry
+  . use t, h_t_subset, h_t_card, t, a
+  apply False.elim
+  sorry  
 
 --prove it, either by hand or by using mathlib's version
 
