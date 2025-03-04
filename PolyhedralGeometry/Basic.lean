@@ -3,6 +3,7 @@ import Mathlib.Analysis.Convex.Basic
 import Mathlib.Analysis.Convex.Cone.Basic
 import Mathlib.Analysis.InnerProductSpace.Defs
 import Mathlib.LinearAlgebra.FiniteDimensional.Defs
+import Mathlib.LinearAlgebra.LinearIndependent.Defs
 --import Mathlib.Topology.MetricSpace.Defs
 --import Mathlib.LinearAlgebra.Dual
 --import Mathlib.Topology.Defs.Basic
@@ -136,7 +137,10 @@ theorem min_elt (s : Set ℕ) (h_s_nonempty : s.Nonempty) : ∃ n ∈ s, ∀ m <
     rcases h' with ⟨n', h₁, h₂⟩
     exact ih n' h₁ h₂
 
-variable [FiniteDimensional ℝ V] {ι : Type*} [Finite ι] (B : Basis ι ℝ V)
+-- noncomputable def Finset.toIndex {α : Type*} (s : Finset α) : ι → α := by
+--   let s' := s.toList
+
+variable [FiniteDimensional ℝ V]
 
 -- theorem 1.3.2(b)
 theorem caratheordory (s : Set V) (x : V) (h : x ∈ conicalHull s) :
@@ -152,7 +156,22 @@ theorem caratheordory (s : Set V) (x : V) (h : x ∈ conicalHull s) :
   rcases le_or_gt t.card (Module.finrank ℝ V) with h_t_card | h_t_card
   . use t, h_t_subset, h_t_card, t, a
   apply False.elim
-  sorry  
+  have h_not_lin_indep : ¬(LinearIndependent ℝ (fun x => x : ↑t → V)) := by
+    intro h
+    have h₁ := LinearIndependent.cardinal_le_rank h
+    have := Cardinal.toNat_le_toNat h₁ (Module.rank_lt_aleph0 ℝ V)
+    simp at this
+    linarith!
+  have := Fintype.not_linearIndependent_iff.mp h_not_lin_indep
+  rcases this with ⟨b, h_combo, u, h_b_u_ne_0⟩
+  let b' : V → ℝ := fun v =>
+    if hvt : v ∈ t then b { val := v, property := hvt} else 0
+  have h_combo₁ : ∑ v ∈ t, b' v = 0 := sorry
+  sorry
+
+#check not_linearIndependent_iff
+
+variable {ι : Type*} [Finite ι] (B : Basis ι ℝ V)
 
 --prove it, either by hand or by using mathlib's version
 
