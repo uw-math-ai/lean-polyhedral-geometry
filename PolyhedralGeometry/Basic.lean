@@ -1,3 +1,4 @@
+import PolyhedralGeometry.Defs
 import Mathlib.Data.Real.Basic
 import Mathlib.Analysis.Convex.Basic
 import Mathlib.Analysis.Convex.Cone.Basic
@@ -8,17 +9,7 @@ import Mathlib.LinearAlgebra.LinearIndependent.Defs
 --import Mathlib.LinearAlgebra.Dual
 --import Mathlib.Topology.Defs.Basic
 
--- this says that V is a vector space over ℝ
 variable {V: Type*} [AddCommGroup V] [Module ℝ V]
-
-/-- a term `h : Halfspace s` is a proof that `s` is a halfspace -/
-def Halfspace (s : Set V) : Prop :=
-  -- "there exists a linear functional f and a constant c such that s equals the set of all points x in V such that f(x) ≤ c"
-  ∃ (f : V →ₗ[ℝ] ℝ) (c : ℝ), s = { x | f x ≤ c }
-
--- why does making `I` of Type* screw up `Polytope`?
-def Polyhedron (s : Set V) : Prop :=
-  ∃ (I : Type) (H : I → Set V), Finite I ∧ (∀ i : I, Halfspace (H i)) ∧ s = ⋂ (i : I), H i
 
 lemma halfspace_convex : ∀ (s : Set V), Halfspace s → Convex ℝ s := by
   intro s h_s_halfspace
@@ -59,16 +50,6 @@ theorem poly_convex : ∀ (s : Set V), Polyhedron s → Convex ℝ s := by
   exact halfspace_convex _ (h_Hi_halfspace i)
 
 --todo: eliminate the need to have an explicit inner product on V; i.e., show that it doesn't depend on the choice of inner product, so the definition can be made without such a choice)
-variable [SeminormedAddCommGroup V] [InnerProductSpace ℝ V]
-
-def Polytope (s : Set V) : Prop :=
-  Polyhedron s ∧ Bornology.IsBounded s
-
-def Cone (s : Set V) : Prop :=
-  s.Nonempty ∧ ∀ c ≥ (0 : ℝ), ∀ x ∈ s, c • x ∈ s
-
-def PolyhedralCone (s : Set V) : Prop :=
-  Polyhedron s ∧ Cone s
 
 example (s : Set V) : PolyhedralCone s → ∃ s' : ConvexCone ℝ V, s'.carrier = s := sorry
 
@@ -109,16 +90,6 @@ example (s : Set V) (f : V →ₗ[ℝ] ℝ) (c : ℝ) : Cone s → (∀ x ∈ s,
     rw [mul_assoc, inv_mul_cancel₀ this, mul_one] at le_c
     show False
     linarith
-
---todo:
-
-#check convexHull
-
-def conicalHull (s : Set V) : Set V :=
-  { x | ∃ (t : Finset V) (a : V → ℝ),
-    (∀ v ∈ t, 0 ≤ a v) ∧ ↑t ⊆ s ∧ x = ∑ v in t, a v • v }
-
-#check convexHull
 
 def conicalCombo_cards (s : Set V) (x : V) : Set ℕ := Finset.card '' { (t : Finset V) | ∃ (a : V → ℝ), (∀ v ∈ t, 0 ≤ a v) ∧ ↑t ⊆ s ∧ x = ∑ v in t, a v • v}
 
@@ -165,15 +136,13 @@ theorem caratheordory (s : Set V) (x : V) (h : x ∈ conicalHull s) :
   have := Fintype.not_linearIndependent_iff.mp h_not_lin_indep
   rcases this with ⟨b, h_combo, u, h_b_u_ne_0⟩
   let b' : V → ℝ := fun v =>
-    if hvt : v ∈ t then b { val := v, property := hvt} else 0
-  have h_combo₁ : ∑ v ∈ t, b' v = 0 := sorry
+    --if hvt : v ∈ t then b { val := v, property := hvt} else 0
+  --have h_combo₁ : ∑ v ∈ t, b' v = 0 := sorry
+  sorry
   sorry
 
 #check not_linearIndependent_iff
 
 variable {ι : Type*} [Finite ι] (B : Basis ι ℝ V)
 
---prove it, either by hand or by using mathlib's version
-
---make alt defs of polyhedron and polytope in terms of convex hulls
 --figure out how closure operators work (to define conicalHull like mathlib's convexHull)
