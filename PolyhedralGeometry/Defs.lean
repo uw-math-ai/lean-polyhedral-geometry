@@ -1,5 +1,4 @@
 import Mathlib.Data.Real.Basic
-import Mathlib.Analysis.Convex.Basic
 import Mathlib.Analysis.Convex.Cone.Basic
 import Mathlib.Analysis.InnerProductSpace.Defs
 -- import Mathlib.LinearAlgebra.FiniteDimensional.Defs

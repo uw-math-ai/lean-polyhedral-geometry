@@ -113,6 +113,8 @@ theorem min_elt (s : Set ℕ) (h_s_nonempty : s.Nonempty) : ∃ n ∈ s, ∀ m <
 
 variable [FiniteDimensional ℝ V]
 
+open Classical
+
 -- theorem 1.3.2(b)
 theorem caratheordory (s : Set V) (x : V) (h : x ∈ conicalHull s) :
   ∃ (t : Finset V), ↑t ⊆ s ∧ t.card ≤ Module.finrank ℝ V ∧ x ∈ conicalHull t := by
@@ -136,10 +138,24 @@ theorem caratheordory (s : Set V) (x : V) (h : x ∈ conicalHull s) :
   have := Fintype.not_linearIndependent_iff.mp h_not_lin_indep
   rcases this with ⟨b, h_combo, u, h_b_u_ne_0⟩
   let b' : V → ℝ := fun v =>
-    --if hvt : v ∈ t then b { val := v, property := hvt} else 0
+    if hvt : v ∈ t then b { val := v, property := hvt} else 0
   --have h_combo₁ : ∑ v ∈ t, b' v = 0 := sorry
-  sorry
-  sorry
+  by_cases h' : b' u > 0
+  #check { x // x ∈ t}
+  . let ratio : V → ℝ := fun i => (b' i) / (a i)
+    have : {x | x ∈ t}.Nonempty := by
+      apply Set.nonempty_of_ncard_ne_zero
+      have : t.card > 0 := by linarith
+      show (↑t : Set V).ncard ≠ 0
+      rw [Set.ncard_coe_Finset]
+      linarith
+    have := Set.exists_max_image {x | x ∈ t} ratio (Set.finite_mem_finset t) this
+    rcases this with ⟨u', h_u'_t, h_u'_max⟩
+    dsimp at h_u'_t
+    simp [ratio] at h_u'_max
+    sorry
+  . let b_neg : { x // x ∈ t } → ℝ := fun i => -(b i)
+    sorry
 
 #check not_linearIndependent_iff
 
