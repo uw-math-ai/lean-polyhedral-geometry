@@ -18,34 +18,11 @@ def Polyhedron (s : Set V) : Prop :=
 
 lemma halfspace_convex : ∀ (s : Set V), Halfspace s → Convex ℝ s := by
   intro s h_s_halfspace
-  unfold Convex
-  intro x h_x_in_s
-  unfold StarConvex
-  intro y h_y_in_s a b h_a_nonneg h_b_nonneg h_a_b_one
-  show a • x + b • y ∈ s
-  unfold Halfspace at h_s_halfspace
   rcases h_s_halfspace with ⟨f, ⟨c, rfl⟩⟩
-  -- rw [Set.mem_def] at h_x_in_s
-  -- dsimp at h_x_in_s -- doesn't work!
-  have h_x_in_s : f x ≤ c := by assumption
-  have h_y_in_s : f y ≤ c := by assumption
-  show f (a • x + b • y) ≤ c
-  calc
-    f (a • x + b • y) = f (a • x) + f (b • y) := by
-      apply LinearMap.map_add
-    _ = a * f x + b * f y := by
-      repeat rw [LinearMap.map_smul]
-      rfl
-    _ ≤ a * c + b * c := by
-      apply add_le_add
-      <;> apply mul_le_mul_of_nonneg_left
-      <;> assumption
-    _ = (a + b) * c := by rw [add_mul]
-    _ = 1 * c := by rw [h_a_b_one]
-    _ = c := one_mul c
-
---use this instead!
-#check convex_halfSpace_le
+  convert convex_halfSpace_le ?_ ?_
+  . exact inferInstance
+  . exact inferInstance
+  . exact LinearMap.isLinear f
 
 theorem poly_convex : ∀ (s : Set V), Polyhedron s → Convex ℝ s := by
   --to do it the easy way, use `convex_iInter`
