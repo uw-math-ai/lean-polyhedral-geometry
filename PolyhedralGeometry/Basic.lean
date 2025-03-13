@@ -117,98 +117,70 @@ section
 
 variable (α β : Type*) [AddCommMonoid β]
 
+
+lemma reduce_by_one (t : Finset V) (a : V → ℝ) (x : V) (h₁ : ∀ v ∈ t, 0 ≤ a v)
+  (h₂ : x = ∑ v in t, a v • v)
+  (h₃ : t.card > Module.finrank ℝ V) :
+  ∃ (t' : Finset V) (a' : V → ℝ), t'.card < t.card ∧ t' ⊆ t ∧ (∀ v ∈ t', 0 ≤ a' v) ∧ x = ∑ v ∈ t', a' v • v := by
+  by_cases all_zero : ∀ v ∈ t, a v = 0
+  -- Case 1: All Coefficients are 0
+  · use ∅
+    use a
+    refine ⟨?_, ?_, ?_, ?_⟩
+    · have : t.card > 0 := by
+        exact Nat.zero_lt_of_lt h₃
+      have : (↑∅ : Finset V).card = 0 := by
+        exact rfl
+      linarith
+    · exact Finset.empty_subset t
+    · intro x x_in_empty
+      apply False.elim
+      exact (List.mem_nil_iff x).mp x_in_empty
+    · have : x = 0 := by
+        rw [h₂]
+        apply Finset.sum_eq_zero
+        intro v₀ v₀_in_t
+        have : a v₀ = 0 := all_zero v₀ v₀_in_t
+        exact smul_eq_zero_of_left (all_zero v₀ v₀_in_t) v₀
+      simp; exact this
+
+  -- Case 2: At Least One Coefficient is nonzero
+  · push_neg at all_zero
+    rcases all_zero with ⟨v₁,hv₁, h_a_v₁_nonzero⟩
+    have h_a_v₁_pos : 0 < a v₁ := by
+      exact lt_of_le_of_ne (h₁ v₁ hv₁) (id (Ne.symm h_a_v₁_nonzero))
+    -- Since t.card > finrank ℝ V the set of vectors t is linearly dependent.
+    have ld : ¬ (LinearIndependent ℝ (fun x => x : {x // x ∈ t} → V)):= by
+        intro h
+        have := LinearIndependent.cardinal_le_rank h
+        have := Cardinal.toNat_le_toNat this (Module.rank_lt_aleph0 ℝ V)
+        simp at this
+        linarith!
+    -- obtain ⟨c₀, hc₀_nonzero, hc₀_sum⟩ : ∃ c₀ : V → ℝ, (∃ v ∈ t, c₀ v ≠ 0) ∧ (∑ v in t, c₀ v • v = 0)
+    -- ·
+    sorry
+
+
 -- theorem 1.3.2(b)
-theorem caratheordory (s : Set V) (x : V) (h : x ∈ conicalHull s) :
+theorem caratheordory' (s : Set V) (x : V) (h : x ∈ conicalHull s) :
   ∃ (t : Finset V), ↑t ⊆ s ∧ t.card ≤ Module.finrank ℝ V ∧ x ∈ conicalHull t := by
-  -- rcases h with ⟨u, a, h_a_nonneg, h_u_subset, h_x_combo⟩
-  -- rcases le_or_gt u.card (Module.finrank ℝ V) with h_u_card | h_u_card
-  -- . use u, h_u_subset, h_u_card, u, a
-  -- induction' u using Finset.induction_on with v u h_v_nin_u ih
-  -- . sorry
-  -- . sorry
   rcases min_elt (conicalCombo_cards s x) (conicalCombo_cards_nonempty s x h) with ⟨n, h', h_minimality⟩
   rcases h' with ⟨t, ⟨a, h_a_nonneg, h_t_subset, h_x_combo⟩, rfl⟩
   rcases le_or_gt t.card (Module.finrank ℝ V) with h_t_card | h_t_card
   . use t, h_t_subset, h_t_card, t, a
   apply False.elim
-  have h_not_lin_indep : ¬(LinearIndependent ℝ (fun x => x : {x // x ∈ t} → V)) := by
-    intro h
-    have := LinearIndependent.cardinal_le_rank h
-    have := Cardinal.toNat_le_toNat this (Module.rank_lt_aleph0 ℝ V)
-    simp at this
-    linarith!
-  have := Fintype.not_linearIndependent_iff.mp h_not_lin_indep
-  rcases this with ⟨b, h_b_combo, ⟨u, h_u_t⟩, h_b_u_ne_0⟩
-  let b' : V → ℝ := fun v =>
-    if hvt : v ∈ t then b { val := v, property := hvt} else 0
-  have h_b'_u_ne_0 : b' u ≠ 0 := by simp [b']; use h_u_t
-  have h_b'_combo : ∑ v ∈ t, b' v • v = 0 := by
-    simp [b']
-    rw [←h_b_combo, Finset.sum_dite_of_true]
-    simp
-  by_cases h' : b' u > 0
-  . let ratio : V → ℝ := fun i => (b' i) / (a i)
-    have h_t_nonempty : {x | x ∈ t}.Nonempty := by
-      apply Set.nonempty_of_ncard_ne_zero
-      have : t.card > 0 := by linarith
-      show (↑t : Set V).ncard ≠ 0
-      rw [Set.ncard_coe_Finset]
-      linarith
-    have := Set.exists_max_image {x | x ∈ t} ratio (Set.finite_mem_finset t) h_t_nonempty
-    rcases this with ⟨u', h_u'_t, h_u'_max⟩
-    simp [ratio] at h_u'_max
-    let α := a u' / b' u'
-    have h_b'_u'_ne_0 : b' u' ≠ 0 := by sorry
-    have h₁ : (a - α • b') u' = 0 := by sorry
-    have h₂ : ∀ v ∈ t, (a - α • b') v ≥ 0 := by sorry
-    have h_x_combo' : x = ∑ v ∈ t, (a - α • b') v • v := by sorry
-    have : t.card - 1 ∈ conicalCombo_cards s x := by
-      have h' : {x | x ∈ t ∧ x ≠ u'} ⊆ t := by sorry
-      have : {x | x ∈ t ∧ x ≠ u'}.Finite := Set.Finite.subset (by sorry : (t.toSet).Finite) h'
-      let t' : Finset V := Set.Finite.toFinset this
-      use t'
-      have h_t'_ss_t : t' ⊆ t := by simp [t']; exact h'
-      have t'_def : t = {u'} ∪ t' := by
-        ext v
-        constructor
-        . intro _
-          by_cases h' : v = u'
-          . rw [h']
-            apply Finset.mem_union_left
-            apply Finset.mem_singleton_self
-          . apply Finset.mem_union_right
-            simp [t']
-            constructor <;> assumption
-        . intro h
-          rw [Finset.mem_union] at h
-          rcases h with h | h
-          . have : v = u' := Finset.mem_singleton.mp h
-            rw [this]
-            assumption
-          . simp [t'] at h
-            exact h.left
-      constructor
-      . use a - α • b'
-        constructor
-        . sorry
-        . constructor
-          . sorry
-          . sorry
-      . apply Nat.eq_sub_of_add_eq
-        apply Eq.symm
-        rw [t'_def]
-        calc
-          ({u'} ∪ t').card = ({u'} ∪ t').card + ({u'} ∩ t').card := by sorry
-          _ = ({u'} : Finset V).card + t'.card := by apply Finset.card_union_add_card_inter
-          _ = 1 + t'.card := by congr
-          _ = t'.card + 1 := add_comm _ _
-    have : t.card - 1 < t.card := by sorry -- this is not trivial since 0 - 1 = 0 in Nat (so linarith can't solve it without some help)
-    have := h_minimality (t.card - 1) this
-    contradiction
-  . let b' : V → ℝ := fun i => -b' i
-    --there should be a way to redefine b' above selectively given this condition, so that we don't have to repeat the proof above verbatim
-    sorry
-
+  have := reduce_by_one t a x h_a_nonneg h_x_combo h_t_card
+  rcases this with ⟨t',a',t'_le_t,t'_sub_t,a'_nonneg,t'_x_conic_combo⟩
+  have t'_subset_s : ↑t' ⊆ s := by
+    have : (↑t' : Set V) ⊆ (t : Set V) := by
+      exact t'_sub_t
+    apply subset_trans this h_t_subset
+  have t'_is_in_conicalCombos : t'.card ∈ conicalCombo_cards s x := by
+    use t'
+    use ⟨a',a'_nonneg,t'_subset_s,t'_x_conic_combo⟩
+  have := h_minimality t'.card t'_le_t
+  show False
+  exact this t'_is_in_conicalCombos
 variable {ι : Type*} [Finite ι] (B : Basis ι ℝ V)
 
 --figure out how closure operators work (to define conicalHull like mathlib's convexHull)
