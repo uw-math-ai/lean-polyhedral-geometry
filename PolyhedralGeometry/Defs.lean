@@ -35,10 +35,31 @@ def Cone (s : Set V) : Prop :=
 def PolyhedralCone (s : Set V) : Prop :=
   Polyhedron s ∧ Cone s
 
-#check convexHull
+#print convexHull
 
 def conicalHull (s : Set V) : Set V :=
   { x | ∃ (t : Finset V) (a : V → ℝ),
     (∀ v ∈ t, 0 ≤ a v) ∧ ↑t ⊆ s ∧ x = ∑ v ∈ t, a v • v }
+
+def isConicalCombo (s : Set V) (x : V) : Prop :=
+  ∃ (ι : Type) (t : Finset ι) (a : t → ℝ) (v : t → V),
+    (∀ i, 0 ≤ a i) ∧ (∀ i, v i ∈ s) ∧ x = ∑ i, a i • v i
+
+def isConicalCombo_aux (s : Set V) (x : V) (n : ℕ) : Prop :=
+  ∃ (a : Fin n → ℝ) (v : Fin n → V),
+    (∀ i, 0 ≤ a i) ∧ (∀ i, v i ∈ s) ∧ x = ∑ i, a i • v i
+
+--what's best?
+
+def isConicalCombo' (s : Set V) (x : V) : Prop :=
+  ∃ (ι : Type) (t : Finset ι) (a : ι → ℝ) (v : ι → V),
+    (∀ i ∈ t, a i = 0 ∨ 0 ≤ a i ∧ v i ∈ s) ∧ x = ∑ i ∈ t, a i • v i
+
+def isConicalCombo_aux' (s : Set V) (x : V) (n : ℕ) : Prop :=
+  ∃ (a : ℕ → ℝ) (v : ℕ → V),
+    (∀ i < n, a i = 0 ∨ 0 ≤ a i ∧ v i ∈ s) ∧ x = ∑ i ∈ Finset.range n, a i • v i
+
+def conicalHull' (s : Set V) : Set V :=
+  { x | isConicalCombo' s x }
 
 --make alt defs of polyhedron and polytope in terms of convex hulls
