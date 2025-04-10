@@ -8,18 +8,25 @@ import Mathlib.Analysis.InnerProductSpace.Defs
 -- import Mathlib.Topology.Defs.Basic
 
 -- this says that V is a vector space over ℝ
-variable {V: Type*} [AddCommGroup V] [Module ℝ V]
+variable {V : Type*} [AddCommGroup V] [Module ℝ V]
 
 /-- a term `h : Halfspace s` is a proof that `s` is a halfspace -/
 def Halfspace (s : Set V) : Prop :=
   -- "there exists a linear functional f and a constant c such that s equals the set of all points x in V such that f(x) ≤ c"
   ∃ (f : V →ₗ[ℝ] ℝ) (c : ℝ), s = { x | f x ≤ c }
 
+variable (s : Set V) (h : Halfspace s)
+
 -- why does making `I` of Type* screw up `Polytope`?
 def Polyhedron (s : Set V) : Prop :=
   ∃ (I : Type) (H : I → Set V), Finite I ∧ (∀ i : I, Halfspace (H i)) ∧ s = ⋂ (i : I), H i
 
 --todo: eliminate the need to have an explicit inner product on V; i.e., show that it doesn't depend on the choice of inner product, so the definition can be made without such a choice)
+
+-- def Polytope' (s : Set V) : Prop :=
+--   Polyhedron s ∧ ∀ _ : SeminormedAddCommGroup V, ∀ _ : InnerProductSpace ℝ V, Bornology.IsBounded s
+
+-- theorem bounded_iff_bounded_all (s : Set V) : Polytope' s ↔ Polyhedron s ∧ ∃ (_ : SeminormedAddCommGroup V) (_ : InnerProductSpace ℝ V), Bornology.IsBounded s := by sorry
 
 section
 variable [SeminormedAddCommGroup V] [InnerProductSpace ℝ V]
@@ -61,5 +68,7 @@ def isConicalCombo_aux' (s : Set V) (x : V) (n : ℕ) : Prop :=
 
 def conicalHull' (s : Set V) : Set V :=
   { x | isConicalCombo' s x }
+
+--figure out how closure operators work (to define conicalHull like mathlib's convexHull)
 
 --make alt defs of polyhedron and polytope in terms of convex hulls

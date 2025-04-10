@@ -47,12 +47,8 @@ theorem poly_convex : ∀ (s : Set V), Polyhedron s → Convex ℝ s := by
   intro i
   exact halfspace_convex _ (h_Hi_halfspace i)
 
---todo: eliminate the need to have an explicit inner product on V; i.e., show that it doesn't depend on the choice of inner product, so the definition can be made without such a choice)
-
-example (s : Set V) : PolyhedralCone s → ∃ s' : ConvexCone ℝ V, s'.carrier = s := sorry
-
 --lemma 1.2.2
-example (s : Set V) (f : V →ₗ[ℝ] ℝ) (c : ℝ) : Cone s → (∀ x ∈ s, f x ≤ c) → c ≥ 0 ∧ ∀ x ∈ s, f x ≤ 0 := by
+lemma translate_halfspace_of_cone_subset (s : Set V) (f : V →ₗ[ℝ] ℝ) (c : ℝ) : Cone s → (∀ x ∈ s, f x ≤ c) → c ≥ 0 ∧ ∀ x ∈ s, f x ≤ 0 := by
   intro h_s_cone h_s_fc
   constructor
   · revert h_s_fc
@@ -377,8 +373,6 @@ lemma isconicalCombo_aux_le' (s : Set V) (x : V) : m ≤ n → isConicalCombo_au
     rw [Finset.mem_range] at hi
     exact hi
 
-#print Finset.attach
-
 theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_aux' s x (Module.finrank ℝ V) := by
   rintro x h
   rcases (reindex_conicalCombo' s x).mp h with ⟨n, h⟩
@@ -391,9 +385,23 @@ theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_au
   apply ih
   sorry
 
-def inc (P : α → Prop) : { x // P x } → α := Subtype.val
-def inc' (t : Finset α) : t → α := Subtype.val
+--might be useful:
+example (s : Set V) : PolyhedralCone s → ∃ s' : ConvexCone ℝ V, s'.carrier = s := sorry
+example (s : Set V) : ∃ s' : ConvexCone ℝ V, s'.carrier = conicalHull s := by sorry
 
-variable {ι : Type*} [Finite ι] (B : Basis ι ℝ V)
+--todo:
 
---figure out how closure operators work (to define conicalHull like mathlib's convexHull)
+variable [SeminormedAddCommGroup V] [InnerProductSpace ℝ V]
+
+--proposition 1.3.3(b)
+--theorem conical_hull_closed_of_finite : _ := by sorry
+
+--theorem hyperplane_separation : _ := by sorry --use heine-borel for compactness (Metric.isCompact_iff_isClosed_bounded)
+--theorem farkas : _ := by sorry --uses lemma 1.2.2 and hyperplane_separation
+--OR, use hyperplane separation theorem already in mathlib (we only need the statement of Farkas
+
+--see NormedSpace.polar
+--theorem 1.5.1
+--proposition 1.5.2(b)
+
+--theorem 1.6.1
