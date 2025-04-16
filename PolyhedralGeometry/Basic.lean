@@ -5,6 +5,7 @@ import Mathlib.Analysis.Convex.Cone.Basic
 import Mathlib.Analysis.InnerProductSpace.Defs
 import Mathlib.LinearAlgebra.FiniteDimensional.Defs
 import Mathlib.LinearAlgebra.LinearIndependent.Defs
+import Mathlib.Topology.MetricSpace.HausdorffDistance
 --import Mathlib.Topology.MetricSpace.Defs
 --import Mathlib.LinearAlgebra.Dual
 --import Mathlib.Topology.Defs.Basic
@@ -212,3 +213,59 @@ theorem caratheordory (s : Set V) (x : V) (h : x ∈ conicalHull s) :
 variable {ι : Type*} [Finite ι] (B : Basis ι ℝ V)
 
 --figure out how closure operators work (to define conicalHull like mathlib's convexHull)
+
+
+-- 𝕜 is the underlying scalar field (e.g., ℝ or ℚ), assumed to be an ordered ring.
+variable {𝕜 : Type*} [OrderedRing 𝕜]
+
+--Seems like this migh just be (`exists_closed_hyperplane_separating`) in Mathlib 
+--Requirements: both A,B convex, at least one compact, A,B disjoint, Normed Vector Space V.
+--So theorem HyperPlaneSeparation is just apply exists_closed_hyperplane_separating
+
+-- E is the vector space type, equipped with:
+-- 1. An additive commutative group structure (`AddCommGroup`).
+-- 2. A module structure over 𝕜 (generalizing vector spaces to arbitrary rings).
+-- 3. A topology (`TopologicalSpace`) compatible with addition (`TopologicalAddGroup`).
+-- 4. Continuous scalar multiplication (`ContinuousConstSMul`).
+variable {E : Type*} [AddCommGroup E] [Module ℝ E][TopologicalSpace E][PseudoMetricSpace E]
+
+#check PseudoMetricSpace
+-- A and B are the convex sets we want to separate.
+
+namespace Bornology
+-- The goal: Prove there exists a continuous linear functional `f` and a scalar `c` 
+-- such that `f` separates A and B (i.e., `f(a) ≤ c ≤ f(b)` for all `a ∈ A`, `b ∈ B`).
+
+--theorem Metric.isCompact_iff_isClosed_bounded {α : Type u} [PseudoMetricSpace α] {s : Set α} [T2Space α] [ProperSpace α] :
+--IsCompact s ↔ IsClosed s ∧ Bornology.IsBounded s
+theorem HyperplaneSeparation  (A B : Set E) (hA : Convex ℝ A)(hB : Convex ℝ B)  (hB_closed : IsClosed B)
+ (hNempty : A.Nonempty ∧ B.Nonempty) (hA_Bounded: IsBounded A) (hAB : Disjoint A B) :
+   ∃ (f : E →L[ℝ] ℝ) (c : ℝ),
+  (∀ a ∈ A, f a ≤ c) ∧ (∀ b ∈ B, c ≤ f b) := by
+  
+  
+have K_r (A : Set E) (r : ℝ) : Set E :=
+  { x : E | Metric.infDist x A = r} := by
+
+  sorry
+
+  --WLOG, let A Construct a Set K_r compact around A, defined as all points within r of A, the compact 
+  --set within the relation. Let r such that K_r ∩ B ≠ ∅ ∧ K_r ∩ A = A
+
+  --K_r ∩ B ∪ A is compact (show) implies existence of a∈ A, b∈ B ∩ K_r such that d(a,b) is minimal. 
+  --In space E, can draw vector f' from a to b.
+
+
+  -- f' is norm to hyperplane separating A,B. Use this to define hyperplane with f = ⟨f', _ ⟩ 
+  -- hyperplane P = f x = c, x ∈ E. Choose c by middle line segment between a,b.
+
+
+  -- 
+
+
+
+
+
+  sorry
+
+
