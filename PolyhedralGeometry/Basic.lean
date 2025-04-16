@@ -161,7 +161,7 @@ theorem caratheordory (s : Set V) (x : V) (h : x ∈ conicalHull s) :
       rw [dif_pos h_u_t, lt_neg_iff_add_neg]
       simp [b', dif_pos h_u_t] at h'
       linarith
-      
+
   show False
   let ratio : V → ℝ := fun i => (b' i) / (a i)
   have h_t_nonempty : {x | x ∈ t}.Nonempty := by
@@ -251,7 +251,7 @@ lemma reindex_conicalCombo (s : Set V) (x : V) : isConicalCombo s x ↔ ∃ n, i
 lemma isconicalCombo_aux_le (s : Set V) (x : V) : m < n → isConicalCombo_aux s x m → isConicalCombo_aux s x n := by
   intro h_mn
   rintro ⟨a, v, h_a, h_v, h_x_combo⟩
-  by_cases h_s : s.Nonempty 
+  by_cases h_s : s.Nonempty
   . let v₀ : ↑s := ⟨h_s.some, h_s.some_mem⟩
     let a' : Fin n → ℝ := fun i => if h_im : ↑i < m then a ⟨↑i, h_im⟩ else 0
     let v' : Fin n → V := fun i => if h_im : ↑i < m then v ⟨↑i, h_im⟩ else v₀
@@ -314,7 +314,7 @@ lemma reindex_conicalCombo' (s : Set V) (x : V) : isConicalCombo' s x ↔ ∃ n,
     set F : ℕ → α := Subtype.val ∘ (Finset.equivFin t).symm ∘ λ n ↦ if hn : n < N then (⟨n, hn⟩ : Fin N) else (⟨0, hN⟩ : Fin N)
     have h_F : Set.BijOn F (Finset.range N) t := by
       repeat' constructor
-      . simp [Set.MapsTo, F]      
+      . simp [Set.MapsTo, F]
       . simp [Set.InjOn, F]
         intro n₁ hn₁ n₂ hn₂ h_eq
         rw [dif_pos hn₁, dif_pos hn₂] at h_eq
@@ -329,7 +329,7 @@ lemma reindex_conicalCombo' (s : Set V) (x : V) : isConicalCombo' s x ↔ ∃ n,
         rcases this ⟨i, h_it⟩ with ⟨⟨n, hn⟩, h_eq⟩
         use n, hn
         simp [F]
-        rw [dif_pos hn, h_eq]        
+        rw [dif_pos hn, h_eq]
     set a' : ℕ → ℝ := a ∘ F
     set v' : ℕ → V := v ∘ F
     use a', v'
@@ -352,7 +352,7 @@ lemma reindex_conicalCombo' (s : Set V) (x : V) : isConicalCombo' s x ↔ ∃ n,
 
 lemma isconicalCombo_aux_le' (s : Set V) (x : V) : m ≤ n → isConicalCombo_aux' s x m → isConicalCombo_aux' s x n := by
   intro h_mn
-  rintro ⟨a, v, h_av, h_x_combo⟩  
+  rintro ⟨a, v, h_av, h_x_combo⟩
   let a' : ℕ → ℝ := fun i => if h_im : i < m then a i else 0
   use a', v
   repeat' constructor
@@ -378,12 +378,58 @@ theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_au
   rcases (reindex_conicalCombo' s x).mp h with ⟨n, h⟩
   induction' n with N ih
   . exact isconicalCombo_aux_le' s x (Nat.zero_le _) h
-  by_cases hN : N + 1 ≤ Module.finrank ℝ V    
+  by_cases hN : N + 1 ≤ Module.finrank ℝ V
   . exact isconicalCombo_aux_le' s x hN h
   push_neg at hN
   rcases h with ⟨a, v, h_av, h_x_combo⟩
   apply ih
-  sorry
+  by_cases coefficents_all_zero : ∀ i ∈ (Finset.range (N + 1)), a i = 0
+  · unfold isConicalCombo_aux'
+    · use a
+      use v
+      constructor
+      · intro i i_lt_N
+        have i_in_range : i ∈ Finset.range (N + 1) := by
+          apply Finset.mem_range.mpr
+          linarith
+        apply Or.inl (coefficents_all_zero i i_in_range)
+      · have x_is_zero : x = 0 := by
+          rw [h_x_combo]
+          apply Finset.sum_eq_zero
+          intro i₀ i₀_in_range
+          have a_i₀_eq_zero : a i₀ = 0 := by
+            exact coefficents_all_zero i₀ i₀_in_range
+          rw [a_i₀_eq_zero]
+          simp
+        rw [x_is_zero]
+        apply Eq.symm
+        apply Finset.sum_eq_zero
+        intro i₀ i₀_in_range
+        have i₀_lq_N : i₀ < N := by
+          apply Finset.mem_range.mp
+          exact i₀_in_range
+        have i₀_in_range_plus_one : i₀ ∈ Finset.range (N + 1) := by
+          simp
+          linarith
+        have a_i₀_eq_zero : a i₀ = 0 := by
+          exact coefficents_all_zero i₀ i₀_in_range_plus_one
+        rw [a_i₀_eq_zero]
+        simp
+  · push_neg at coefficents_all_zero
+    rcases coefficents_all_zero with ⟨i₀,i₀_in_range,a₀_not_zero⟩
+    have a₀_not_zero' : ¬(a i₀ = 0) := by simp [a₀_not_zero]
+    have h_a₀_pos : 0 < a i₀ := by
+      have : i₀ < N + 1 := by apply Finset.mem_range.mp i₀_in_range
+      exact lt_of_le_of_ne (Or.resolve_left (h_av i₀ this) a₀_not_zero').left (id (Ne.symm a₀_not_zero))
+    let t : Finset V := Finset.image v (Finset.range (N + 1))
+    have ld : ¬ (LinearIndependent ℝ (fun x => x : {x | x ∈ t} → V)) := by
+      intro h''
+      have := LinearIndependent.cardinal_le_rank h''
+      have := Cardinal.toNat_le_toNat this (Module.rank_lt_aleph0 ℝ V)
+      simp at this
+
+
+
 
 --might be useful:
 example (s : Set V) : PolyhedralCone s → ∃ s' : ConvexCone ℝ V, s'.carrier = s := sorry
