@@ -456,21 +456,25 @@ variable {E : Type*} [AddCommGroup E] [Module ℝ E][TopologicalSpace E][PseudoM
 #check PseudoMetricSpace
 -- A and B are the convex sets we want to separate.
 
-namespace Bornology
+open Bornology
 -- The goal: Prove there exists a continuous linear functional `f` and a scalar `c` 
 -- such that `f` separates A and B (i.e., `f(a) ≤ c ≤ f(b)` for all `a ∈ A`, `b ∈ B`).
 
+#print Set.Nonempty
+
 --theorem Metric.isCompact_iff_isClosed_bounded {α : Type u} [PseudoMetricSpace α] {s : Set α} [T2Space α] [ProperSpace α] :
 --IsCompact s ↔ IsClosed s ∧ Bornology.IsBounded s
-theorem HyperplaneSeparation  (A B : Set E) (hA : Convex ℝ A)(hB : Convex ℝ B)  (hB_closed : IsClosed B)
- (hNempty : A.Nonempty ∧ B.Nonempty) (hA_Bounded: IsBounded A) (hAB : Disjoint A B) :
-   ∃ (f : E →L[ℝ] ℝ) (c : ℝ),
-  (∀ a ∈ A, f a ≤ c) ∧ (∀ b ∈ B, c ≤ f b) := by
-  
-  
-have K_r (A : Set E) (r : ℝ) : Set E :=
-  { x : E | Metric.infDist x A = r} := by
-
+theorem HyperplaneSeparation  (A B : Set E) (hA : Convex ℝ A)(hB : Convex ℝ B)  (hB_closed : IsClosed B) (hNempty : A.Nonempty ∧ B.Nonempty) (hA_Bounded: IsBounded A) (hAB : Disjoint A B) : ∃ (f : E →L[ℝ] ℝ) (c : ℝ), (∀ a ∈ A, f a ≤ c) ∧ (∀ b ∈ B, c ≤ f b) := by
+  let K_r (r : ℝ) : Set E := { x : E | Metric.infDist x A ≤ r}
+  have : ∃ (r : ℝ), (K_r r ∩ B).Nonempty := by
+    rcases hNempty.left with ⟨a, h_aA⟩
+    rcases hNempty.right with ⟨b, h_bB⟩
+    use (dist a b)
+    use b
+    constructor
+    . dsimp [K_r]
+      sorry
+    . exact h_bB
   sorry
 
   --WLOG, let A Construct a Set K_r compact around A, defined as all points within r of A, the compact 
