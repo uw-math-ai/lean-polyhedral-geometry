@@ -6,6 +6,7 @@ import Mathlib.Analysis.InnerProductSpace.Defs
 import Mathlib.LinearAlgebra.FiniteDimensional.Defs
 import Mathlib.LinearAlgebra.LinearIndependent.Defs
 import Mathlib.Topology.MetricSpace.HausdorffDistance
+import Mathlib.LinearAlgebra.Dimension.Basic
 --import Mathlib.Topology.MetricSpace.Defs
 --import Mathlib.LinearAlgebra.Dual
 --import Mathlib.Topology.Defs.Basic
@@ -108,13 +109,8 @@ theorem min_elt (s : Set ℕ) (h_s_nonempty : s.Nonempty) : ∃ n ∈ s, ∀ m <
 
 variable [FiniteDimensional ℝ V]
 
-open Classical
-
-section
-
-variable (α β : Type*) [AddCommMonoid β]
-
--- theorem 1.3.2(b)
+-- open Classical
+--theorem 1.3.2(b)
 -- theorem caratheordory (s : Set V) (x : V) (h : x ∈ conicalHull s) :
 --   ∃ (t : Finset V), ↑t ⊆ s ∧ t.card ≤ Module.finrank ℝ V ∧ x ∈ conicalHull t := by
 --   -- rcases h with ⟨u, a, h_a_nonneg, h_u_subset, h_x_combo⟩
@@ -287,7 +283,9 @@ variable (α β : Type*) [AddCommMonoid β]
 
 --------------- second try -----------------
 
-lemma sum_bijon {α β γ: Type*} [AddCommMonoid γ] {t : Finset α} {s : Finset β} {T : α → β} (h_bij : Set.BijOn T t s) {f : α → γ} {g : β → γ} (h_fg : f = g ∘ T) : ∑ i ∈ t, f i = ∑ j ∈ s, g j := by
+section
+
+lemma sum_bijon {α β γ : Type*} [AddCommMonoid γ] {t : Finset α} {s : Finset β} {T : α → β} (h_bij : Set.BijOn T t s) {f : α → γ} {g : β → γ} (h_fg : f = g ∘ T) : ∑ i ∈ t, f i = ∑ j ∈ s, g j := by
   rcases h_bij with ⟨h_mapsto, h_inj, h_surj⟩
   apply Finset.sum_bij
   . apply h_mapsto
@@ -296,6 +294,24 @@ lemma sum_bijon {α β γ: Type*} [AddCommMonoid γ] {t : Finset α} {s : Finset
     simp [Set.SurjOn]
     rfl
   . tauto
+
+open Classical
+
+lemma Finset.sum_enlarge {ι α : Type*} [AddCommMonoid α] {t s : Finset ι} {f : ι → α} (h_ts : t ⊆ s) (h_f : ∀ i ∉ t, f i = 0) : ∑ i ∈ t, f i = ∑ i ∈ s, f i := by
+  induction' s using Finset.strongInductionOn with s ih
+  by_cases h : t = s
+  . rw [h]
+  have : t ⊂ s := ssubset_of_subset_of_ne h_ts h
+  rcases (Finset.ssubset_iff_of_subset h_ts).mp this with ⟨x, h_xs, h_xt⟩
+  let s' := s.erase x
+  have h_ts' : t ⊆ s' := by
+    refine Finset.subset_erase.mpr ?_
+    constructor <;> assumption
+  rw [ih s' (Finset.erase_ssubset h_xs) h_ts']
+  apply Finset.sum_erase
+  exact h_f x h_xt
+
+end
 
 lemma reindex_conicalCombo' (s : Set V) (x : V) : isConicalCombo' s x ↔ ∃ n, isConicalCombo_aux' s x n := by
   constructor
@@ -374,29 +390,33 @@ lemma isconicalCombo_aux_le' (s : Set V) (x : V) : m ≤ n → isConicalCombo_au
     rw [Finset.mem_range] at hi
     exact hi
 
-theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_aux' s x (Module.finrank ℝ V) := by
+variable [FiniteDimensional ℝ V]
+
+open Finset Module
+
+theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_aux' s x (finrank ℝ V) := by
   rintro x h
   rcases (reindex_conicalCombo' s x).mp h with ⟨n, h⟩
   induction' n with N ih
   . exact isconicalCombo_aux_le' s x (Nat.zero_le _) h
-  by_cases hN : N + 1 ≤ Module.finrank ℝ V
+  by_cases hN : N + 1 ≤ finrank ℝ V
   . exact isconicalCombo_aux_le' s x hN h
   push_neg at hN
   rcases h with ⟨a, v, h_av, h_x_combo⟩
   apply ih
-  by_cases coefficents_all_zero : ∀ i ∈ (Finset.range (N + 1)), a i = 0
+  by_cases coefficents_all_zero : ∀ i ∈ (range (N + 1)), a i = 0
   · unfold isConicalCombo_aux'
     · use a
       use v
       constructor
       · intro i i_lt_N
-        have i_in_range : i ∈ Finset.range (N + 1) := by
-          apply Finset.mem_range.mpr
+        have i_in_range : i ∈ range (N + 1) := by
+          apply mem_range.mpr
           linarith
         apply Or.inl (coefficents_all_zero i i_in_range)
       · have x_is_zero : x = 0 := by
           rw [h_x_combo]
-          apply Finset.sum_eq_zero
+          apply sum_eq_zero
           intro i₀ i₀_in_range
           have a_i₀_eq_zero : a i₀ = 0 := by
             exact coefficents_all_zero i₀ i₀_in_range
@@ -404,12 +424,12 @@ theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_au
           simp
         rw [x_is_zero]
         apply Eq.symm
-        apply Finset.sum_eq_zero
+        apply sum_eq_zero
         intro i₀ i₀_in_range
         have i₀_lq_N : i₀ < N := by
-          apply Finset.mem_range.mp
+          apply mem_range.mp
           exact i₀_in_range
-        have i₀_in_range_plus_one : i₀ ∈ Finset.range (N + 1) := by
+        have i₀_in_range_plus_one : i₀ ∈ range (N + 1) := by
           simp
           linarith
         have a_i₀_eq_zero : a i₀ = 0 := by
@@ -420,27 +440,59 @@ theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_au
   rcases coefficents_all_zero with ⟨i₀,i₀_in_range,a₀_not_zero⟩
   replace a₀_not_zero : ¬(a i₀ = 0) := by simp [a₀_not_zero]
   have h_a₀_pos : 0 < a i₀ := by
-    have : i₀ < N + 1 := by apply Finset.mem_range.mp i₀_in_range
+    have : i₀ < N + 1 := by apply mem_range.mp i₀_in_range
     exact lt_of_le_of_ne (Or.resolve_left (h_av i₀ this) a₀_not_zero).left (id (Ne.symm a₀_not_zero))
-  by_cases h_v_not_inj : ∃ i j : Finset.range (N + 1), i ≠ j ∧ v i = v j
-  . sorry
-  push_neg at h_v_not_inj
-  let t : Finset V := Finset.image v (Finset.range (N + 1))
-  let F : Finset.range (N + 1) → V := fun i => v i
-  have ld : ¬(LinearIndependent ℝ (fun (x : {x // x ∈ t}) => (x : V))) := by
+  --let t : Finset V := image v (range (N + 1))
+  have : ¬ LinearIndepOn ℝ v (range (N + 1)) := by
     intro h
-    have := LinearIndependent.cardinal_le_rank h
-    replace := Cardinal.toNat_le_toNat this (Module.rank_lt_aleph0 ℝ V)
+    absurd hN
+    rw [not_lt]
+    have := LinearIndepOn.encard_le_toENat_rank h
+    simp only [Set.encard_coe_eq_coe_finsetCard] at this
     simp at this
-    sorry
-  --have := Fintype.not_linearIndependent_iff.mp h_not_lin_indep
-  --rcases this with ⟨b, h_b_combo, ⟨u, h_u_t⟩, h_b_u_ne_0⟩
+    have := ENat.toNat_le_toNat this
+      (by simp; exact Module.rank_lt_aleph0 ℝ V)
+    -- simp at this
+    -- rw [←finrank] at this
+    exact this
+  replace := (not_congr linearIndepOn_iff'').mp this
+  push_neg at this
+  rcases this with ⟨t, b, h_t_sub_range, h_b_comp, h_b_combo_eq_0, j, h_jt, h_j_ne_0⟩
+  wlog h' : t = range (N + 1) generalizing t
+  . apply this (range (N + 1))
+    all_goals clear this h'; try simp
+    . intro i hiN
+      have : i ∉ t := by
+        intro h_it
+        have := h_t_sub_range h_it
+        have := mem_range.mp this
+        linarith
+      exact h_b_comp i this
+    . rw [←h_b_combo_eq_0]
+      symm
+      apply sum_enlarge
+      . assumption
+      . intro i h_it
+        rw [h_b_comp i h_it]
+        simp
+    . have := h_t_sub_range h_jt
+      apply mem_range.mp
+      exact this
+  rw [h'] at h_b_combo_eq_0 h_jt
+  clear h_t_sub_range h_b_comp h' t a₀_not_zero
+  wlog h' : b j > 0 generalizing b
+  . let b' := -b
+    apply this b'
+    . sorry
+    . sorry
+    . sorry
+  clear h_j_ne_0
   sorry
 
 --figure out how closure operators work (to define conicalHull like mathlib's convexHull)
 
 -- 𝕜 is the underlying scalar field (e.g., ℝ or ℚ), assumed to be an ordered ring.
-variable {𝕜 : Type*} [OrderedRing 𝕜]
+--variable {𝕜 : Type*} [OrderedRing 𝕜]
 
 --Seems like this migh just be (`exists_closed_hyperplane_separating`) in Mathlib 
 --Requirements: both A,B convex, at least one compact, A,B disjoint, Normed Vector Space V.
@@ -459,8 +511,6 @@ variable {E : Type*} [AddCommGroup E] [Module ℝ E][TopologicalSpace E][PseudoM
 open Bornology
 -- The goal: Prove there exists a continuous linear functional `f` and a scalar `c` 
 -- such that `f` separates A and B (i.e., `f(a) ≤ c ≤ f(b)` for all `a ∈ A`, `b ∈ B`).
-
-#print Set.Nonempty
 
 --theorem Metric.isCompact_iff_isClosed_bounded {α : Type u} [PseudoMetricSpace α] {s : Set α} [T2Space α] [ProperSpace α] :
 --IsCompact s ↔ IsClosed s ∧ Bornology.IsBounded s
@@ -487,14 +537,6 @@ theorem HyperplaneSeparation  (A B : Set E) (hA : Convex ℝ A)(hB : Convex ℝ 
   -- f' is norm to hyperplane separating A,B. Use this to define hyperplane with f = ⟨f', _ ⟩ 
   -- hyperplane P = f x = c, x ∈ E. Choose c by middle line segment between a,b.
 
-
-  -- 
-
-
-
-
-
-  sorry
 
 --might be useful:
 example (s : Set V) : PolyhedralCone s → ∃ s' : ConvexCone ℝ V, s'.carrier = s := sorry
