@@ -10,8 +10,6 @@ import Mathlib.Topology.MetricSpace.HausdorffDistance
 --import Mathlib.LinearAlgebra.Dual
 --import Mathlib.Topology.Defs.Basic
 
-
-
 variable {V: Type*} [AddCommGroup V] [Module ℝ V]
 
 lemma halfspace_convex : ∀ (s : Set V), Halfspace s → Convex ℝ s := by
@@ -439,9 +437,7 @@ theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_au
   --rcases this with ⟨b, h_b_combo, ⟨u, h_u_t⟩, h_b_u_ne_0⟩
   sorry
 
-<<<<<<< HEAD
 --figure out how closure operators work (to define conicalHull like mathlib's convexHull)
-
 
 -- 𝕜 is the underlying scalar field (e.g., ℝ or ℚ), assumed to be an ordered ring.
 variable {𝕜 : Type*} [OrderedRing 𝕜]
@@ -496,10 +492,6 @@ have K_r (A : Set E) (r : ℝ) : Set E :=
 
   sorry
 
-
-=======
-
-
 --might be useful:
 example (s : Set V) : PolyhedralCone s → ∃ s' : ConvexCone ℝ V, s'.carrier = s := sorry
 example (s : Set V) : ∃ s' : ConvexCone ℝ V, s'.carrier = conicalHull s := by sorry
@@ -520,4 +512,3 @@ variable [SeminormedAddCommGroup V] [InnerProductSpace ℝ V]
 --proposition 1.5.2(b)
 
 --theorem 1.6.1
->>>>>>> c6e66b2b41c5bb557244b18ff3cd83aca02dc11b
