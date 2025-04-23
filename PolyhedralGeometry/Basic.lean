@@ -480,13 +480,36 @@ theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_au
       exact this
   rw [h'] at h_b_combo_eq_0 h_jt
   clear h_t_sub_range h_b_comp h' t a₀_not_zero
-  wlog h' : b j > 0 generalizing b
+  wlog b_j_pos : b j > 0 generalizing b
   . let b' := -b
     apply this b'
-    . sorry
-    . sorry
-    . sorry
+    . by_contra b'_is_zero
+      have neg_b'_is_zero : -b' j = 0 := by linarith
+      unfold b' at neg_b'_is_zero; simp at neg_b'_is_zero
+      exact h_j_ne_0 neg_b'_is_zero
+    . unfold b'
+      simp [h_b_combo_eq_0]
+    . unfold b'
+      simp
+      simp at b_j_pos
+      exact lt_of_le_of_ne b_j_pos h_j_ne_0
   clear h_j_ne_0
+  let ratios : Finset ℝ := (Finset.range (N + 1)).image (λ i => a i / b i)
+  let ratios_non_neg : Finset ℝ := ratios.filter (λ r => r ≥ 0)
+  have : ratios_non_neg.Nonempty := by
+    unfold ratios_non_neg
+    unfold ratios
+    have a_j : a j ≥ 0 := by
+      sorry
+      #check h_av j
+  have β : ℝ := Finset.min' ratios sorry
+  replace h_b_combo_eq_0 : ∑ i ∈ range (N + 1),  (β * b i) • v i = 0 := by
+    sorry
+  rw [← sub_zero (∑ i ∈ range (N + 1), a i • v i)] at h_x_combo
+  rw [← h_b_combo_eq_0] at h_x_combo
+  have x_plus_zero : x = ∑ i ∈ range (N + 1), ((a i - β * b i) • v i) := by
+    sorry
+  
   sorry
 
 --figure out how closure operators work (to define conicalHull like mathlib's convexHull)
@@ -494,7 +517,7 @@ theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_au
 -- 𝕜 is the underlying scalar field (e.g., ℝ or ℚ), assumed to be an ordered ring.
 --variable {𝕜 : Type*} [OrderedRing 𝕜]
 
---Seems like this migh just be (`exists_closed_hyperplane_separating`) in Mathlib 
+--Seems like this migh just be (`exists_closed_hyperplane_separating`) in Mathlib
 --Requirements: both A,B convex, at least one compact, A,B disjoint, Normed Vector Space V.
 --So theorem HyperPlaneSeparation is just apply exists_closed_hyperplane_separating
 
@@ -509,7 +532,7 @@ variable {E : Type*} [AddCommGroup E] [Module ℝ E][TopologicalSpace E][PseudoM
 -- A and B are the convex sets we want to separate.
 
 open Bornology
--- The goal: Prove there exists a continuous linear functional `f` and a scalar `c` 
+-- The goal: Prove there exists a continuous linear functional `f` and a scalar `c`
 -- such that `f` separates A and B (i.e., `f(a) ≤ c ≤ f(b)` for all `a ∈ A`, `b ∈ B`).
 
 --theorem Metric.isCompact_iff_isClosed_bounded {α : Type u} [PseudoMetricSpace α] {s : Set α} [T2Space α] [ProperSpace α] :
@@ -527,14 +550,14 @@ theorem HyperplaneSeparation  (A B : Set E) (hA : Convex ℝ A)(hB : Convex ℝ 
     . exact h_bB
   sorry
 
-  --WLOG, let A Construct a Set K_r compact around A, defined as all points within r of A, the compact 
+  --WLOG, let A Construct a Set K_r compact around A, defined as all points within r of A, the compact
   --set within the relation. Let r such that K_r ∩ B ≠ ∅ ∧ K_r ∩ A = A
 
-  --K_r ∩ B ∪ A is compact (show) implies existence of a∈ A, b∈ B ∩ K_r such that d(a,b) is minimal. 
+  --K_r ∩ B ∪ A is compact (show) implies existence of a∈ A, b∈ B ∩ K_r such that d(a,b) is minimal.
   --In space E, can draw vector f' from a to b.
 
 
-  -- f' is norm to hyperplane separating A,B. Use this to define hyperplane with f = ⟨f', _ ⟩ 
+  -- f' is norm to hyperplane separating A,B. Use this to define hyperplane with f = ⟨f', _ ⟩
   -- hyperplane P = f x = c, x ∈ E. Choose c by middle line segment between a,b.
 
 
