@@ -545,8 +545,9 @@ theorem HyperplaneSeparation  (A B : Set E) (hA : Convex ℝ A)(hB : Convex ℝ 
     use (dist a b)
     use b
     constructor
-    . dsimp [K_r]
-      sorry
+    . dsimp [K]
+      apply Metric.infDist_le_dist_of_mem
+      exact h_aA
     . exact h_bB
   sorry
 
