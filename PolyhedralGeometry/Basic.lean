@@ -480,13 +480,36 @@ theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_au
       exact this
   rw [h'] at h_b_combo_eq_0 h_jt
   clear h_t_sub_range h_b_comp h' t a₀_not_zero
-  wlog h' : b j > 0 generalizing b
+  wlog b_j_pos : b j > 0 generalizing b
   . let b' := -b
     apply this b'
-    . sorry
-    . sorry
-    . sorry
+    . by_contra b'_is_zero
+      have neg_b'_is_zero : -b' j = 0 := by linarith
+      unfold b' at neg_b'_is_zero; simp at neg_b'_is_zero
+      exact h_j_ne_0 neg_b'_is_zero
+    . unfold b'
+      simp [h_b_combo_eq_0]
+    . unfold b'
+      simp
+      simp at b_j_pos
+      exact lt_of_le_of_ne b_j_pos h_j_ne_0
   clear h_j_ne_0
+  let ratios : Finset ℝ := (Finset.range (N + 1)).image (λ i => a i / b i)
+  let ratios_non_neg : Finset ℝ := ratios.filter (λ r => r ≥ 0)
+  have : ratios_non_neg.Nonempty := by
+    unfold ratios_non_neg
+    unfold ratios
+    have a_j : a j ≥ 0 := by
+      sorry
+      #check h_av j
+  have β : ℝ := Finset.min' ratios sorry
+  replace h_b_combo_eq_0 : ∑ i ∈ range (N + 1),  (β * b i) • v i = 0 := by
+    sorry
+  rw [← sub_zero (∑ i ∈ range (N + 1), a i • v i)] at h_x_combo
+  rw [← h_b_combo_eq_0] at h_x_combo
+  have x_plus_zero : x = ∑ i ∈ range (N + 1), ((a i - β * b i) • v i) := by
+    sorry
+  
   sorry
 
 --figure out how closure operators work (to define conicalHull like mathlib's convexHull)
