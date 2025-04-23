@@ -494,7 +494,7 @@ theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_au
 -- 𝕜 is the underlying scalar field (e.g., ℝ or ℚ), assumed to be an ordered ring.
 --variable {𝕜 : Type*} [OrderedRing 𝕜]
 
---Seems like this migh just be (`exists_closed_hyperplane_separating`) in Mathlib 
+--Seems like this migh just be (`exists_closed_hyperplane_separating`) in Mathlib
 --Requirements: both A,B convex, at least one compact, A,B disjoint, Normed Vector Space V.
 --So theorem HyperPlaneSeparation is just apply exists_closed_hyperplane_separating
 
@@ -509,7 +509,7 @@ variable {E : Type*} [AddCommGroup E] [Module ℝ E][TopologicalSpace E][PseudoM
 -- A and B are the convex sets we want to separate.
 
 open Bornology
--- The goal: Prove there exists a continuous linear functional `f` and a scalar `c` 
+-- The goal: Prove there exists a continuous linear functional `f` and a scalar `c`
 -- such that `f` separates A and B (i.e., `f(a) ≤ c ≤ f(b)` for all `a ∈ A`, `b ∈ B`).
 
 --theorem Metric.isCompact_iff_isClosed_bounded {α : Type u} [PseudoMetricSpace α] {s : Set α} [T2Space α] [ProperSpace α] :
@@ -522,19 +522,20 @@ theorem HyperplaneSeparation  (A B : Set E) (hA : Convex ℝ A)(hB : Convex ℝ 
     use (dist a b)
     use b
     constructor
-    . dsimp [K_r]
-      sorry
+    . dsimp [K]
+      apply Metric.infDist_le_dist_of_mem
+      exact h_aA
     . exact h_bB
   sorry
 
-  --WLOG, let A Construct a Set K_r compact around A, defined as all points within r of A, the compact 
+  --WLOG, let A Construct a Set K_r compact around A, defined as all points within r of A, the compact
   --set within the relation. Let r such that K_r ∩ B ≠ ∅ ∧ K_r ∩ A = A
 
-  --K_r ∩ B ∪ A is compact (show) implies existence of a∈ A, b∈ B ∩ K_r such that d(a,b) is minimal. 
+  --K_r ∩ B ∪ A is compact (show) implies existence of a∈ A, b∈ B ∩ K_r such that d(a,b) is minimal.
   --In space E, can draw vector f' from a to b.
 
 
-  -- f' is norm to hyperplane separating A,B. Use this to define hyperplane with f = ⟨f', _ ⟩ 
+  -- f' is norm to hyperplane separating A,B. Use this to define hyperplane with f = ⟨f', _ ⟩
   -- hyperplane P = f x = c, x ∈ E. Choose c by middle line segment between a,b.
 
 
