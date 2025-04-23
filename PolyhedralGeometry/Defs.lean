@@ -72,3 +72,4 @@ def conicalHull' (s : Set V) : Set V :=
 --figure out how closure operators work (to define conicalHull like mathlib's convexHull)
 
 --make alt defs of polyhedron and polytope in terms of convex hulls
+

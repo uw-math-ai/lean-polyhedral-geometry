@@ -442,7 +442,7 @@ theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_au
 -- 𝕜 is the underlying scalar field (e.g., ℝ or ℚ), assumed to be an ordered ring.
 variable {𝕜 : Type*} [OrderedRing 𝕜]
 
---Seems like this migh just be (`exists_closed_hyperplane_separating`) in Mathlib 
+--Seems like this migh just be (`exists_closed_hyperplane_separating`) in Mathlib
 --Requirements: both A,B convex, at least one compact, A,B disjoint, Normed Vector Space V.
 --So theorem HyperPlaneSeparation is just apply exists_closed_hyperplane_separating
 
@@ -457,38 +457,67 @@ variable {E : Type*} [AddCommGroup E] [Module ℝ E][TopologicalSpace E][PseudoM
 -- A and B are the convex sets we want to separate.
 
 open Bornology
--- The goal: Prove there exists a continuous linear functional `f` and a scalar `c` 
+-- The goal: Prove there exists a continuous linear functional `f` and a scalar `c`
 -- such that `f` separates A and B (i.e., `f(a) ≤ c ≤ f(b)` for all `a ∈ A`, `b ∈ B`).
 
 #print Set.Nonempty
+#check Metric.infDist
+#check dist_nonneg
+#check Metric.continuous_infDist_pt
+
 
 --theorem Metric.isCompact_iff_isClosed_bounded {α : Type u} [PseudoMetricSpace α] {s : Set α} [T2Space α] [ProperSpace α] :
 --IsCompact s ↔ IsClosed s ∧ Bornology.IsBounded s
-theorem HyperplaneSeparation  (A B : Set E) (hA : Convex ℝ A)(hB : Convex ℝ B)  (hB_closed : IsClosed B) (hNempty : A.Nonempty ∧ B.Nonempty) (hA_Bounded: IsBounded A) (hAB : Disjoint A B) : ∃ (f : E →L[ℝ] ℝ) (c : ℝ), (∀ a ∈ A, f a ≤ c) ∧ (∀ b ∈ B, c ≤ f b) := by
-  let K_r (r : ℝ) : Set E := { x : E | Metric.infDist x A ≤ r}
-  have : ∃ (r : ℝ), (K_r r ∩ B).Nonempty := by
-    rcases hNempty.left with ⟨a, h_aA⟩
-    rcases hNempty.right with ⟨b, h_bB⟩
-    use (dist a b)
-    use b
-    constructor
-    . dsimp [K_r]
-      sorry
-    . exact h_bB
-  sorry
 
-  --WLOG, let A Construct a Set K_r compact around A, defined as all points within r of A, the compact 
+--gonna have to add Metric.hausdorffDist_nonneg for latest goal
+theorem HyperplaneSeparation  (A B : Set E) (hA : Convex ℝ A)(hB : Convex ℝ B)  (hclosed: IsClosed A ∧ IsClosed B ) (hNempty : A.Nonempty ∧ B.Nonempty) (hA_Bounded: IsBounded A) (hAB : Disjoint A B) : ∃ (f : E →L[ℝ] ℝ) (c : ℝ), (∀ a ∈ A, f a ≤ c) ∧ (∀ b ∈ B, c ≤ f b) := by
+  rcases hNempty.left with ⟨a, h_aA⟩
+  rcases hNempty.right with ⟨b, h_bB⟩
+  let K (r : ℝ) (hr: r ≥ 0): Set E := { x : E | Metric.infDist x A ≤ r}
+  have BcapK : ∃ (r : ℝ)(hr: r≥ 0), ((K r hr) ∩ B).Nonempty := by
+    use (dist b a)
+    simp[dist_nonneg] 
+    use b 
+    constructor
+    . dsimp [K]
+      apply Metric.infDist_le_dist_of_mem
+      exact h_aA
+    . exact h_bB
+  have Kclosed (r: ℝ)(hr : r ≥ 0): IsClosed (K r hr) := by
+    have h_continuous : Continuous (fun x ↦ Metric.infDist x A) := by
+      --exact Metric.continuous_infDist_pt A
+      sorry
+    have h_closed_Iic : IsClosed (Set.Iic r) := isClosed_Iic
+    exact IsClosed.preimage h_continuous h_closed_Iic
+  have Kbounded  (r: ℝ)(hr: r ≥ 0): IsBounded (K r hr) := by
+    sorry
+  have Kcompact (r : ℝ )(hr : r ≥ 0): IsCompact (K r hr) := by
+    rw[Metric.isCompact_iff_isClosed_bounded] 
+
+    sorry
+  have Knempty (r : ℝ)(hr : 0 ≤ r): (K r hr).Nonempty := by
+    use a
+    dsimp [K]
+    rw[Metric.infDist_zero_of_mem]
+    exact hr
+    exact h_aA
+  have closedInter (r: ℝ){hr: r ≥ 0} : IsClosed ((K r hr) ∩ B):= by
+    exact IsClosed.inter (Kclosed r hr) (hclosed.2)
+  let distBtoA (r: ℝ)(hr: r ≥ 0):= Set.restrict ((K r hr) ∩ B) (fun b => Metric.infDist b A)
+  --have
+  rcases IsCompact.exists_isMinOn (Kcompact ) (Knempty) (distBtoA)
+    sorry
+
+  --WLOG, let A Construct a Set K_r compact around A, defined as all points within r of A, the compact
   --set within the relation. Let r such that K_r ∩ B ≠ ∅ ∧ K_r ∩ A = A
 
-  --K_r ∩ B ∪ A is compact (show) implies existence of a∈ A, b∈ B ∩ K_r such that d(a,b) is minimal. 
+  --K_r ∩ B ∪ A is compact (show) implies existence of a∈ A, b∈ B ∩ K_r such that d(a,b) is minimal.
   --In space E, can draw vector f' from a to b.
 
 
-  -- f' is norm to hyperplane separating A,B. Use this to define hyperplane with f = ⟨f', _ ⟩ 
+  -- f' is norm to hyperplane separating A,B. Use this to define hyperplane with f = ⟨f', _ ⟩
   -- hyperplane P = f x = c, x ∈ E. Choose c by middle line segment between a,b.
 
-
-  -- 
 
 
 
