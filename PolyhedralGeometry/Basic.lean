@@ -406,8 +406,7 @@ theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_au
   apply ih
   by_cases coefficents_all_zero : ∀ i ∈ (range (N + 1)), a i = 0
   · unfold isConicalCombo_aux'
-    · use a
-      use v
+    · use a, v
       constructor
       · intro i i_lt_N
         have i_in_range : i ∈ range (N + 1) := by
@@ -482,16 +481,10 @@ theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_au
   clear h_t_sub_range h_b_comp h' t a₀_not_zero
   wlog b_j_pos : b j > 0 generalizing b
   . let b' := -b
-    apply this b'
-    . by_contra b'_is_zero
-      have neg_b'_is_zero : -b' j = 0 := by linarith
-      unfold b' at neg_b'_is_zero; simp at neg_b'_is_zero
-      exact h_j_ne_0 neg_b'_is_zero
-    . unfold b'
-      simp [h_b_combo_eq_0]
-    . unfold b'
-      simp
-      simp at b_j_pos
+    apply this b' <;> simp [b']
+    . assumption
+    . simp [h_b_combo_eq_0]
+    . simp at b_j_pos
       exact lt_of_le_of_ne b_j_pos h_j_ne_0
   clear h_j_ne_0
   let ratios : Finset ℝ := (Finset.range (N + 1)).image (λ i => a i / b i)
@@ -500,16 +493,17 @@ theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_au
     unfold ratios_non_neg
     unfold ratios
     have a_j : a j ≥ 0 := by
-      sorry
       #check h_av j
+      sorry
+    sorry
   have β : ℝ := Finset.min' ratios sorry
   replace h_b_combo_eq_0 : ∑ i ∈ range (N + 1),  (β * b i) • v i = 0 := by
     sorry
   rw [← sub_zero (∑ i ∈ range (N + 1), a i • v i)] at h_x_combo
   rw [← h_b_combo_eq_0] at h_x_combo
   have x_plus_zero : x = ∑ i ∈ range (N + 1), ((a i - β * b i) • v i) := by
-    sorry
-  
+    simp [sub_smul, Finset.sum_sub_distrib]
+    exact h_x_combo
   sorry
 
 --figure out how closure operators work (to define conicalHull like mathlib's convexHull)
