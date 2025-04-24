@@ -11,6 +11,7 @@ import Mathlib.LinearAlgebra.Dimension.Basic
 --import Mathlib.LinearAlgebra.Dual
 --import Mathlib.Topology.Defs.Basic
 
+section
 variable {V: Type*} [AddCommGroup V] [Module ℝ V]
 
 lemma halfspace_convex : ∀ (s : Set V), Halfspace s → Convex ℝ s := by
@@ -107,7 +108,7 @@ theorem min_elt (s : Set ℕ) (h_s_nonempty : s.Nonempty) : ∃ n ∈ s, ∀ m <
 -- noncomputable def Finset.toIndex {α : Type*} (s : Finset α) : ι → α := by
 --   let s' := s.toList
 
-variable [FiniteDimensional ℝ V]
+--variable [FiniteDimensional ℝ V]
 
 -- open Classical
 --theorem 1.3.2(b)
@@ -391,7 +392,6 @@ lemma isconicalCombo_aux_le' (s : Set V) (x : V) : m ≤ n → isConicalCombo_au
     exact hi
 
 variable [FiniteDimensional ℝ V]
-
 open Finset Module
 
 theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_aux' s x (finrank ℝ V) := by
@@ -506,6 +506,8 @@ theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_au
     exact h_x_combo
   sorry
 
+end
+
 --figure out how closure operators work (to define conicalHull like mathlib's convexHull)
 
 -- 𝕜 is the underlying scalar field (e.g., ℝ or ℚ), assumed to be an ordered ring.
@@ -520,35 +522,30 @@ theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_au
 -- 2. A module structure over 𝕜 (generalizing vector spaces to arbitrary rings).
 -- 3. A topology (`TopologicalSpace`) compatible with addition (`TopologicalAddGroup`).
 -- 4. Continuous scalar multiplication (`ContinuousConstSMul`).
-variable {E : Type*} [AddCommGroup E] [Module ℝ E] [PseudoMetricSpace E] [T2Space E] [ProperSpace E]
 
+section
+variable {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [FiniteDimensional ℝ V]
+open Bornology
 
 #check PseudoMetricSpace
 -- A and B are the convex sets we want to separate.
 
-
-open Bornology
 -- The goal: Prove there exists a continuous linear functional `f` and a scalar `c`
 -- such that `f` separates A and B (i.e., `f(a) ≤ c ≤ f(b)` for all `a ∈ A`, `b ∈ B`).
-
 
 #print Set.Nonempty
 #check Metric.infDist
 #check dist_nonneg
 #check Metric.continuous_infDist_pt
 
-
-
-
 --theorem Metric.isCompact_iff_isClosed_bounded {α : Type u} [PseudoMetricSpace α] {s : Set α} [T2Space α] [ProperSpace α] :
 --IsCompact s ↔ IsClosed s ∧ Bornology.IsBounded s
 
-
 --gonna have to add Metric.hausdorffDist_nonneg for latest goal
-theorem HyperplaneSeparation  (A B : Set E) (hA : Convex ℝ A)(hB : Convex ℝ B)  (hclosed: IsClosed A ∧ IsClosed B ) (hNempty : A.Nonempty ∧ B.Nonempty) (hA_Bounded: IsBounded A) (hAB : Disjoint A B) : ∃ (f : E →L[ℝ] ℝ) (c : ℝ), (∀ a ∈ A, f a ≤ c) ∧ (∀ b ∈ B, c ≤ f b) := by
+theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex ℝ B)  (hclosed: IsClosed A ∧ IsClosed B ) (hNempty : A.Nonempty ∧ B.Nonempty) (hA_Bounded: IsBounded A) (hAB : Disjoint A B) : ∃ (f : V →L[ℝ] ℝ) (c : ℝ), (∀ a ∈ A, f a ≤ c) ∧ (∀ b ∈ B, c ≤ f b) := by
  rcases hNempty.left with ⟨a, h_aA⟩
  rcases hNempty.right with ⟨b, h_bB⟩
- let K (r : ℝ) : Set E := { x : E | Metric.infDist x A ≤ r}
+ let K (r : ℝ) : Set V := { x : V | Metric.infDist x A ≤ r}
  have BcapK : ∃ r ≥ 0, ((K r) ∩ B).Nonempty := by
    use (dist b a)
    simp[dist_nonneg]
@@ -587,9 +584,9 @@ theorem HyperplaneSeparation  (A B : Set E) (hA : Convex ℝ A)(hB : Convex ℝ 
  --rcases this
  sorry
 
-
  --WLOG, let A Construct a Set K_r compact around A, defined as all points within r of A, the compact
  --set within the relation. Let r such that K_r ∩ B ≠ ∅ ∧ K_r ∩ A = A
 
-
  --K_r ∩ B ∪ A is compact (show) implies existence of a∈ A, b∈ B ∩ K_r such that d(a,b) is minimal.
+
+end
