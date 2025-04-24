@@ -520,7 +520,7 @@ theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_au
 -- 2. A module structure over 𝕜 (generalizing vector spaces to arbitrary rings).
 -- 3. A topology (`TopologicalSpace`) compatible with addition (`TopologicalAddGroup`).
 -- 4. Continuous scalar multiplication (`ContinuousConstSMul`).
-variable {E : Type*} [AddCommGroup E] [Module ℝ E][TopologicalSpace E][PseudoMetricSpace E]
+variable {E : Type*} [AddCommGroup E] [Module ℝ E] [PseudoMetricSpace E] [T2Space E] [ProperSpace E]
 
 
 #check PseudoMetricSpace
@@ -548,8 +548,8 @@ open Bornology
 theorem HyperplaneSeparation  (A B : Set E) (hA : Convex ℝ A)(hB : Convex ℝ B)  (hclosed: IsClosed A ∧ IsClosed B ) (hNempty : A.Nonempty ∧ B.Nonempty) (hA_Bounded: IsBounded A) (hAB : Disjoint A B) : ∃ (f : E →L[ℝ] ℝ) (c : ℝ), (∀ a ∈ A, f a ≤ c) ∧ (∀ b ∈ B, c ≤ f b) := by
  rcases hNempty.left with ⟨a, h_aA⟩
  rcases hNempty.right with ⟨b, h_bB⟩
- let K (r : ℝ) (hr: r ≥ 0): Set E := { x : E | Metric.infDist x A ≤ r}
- have BcapK : ∃ (r : ℝ)(hr: r≥ 0), ((K r hr) ∩ B).Nonempty := by
+ let K (r : ℝ) : Set E := { x : E | Metric.infDist x A ≤ r}
+ have BcapK : ∃ r ≥ 0, ((K r) ∩ B).Nonempty := by
    use (dist b a)
    simp[dist_nonneg]
    use b
@@ -558,31 +558,34 @@ theorem HyperplaneSeparation  (A B : Set E) (hA : Convex ℝ A)(hB : Convex ℝ 
      apply Metric.infDist_le_dist_of_mem
      exact h_aA
    . exact h_bB
- have Kclosed (r: ℝ)(hr : r ≥ 0): IsClosed (K r hr) := by
-   have h_continuous : Continuous (fun x ↦ Metric.infDist x A) := by
-     --exact Metric.continuous_infDist_pt A
-     sorry
+ have h_continuous : Continuous (fun x ↦ Metric.infDist x A) := by
+   exact Metric.continuous_infDist_pt A
+ have Kclosed (r: ℝ) (hr : r ≥ 0) : IsClosed (K r) := by
    have h_closed_Iic : IsClosed (Set.Iic r) := isClosed_Iic
    exact IsClosed.preimage h_continuous h_closed_Iic
- have Kbounded  (r: ℝ)(hr: r ≥ 0): IsBounded (K r hr) := by
+ have Kbounded (r: ℝ) (hr: r ≥ 0) : IsBounded (K r) := by
+   --Metric.isBounded_iff_subset_ball
    sorry
- have Kcompact (r : ℝ )(hr : r ≥ 0): IsCompact (K r hr) := by
+ have Kcompact (r : ℝ ) (hr : r ≥ 0) : IsCompact (K r) := by
    rw [Metric.isCompact_iff_isClosed_bounded]
-
-
    sorry
- have Knempty (r : ℝ)(hr : 0 ≤ r): (K r hr).Nonempty := by
+ have Knempty (r : ℝ) (hr : r ≥ 0) : (K r).Nonempty := by
    use a
    dsimp [K]
    rw[Metric.infDist_zero_of_mem]
    exact hr
    exact h_aA
- have closedInter (r: ℝ){hr: r ≥ 0} : IsClosed ((K r hr) ∩ B):= by
+ have closedInter (r: ℝ) {hr: r ≥ 0} : IsClosed ((K r) ∩ B) := by
    exact IsClosed.inter (Kclosed r hr) (hclosed.2)
- let distBtoA (r: ℝ)(hr: r ≥ 0):= Set.restrict ((K r hr) ∩ B) (fun b => Metric.infDist b A)
- --have
- rcases IsCompact.exists_isMinOn (Kcompact ) (Knempty) (distBtoA)
-   sorry
+ rcases BcapK with ⟨r₀, h_r₀_ge_0, h_inter_nonempty⟩
+ let distBtoA := Set.image (fun b => Metric.infDist b A) ((K r₀) ∩ B)
+ --maybe this instead
+ --let distBtoA := (fun b => Metric.infDist b A)'' B
+ --show that (K r) ∩ B is bounded, therefore compact
+ have h_compact : IsCompact (K r₀ ∩ B) := by sorry
+ --have := IsCompact.exists_isMinOn sorry sorry h_continuous
+ --rcases this
+ sorry
 
 
  --WLOG, let A Construct a Set K_r compact around A, defined as all points within r of A, the compact
