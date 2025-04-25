@@ -1,4 +1,5 @@
 import PolyhedralGeometry.Defs
+import PolyhedralGeometry.Misc
 import Mathlib.Data.Real.Basic
 import Mathlib.Analysis.Convex.Basic
 import Mathlib.Analysis.Convex.Cone.Basic
@@ -276,18 +277,19 @@ lemma sum_bijon {α β γ : Type*} [AddCommMonoid γ] {t : Finset α} {s : Finse
 open Classical
 
 lemma Finset.sum_enlarge {ι α : Type*} [AddCommMonoid α] {t s : Finset ι} {f : ι → α} (h_ts : t ⊆ s) (h_f : ∀ i ∉ t, f i = 0) : ∑ i ∈ t, f i = ∑ i ∈ s, f i := by
-  induction' s using Finset.strongInductionOn with s ih
-  by_cases h : t = s
-  . rw [h]
-  have : t ⊂ s := ssubset_of_subset_of_ne h_ts h
-  rcases (Finset.ssubset_iff_of_subset h_ts).mp this with ⟨x, h_xs, h_xt⟩
-  let s' := s.erase x
-  have h_ts' : t ⊆ s' := by
-    refine Finset.subset_erase.mpr ?_
-    constructor <;> assumption
-  rw [ih s' (Finset.erase_ssubset h_xs) h_ts']
-  apply Finset.sum_erase
-  exact h_f x h_xt
+  refine Finset.induction_on_nonempty_base
+    (λ s ↦ ∑ i ∈ t, f i = ∑ i ∈ s, f i) t rfl ?_ s h_ts
+  intro t' a h_t_subset_t' ih
+  rw [ih]
+  by_cases h_at : a ∈ t
+  . have : a ∈ t' := h_t_subset_t' h_at
+    have := Finset.insert_eq_of_mem this
+    rw [this]
+  by_cases h_at' : a ∈ t'
+  . simp [h_at']
+  rw [Finset.sum_insert h_at']
+  have := h_f a h_at
+  rw [this, zero_add]
 
 end
 
