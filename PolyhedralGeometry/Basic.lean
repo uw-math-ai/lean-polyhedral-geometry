@@ -7,6 +7,7 @@ import Mathlib.LinearAlgebra.FiniteDimensional.Defs
 import Mathlib.LinearAlgebra.LinearIndependent.Defs
 import Mathlib.Topology.MetricSpace.HausdorffDistance
 import Mathlib.LinearAlgebra.Dimension.Basic
+import Mathlib.Analysis.InnerProductSpace.Basic
 --import Mathlib.Topology.MetricSpace.Defs
 --import Mathlib.LinearAlgebra.Dual
 --import Mathlib.Topology.Defs.Basic
@@ -513,7 +514,7 @@ end
 -- 𝕜 is the underlying scalar field (e.g., ℝ or ℚ), assumed to be an ordered ring.
 --variable {𝕜 : Type*} [OrderedRing 𝕜]
 
---Seems like this migh just be (`exists_closed_hyperplane_separating`) in Mathlib 
+--Seems like this migh just be (`exists_closed_hyperplane_separating`) in Mathlib
 --Requirements: both A,B convex, at least one compact, A,B disjoint, Normed Vector Space V.
 --So theorem HyperPlaneSeparation is just apply exists_closed_hyperplane_separating
 
@@ -531,19 +532,21 @@ open Bornology
 -- A and B are the convex sets we want to separate.
 
 open Bornology
--- The goal: Prove there exists a continuous linear functional `f` and a scalar `c` 
+
+-- The goal: Prove there exists a continuous linear functional `f` and a scalar `c`
 -- such that `f` separates A and B (i.e., `f(a) ≤ c ≤ f(b)` for all `a ∈ A`, `b ∈ B`).
 
 #print Set.Nonempty
 #check Metric.infDist
 #check dist_nonneg
 #check Metric.continuous_infDist_pt
-
+#check Convex
 --theorem Metric.isCompact_iff_isClosed_bounded {α : Type u} [PseudoMetricSpace α] {s : Set α} [T2Space α] [ProperSpace α] :
 --IsCompact s ↔ IsClosed s ∧ Bornology.IsBounded s
 
 --gonna have to add Metric.hausdorffDist_nonneg for latest goal
-theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex ℝ B)  (hclosed: IsClosed A ∧ IsClosed B ) (hNempty : A.Nonempty ∧ B.Nonempty) (hA_Bounded: IsBounded A) (hAB : Disjoint A B) : ∃ (f : V →L[ℝ] ℝ) (c : ℝ), (∀ a ∈ A, f a ≤ c) ∧ (∀ b ∈ B, c ≤ f b) := by
+--changed f : V → L[ℝ] ℝ to f: V → ℝ. Not sure whether we want to cover non-finite-dimensional cases?
+theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex ℝ B)  (hclosed: IsClosed A ∧ IsClosed B ) (hNempty : A.Nonempty ∧ B.Nonempty) (hA_Bounded: IsBounded A) (hAB : Disjoint A B) : ∃ (f : V → ℝ) (c : ℝ), (∀ a ∈ A, f a ≤ c) ∧ (∀ b ∈ B, c ≤ f b) := by
   rcases hNempty.left with ⟨a, h_aA⟩
   rcases hNempty.right with ⟨b, h_bB⟩
   let K (r : ℝ) : Set V := { x : V | Metric.infDist x A ≤ r}
@@ -562,11 +565,27 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex ℝ
     have h_closed_Iic : IsClosed (Set.Iic r) := isClosed_Iic
     exact IsClosed.preimage h_continuous h_closed_Iic
   have Kbounded (r: ℝ) (hr: r ≥ 0) : IsBounded (K r) := by
-    --Metric.isBounded_iff_subset_ball
-    sorry
+
+    have subset: K r ⊆ Metric.ball a (Metric.diam A + r+1) := by
+      dsimp[K,Metric.ball]
+      simp
+      intro b
+      have ex_a' : ∃ a', a' ∈ A ∧ Metric.infDist b A  = dist b a' := by
+        apply IsClosed.exists_infDist_eq_dist hclosed.1 hNempty.1 b
+      obtain ⟨a', ha', hdist⟩ := ex_a'
+      rw[hdist]
+      intro hba'
+      calc
+        dist b a  ≤  dist b a' + dist a' a:= by apply dist_triangle
+        _ ≤ r +  dist a' a:= by simp[hba']
+        _ ≤ r +  Metric.diam A:= by linarith[Metric.dist_le_diam_of_mem hA_Bounded ha' h_aA]
+      linarith
+    rw [Metric.isBounded_iff_subset_ball a]
+    use (Metric.diam A + r+1)
+
   have Kcompact (r : ℝ ) (hr : r ≥ 0) : IsCompact (K r) := by
     rw [Metric.isCompact_iff_isClosed_bounded]
-    sorry
+    exact ⟨Kclosed r hr, Kbounded r hr⟩
   have Knempty (r : ℝ) (hr : r ≥ 0) : (K r).Nonempty := by
     use a
     dsimp [K]
@@ -577,20 +596,104 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex ℝ
     exact IsClosed.inter (Kclosed r hr) (hclosed.2)
   rcases BcapK with ⟨r₀, h_r₀_ge_0, h_inter_nonempty⟩
   let distBtoA := Set.image (fun b => Metric.infDist b A) ((K r₀) ∩ B)
+
   --maybe this instead
   --let distBtoA := (fun b => Metric.infDist b A)'' B
   --show that (K r) ∩ B is bounded, therefore compact
-  have h_compact : IsCompact (K r₀ ∩ B) := by sorry
-  --have := IsCompact.exists_isMinOn sorry sorry h_continuous
-  --rcases this
+
+  have h_compact : IsCompact (K r₀ ∩ B) := by
+    rw[Metric.isCompact_iff_isClosed_bounded]
+    simp[IsClosed.inter (Kclosed r₀ h_r₀_ge_0) (hclosed.2)]
+    have h: (K r₀ ∩ B) ⊆ K r₀ := by exact Set.inter_subset_left
+    exact Bornology.IsBounded.subset (Kbounded r₀ h_r₀_ge_0) h
+  have := IsCompact.exists_isMinOn h_compact h_inter_nonempty (Continuous.continuousOn h_continuous)
+  rcases this with ⟨b', hb'⟩
+  have min_a : ∃ a, a ∈ A ∧ Metric.infDist b' A  = dist b' a := by
+    apply IsClosed.exists_infDist_eq_dist hclosed.1 hNempty.1 b'
+  rcases min_a with ⟨a', ha'⟩
+  let f: V → ℝ  := fun x => inner (b'-a') x
+  have a_not_b: a' ≠ b' := by
+    intro h
+    have h1: b' ∈ B := by exact Set.mem_of_mem_inter_right hb'.1
+    have h2: a' ∈ B := by sorry --dont understand why this isnt simply a rw
+    have h_inter: a' ∈ A ∩ B := by exact Set.mem_inter ha'.1 h2
+    rw[Set.disjoint_iff_inter_eq_empty] at hAB
+    have contra: A ∩ B ≠ ∅  := by
+      simp[Set.nonempty_of_mem h_inter, ← Set.nonempty_iff_ne_empty]
+    contradiction
+
+  have h_prods_ineq: f b' > f a' := by
+    have h_greater_zero: 0 < ‖b'-a'‖^2:= by
+      have h1: 0 ≤   ‖b'-a'‖^2 := by simp[sq_nonneg]
+      have h2 :  ‖b' - a'‖ ≠ 0 := by
+        intro h
+        rw[norm_eq_zero] at h
+        rw[sub_eq_zero] at h
+        symm at h
+        contradiction
+      simp[h1, h2, sq_pos_iff]
+    have intermediate_step: 0< f b' - f a' := by
+      calc
+        0 <   ‖b'-a'‖^2:= by exact h_greater_zero
+        _ = (inner b' b') - 2*(inner b' a') + (inner a' a') := by simp [norm_sub_sq_real, real_inner_self_eq_norm_sq]
+        _ = (inner b' b') - (inner b' a')- ((inner b' a')- (inner a' a')) := by linarith
+        _ = (inner b' b') - (inner b' a')- inner (b'-a') a' := by rw [← inner_sub_left]
+        _ = (inner b' b') - (inner a' b')- inner (b'-a') a' := by simp[real_inner_comm]
+        _ = inner (b' - a') b'- inner (b'-a') a' := by rw [← inner_sub_left]
+        _ = f b' - f a' := by simp[f]
+    linarith
+  have minf : ∀ b₀ ∈ B, f b' ≥ f b₀ := by
+    intro b₀
+    intro hb₀
+    have lin_dep (γ : ℝ):  (0 ≤ γ)∧ (γ ≤ 1) → γ•b' + (1-γ)•b₀  ∈ B := by
+      have star : StarConvex ℝ b' B := by
+        exact Convex.starConvex hB (Set.mem_of_mem_inter_right hb'.1)
+      intro hyp
+      apply starConvex_iff_segment_subset.1 (star)
+      use hb₀
+      unfold segment
+      use γ, (1-γ)
+      simp[hyp.1, hyp.2]
+    have ineq (γ : ℝ) (hγ: γ ≥ 0) (hγ': γ ≤ 1): ‖b'-a'‖^2 + γ^2*‖b'-a'‖^2 + 2*γ * inner (b'-a') (b₀ - b') ≥ 0 := by
+      calc
+        0 ≤ ‖γ•b' + (1-γ)•b₀-a'‖^2  := by simp[norm_nonneg]
+        _ = ‖γ•b' + b' - b' + (1-γ)•b₀-a'‖^2 := by simp
+        _ = ‖b'-a+γ•b' + (1-γ)•b₀-b'‖^2 := by sorry
+        _ = ‖b'-a'‖^2 + γ^2*‖b'-a'‖^2 + 2*γ * inner (b'-a') (b₀ - b') := by sorry
+
+
+
+
+
+
+
+    sorry
+  
+
+
+
+
+
+
+
+
+
+
+
+
   sorry
+  --#check IsCompact.exists_isMinOn
+
+  --rcases this
+
+sorry
 
  --WLOG, let A Construct a Set K_r compact around A, defined as all points within r of A, the compact
  --set within the relation. Let r such that K_r ∩ B ≠ ∅ ∧ K_r ∩ A = A
 
  --K_r ∩ B ∪ A is compact (show) implies existence of a∈ A, b∈ B ∩ K_r such that d(a,b) is minimal.
 
-  -- f' is norm to hyperplane separating A,B. Use this to define hyperplane with f = ⟨f', _ ⟩ 
+  -- f' is norm to hyperplane separating A,B. Use this to define hyperplane with f = ⟨f', _ ⟩
   -- hyperplane P = f x = c, x ∈ E. Choose c by middle line segment between a,b.
 
 end
