@@ -509,6 +509,19 @@ theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_au
 
 end
 
+section
+variable {V : Type*} [NormedAddCommGroup V] [Module ℝ V] [FiniteDimensional ℝ V]
+
+--variable {ι : Type*} [Finite ι]
+--#synth TopologicalSpace (ι →₀ ℝ)
+--lemma positive_orthant_closed {ι : Type} : IsClosed {x : ι →₀ ℝ | True} := by sorry
+--maybe easier to work with Cone(T) directly, rather than trying to work with ℝ^d
+
+--proposition 1.3.3(b)
+theorem conical_hull_closed_of_finite (s : Set V) : s.Finite → IsClosed (conicalHull' s) := by sorry
+
+end
+
 --figure out how closure operators work (to define conicalHull like mathlib's convexHull)
 
 -- 𝕜 is the underlying scalar field (e.g., ℝ or ℚ), assumed to be an ordered ring.
@@ -526,7 +539,7 @@ end
 
 section
 variable {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [FiniteDimensional ℝ V]
-open Bornology
+open Bornology RealInnerProductSpace
 
 #check PseudoMetricSpace
 -- A and B are the convex sets we want to separate.
@@ -583,7 +596,7 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex ℝ
     rw [Metric.isBounded_iff_subset_ball a]
     use (Metric.diam A + r+1)
 
-  have Kcompact (r : ℝ ) (hr : r ≥ 0) : IsCompact (K r) := by
+  have Kcompact (r : ℝ) (hr : r ≥ 0) : IsCompact (K r) := by
     rw [Metric.isCompact_iff_isClosed_bounded]
     exact ⟨Kclosed r hr, Kbounded r hr⟩
   have Knempty (r : ℝ) (hr : r ≥ 0) : (K r).Nonempty := by
@@ -596,11 +609,9 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex ℝ
     exact IsClosed.inter (Kclosed r hr) (hclosed.2)
   rcases BcapK with ⟨r₀, h_r₀_ge_0, h_inter_nonempty⟩
   let distBtoA := Set.image (fun b => Metric.infDist b A) ((K r₀) ∩ B)
-
   --maybe this instead
   --let distBtoA := (fun b => Metric.infDist b A)'' B
   --show that (K r) ∩ B is bounded, therefore compact
-
   have h_compact : IsCompact (K r₀ ∩ B) := by
     rw[Metric.isCompact_iff_isClosed_bounded]
     simp[IsClosed.inter (Kclosed r₀ h_r₀_ge_0) (hclosed.2)]
@@ -611,11 +622,13 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex ℝ
   have min_a : ∃ a, a ∈ A ∧ Metric.infDist b' A  = dist b' a := by
     apply IsClosed.exists_infDist_eq_dist hclosed.1 hNempty.1 b'
   rcases min_a with ⟨a', ha'⟩
-  let f: V → ℝ  := fun x => inner (b'-a') x
+  let f: V → ℝ  := fun x => ⟪b'-a', x⟫
   have a_not_b: a' ≠ b' := by
     intro h
     have h1: b' ∈ B := by exact Set.mem_of_mem_inter_right hb'.1
-    have h2: a' ∈ B := by sorry --dont understand why this isnt simply a rw
+    have h2: a' ∈ B := by
+      rw [h]
+      exact h1
     have h_inter: a' ∈ A ∩ B := by exact Set.mem_inter ha'.1 h2
     rw[Set.disjoint_iff_inter_eq_empty] at hAB
     have contra: A ∩ B ≠ ∅  := by
@@ -632,61 +645,32 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex ℝ
         symm at h
         contradiction
       simp[h1, h2, sq_pos_iff]
-    have intermediate_step: 0< f b' - f a' := by
+    have intermediate_step: 0 < f b' - f a' := by
       calc
-        0 <   ‖b'-a'‖^2:= by exact h_greater_zero
-        _ = (inner b' b') - 2*(inner b' a') + (inner a' a') := by simp [norm_sub_sq_real, real_inner_self_eq_norm_sq]
-        _ = (inner b' b') - (inner b' a')- ((inner b' a')- (inner a' a')) := by linarith
-        _ = (inner b' b') - (inner b' a')- inner (b'-a') a' := by rw [← inner_sub_left]
-        _ = (inner b' b') - (inner a' b')- inner (b'-a') a' := by simp[real_inner_comm]
+        0 < ‖b'-a'‖^2 := by exact h_greater_zero
+        _ = (inner b' b') - 2*(inner b' a') + (inner a' a') := by
+          simp [norm_sub_sq_real, real_inner_self_eq_norm_sq]
+        _ = (inner b' b') - (inner b' a') - ((inner b' a') - (inner a' a')) := by linarith
+        _ = (inner b' b') - (inner b' a') - inner (b'-a') a' := by rw [← inner_sub_left]
+        _ = (inner b' b') - (inner a' b') - inner (b'-a') a' := by simp[real_inner_comm]
         _ = inner (b' - a') b'- inner (b'-a') a' := by rw [← inner_sub_left]
         _ = f b' - f a' := by simp[f]
     linarith
   have minf : ∀ b₀ ∈ B, f b' ≥ f b₀ := by
-    intro b₀
-    intro hb₀
-    have lin_dep (γ : ℝ):  (0 ≤ γ)∧ (γ ≤ 1) → γ•b' + (1-γ)•b₀  ∈ B := by
-      have star : StarConvex ℝ b' B := by
-        exact Convex.starConvex hB (Set.mem_of_mem_inter_right hb'.1)
-      intro hyp
-      apply starConvex_iff_segment_subset.1 (star)
-      use hb₀
-      unfold segment
-      use γ, (1-γ)
-      simp[hyp.1, hyp.2]
-    have ineq (γ : ℝ) (hγ: γ ≥ 0) (hγ': γ ≤ 1): ‖b'-a'‖^2 + γ^2*‖b'-a'‖^2 + 2*γ * inner (b'-a') (b₀ - b') ≥ 0 := by
+    intro b₀ hb₀
+    have lin_dep (γ : ℝ) : (0 ≤ γ) ∧ (γ ≤ 1) → γ • b' + (1-γ) • b₀  ∈ B :=
+      fun ⟨h, _⟩ => hB (Set.mem_of_mem_inter_right hb'.1) hb₀ h (by linarith) (by simp)
+    have ineq (γ : ℝ) (hγ: γ ≥ 0) (hγ': γ ≤ 1): ‖b'-a'‖^2 + γ^2*‖b'-a'‖^2 + 2*γ * ⟪b'-a', b₀ - b'⟫ ≥ 0 := by
       calc
         0 ≤ ‖γ•b' + (1-γ)•b₀-a'‖^2  := by simp[norm_nonneg]
         _ = ‖γ•b' + b' - b' + (1-γ)•b₀-a'‖^2 := by simp
-        _ = ‖b'-a+γ•b' + (1-γ)•b₀-b'‖^2 := by sorry
-        _ = ‖b'-a'‖^2 + γ^2*‖b'-a'‖^2 + 2*γ * inner (b'-a') (b₀ - b') := by sorry
-
-
-
-
-
-
-
+        _ = ‖b' - a' + γ•b' + (1-γ)•b₀ - b'‖^2 := by congr 2; module
+        _ = ‖b'-a'‖^2 + γ^2*‖b'-a'‖^2 + 2*γ * ⟪b'-a', b₀ - b'⟫ := by sorry
     sorry
-  
-
-
-
-
-
-
-
-
-
-
-
-
   sorry
   --#check IsCompact.exists_isMinOn
 
   --rcases this
-
-sorry
 
  --WLOG, let A Construct a Set K_r compact around A, defined as all points within r of A, the compact
  --set within the relation. Let r such that K_r ∩ B ≠ ∅ ∧ K_r ∩ A = A
@@ -709,10 +693,6 @@ end
 
 --todo:
 
---proposition 1.3.3(b)
---theorem conical_hull_closed_of_finite : _ := by sorry
-
---theorem hyperplane_separation : _ := by sorry --use heine-borel for compactness (Metric.isCompact_iff_isClosed_bounded)
 --theorem farkas : _ := by sorry --uses lemma 1.2.2 and hyperplane_separation
 --OR, use hyperplane separation theorem already in mathlib (we only need the statement of Farkas
 
