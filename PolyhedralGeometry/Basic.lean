@@ -89,201 +89,14 @@ lemma translate_halfspace_of_cone_subset (s : Set V) (f : V →ₗ[ℝ] ℝ) (c 
     show False
     linarith
 
-def conicalCombo_cards (s : Set V) (x : V) : Set ℕ := Finset.card '' { (t : Finset V) | ∃ (a : V → ℝ), (∀ v ∈ t, 0 ≤ a v) ∧ ↑t ⊆ s ∧ x = ∑ v ∈ t, a v • v}
-
-lemma conicalCombo_cards_nonempty (s : Set V) (x : V) : x ∈ conicalHull s → (conicalCombo_cards s x).Nonempty := by
-  intro ⟨vectors,h⟩
-  use vectors.card
-  exists vectors
-
---maybe don't need this?
-theorem min_elt (s : Set ℕ) (h_s_nonempty : s.Nonempty) : ∃ n ∈ s, ∀ m < n, m ∉ s := by
-  rcases h_s_nonempty with ⟨n, h⟩
-  induction' n using Nat.strong_induction_on with n ih
-  by_cases h' : ∀ m < n, m ∉ s
-  . use n
-  . push_neg at h'
-    rcases h' with ⟨n', h₁, h₂⟩
-    exact ih n' h₁ h₂
-
--- noncomputable def Finset.toIndex {α : Type*} (s : Finset α) : ι → α := by
---   let s' := s.toList
-
---variable [FiniteDimensional ℝ V]
-
--- open Classical
---theorem 1.3.2(b)
--- theorem caratheordory (s : Set V) (x : V) (h : x ∈ conicalHull s) :
---   ∃ (t : Finset V), ↑t ⊆ s ∧ t.card ≤ Module.finrank ℝ V ∧ x ∈ conicalHull t := by
---   -- rcases h with ⟨u, a, h_a_nonneg, h_u_subset, h_x_combo⟩
---   -- rcases le_or_gt u.card (Module.finrank ℝ V) with h_u_card | h_u_card
---   -- . use u, h_u_subset, h_u_card, u, a
---   -- induction' u using Finset.induction_on with v u h_v_nin_u ih
---   -- . sorry
---   -- . sorry
---   rcases min_elt (conicalCombo_cards s x) (conicalCombo_cards_nonempty s x h) with ⟨n, h', h_minimality⟩
---   rcases h' with ⟨t, ⟨a, h_a_nonneg, h_t_subset, h_x_combo⟩, rfl⟩
---   rcases le_or_gt t.card (Module.finrank ℝ V) with h_t_card | h_t_card
---   . use t, h_t_subset, h_t_card, t, a
---   apply False.elim
---   have h_not_lin_indep : ¬(LinearIndependent ℝ (fun x => x : {x // x ∈ t} → V)) := by
---     intro h
---     have := LinearIndependent.cardinal_le_rank h
---     have := Cardinal.toNat_le_toNat this (Module.rank_lt_aleph0 ℝ V)
---     simp at this
---     linarith!
---   have := Fintype.not_linearIndependent_iff.mp h_not_lin_indep
---   rcases this with ⟨b, h_b_combo, ⟨u, h_u_t⟩, h_b_u_ne_0⟩
---   let b' : V → ℝ := fun v =>
---     if hvt : v ∈ t then b { val := v, property := hvt} else 0
---   have h_b'_u_ne_0 : b' u ≠ 0 := by simp [b']; use h_u_t
---   have h_b'_combo : ∑ v ∈ t, b' v • v = 0 := by
---     simp [b']
---     rw [←h_b_combo, Finset.sum_dite_of_true]
---     simp
---   wlog h' : b' u > 0 generalizing b
+-- theorem min_elt (s : Set ℕ) (h_s_nonempty : s.Nonempty) : ∃ n ∈ s, ∀ m < n, m ∉ s := by
+--   rcases h_s_nonempty with ⟨n, h⟩
+--   induction' n using Nat.strong_induction_on with n ih
+--   by_cases h' : ∀ m < n, m ∉ s
+--   . use n
 --   . push_neg at h'
---     by_cases h'' : b' u = 0
---     . contradiction
---     have h' : b' u < 0 := by
---       apply lt_of_le_of_ne <;> assumption
---     apply this (fun x => - b x)
---     . simpa
---     . simp [h_b_u_ne_0]
---     . simp
---       use h_u_t
---     . suffices ∑ v ∈ t, (if hvt : v ∈ t then -b ⟨v, hvt⟩ • v else 0) = 0 by
---         rw [←this]; congr; simp
---       rw [Finset.sum_dite_of_true (by tauto : ∀ v ∈ t, v ∈ t)]
---       simpa
---     . simp
---       rw [dif_pos h_u_t, lt_neg_iff_add_neg]
---       simp [b', dif_pos h_u_t] at h'
---       linarith
-
---   show False
---   let ratio : V → ℝ := fun i => (b' i) / (a i)
---   have h_t_nonempty : {x | x ∈ t}.Nonempty := by
---     apply Set.nonempty_of_ncard_ne_zero
---     have : t.card > 0 := by linarith
---     show (↑t : Set V).ncard ≠ 0
---     rw [Set.ncard_coe_Finset]
---     linarith
---   have := Set.exists_max_image {x | x ∈ t} ratio (Set.finite_mem_finset t) h_t_nonempty
---   rcases this with ⟨u', h_u'_t, h_u'_max⟩
---   simp [ratio] at h_u'_max
---   let α := a u' / b' u'
---   have h_b'_u'_ne_0 : b' u' ≠ 0 := by sorry
---   have h₁ : (a - α • b') u' = 0 := by sorry
---   have h₂ : ∀ v ∈ t, (a - α • b') v ≥ 0 := by sorry
---   have h_x_combo' : x = ∑ v ∈ t, (a - α • b') v • v := by sorry
---   have : t.card - 1 ∈ conicalCombo_cards s x := by
---     have h' : {x | x ∈ t ∧ x ≠ u'} ⊆ t := by sorry
---     have : {x | x ∈ t ∧ x ≠ u'}.Finite := Set.Finite.subset (by sorry : (t.toSet).Finite) h'
---     let t' : Finset V := Set.Finite.toFinset this
---     use t'
---     have h_t'_ss_t : t' ⊆ t := by simp [t']; exact h'
---     have t'_def : t = {u'} ∪ t' := by
---       ext v
---       constructor
---       . intro _
---         by_cases h' : v = u'
---         . rw [h']
---           apply Finset.mem_union_left
---           apply Finset.mem_singleton_self
---         . apply Finset.mem_union_right
---           simp [t']
---           constructor <;> assumption
---       . intro h
---         rw [Finset.mem_union] at h
---         rcases h with h | h
---         . have : v = u' := Finset.mem_singleton.mp h
---           rw [this]
---           assumption
---         . simp [t'] at h
---           exact h.left
---     constructor
---     . use a - α • b'
---       constructor
---       . sorry
---       . constructor
---         . sorry
---         . sorry
---     . apply Nat.eq_sub_of_add_eq
---       apply Eq.symm
---       rw [t'_def]
---       calc
---         ({u'} ∪ t').card = ({u'} ∪ t').card + ({u'} ∩ t').card := by sorry
---         _ = ({u'} : Finset V).card + t'.card := by apply Finset.card_union_add_card_inter
---         _ = 1 + t'.card := by congr
---         _ = t'.card + 1 := add_comm _ _
---   have : t.card - 1 < t.card := by sorry -- this is not trivial since 0 - 1 = 0 in Nat (so linarith can't solve it without some help)
---   have := h_minimality (t.card - 1) this
---   contradiction
-
---================ alternative proof ====================
-
--- lemma reindex_conicalCombo (s : Set V) (x : V) : isConicalCombo s x ↔ ∃ n, isConicalCombo_aux s x n := by
---   constructor
---   . rintro ⟨α, t, a, v, h_a, h_v, h_x_combo⟩
---     use t.card
---     unfold isConicalCombo_aux
---     have := (Finset.equivFin t).invFun
---     set a' := a ∘ (Finset.equivFin t).invFun
---     set v' := v ∘ (Finset.equivFin t).invFun
---     use a', v'
---     repeat' constructor
---     . simp [a', h_a]
---     . simp [v', h_v]
---     . simp [a', v']
---       rw [h_x_combo]
---       refine Finset.sum_equiv (Finset.equivFin t) (fun i ↦ (by simp)) (by simp)
---   . rintro ⟨n, a, v, h_a, h_v, h_x_combo⟩
---     set a' : Finset.univ → ℝ := a ∘ Subtype.val
---     set v' : Finset.univ → V := v ∘ Subtype.val
---     use Fin n, Finset.univ, a', v'
---     repeat' constructor
---     repeat simpa
-
--- --set_option pp.explicit true
-
--- lemma isconicalCombo_aux_le (s : Set V) (x : V) : m < n → isConicalCombo_aux s x m → isConicalCombo_aux s x n := by
---   intro h_mn
---   rintro ⟨a, v, h_a, h_v, h_x_combo⟩
---   by_cases h_s : s.Nonempty
---   . let v₀ : ↑s := ⟨h_s.some, h_s.some_mem⟩
---     let a' : Fin n → ℝ := fun i => if h_im : ↑i < m then a ⟨↑i, h_im⟩ else 0
---     let v' : Fin n → V := fun i => if h_im : ↑i < m then v ⟨↑i, h_im⟩ else v₀
---     use a', v'
---     repeat' constructor
---     . intro i
---       by_cases h_im : i < m
---       . simp [a', dif_pos h_im]
---         exact h_a ⟨i, h_im⟩
---       . simp [a', dif_neg h_im]
---     . intro i
---       by_cases h_im : i < m
---       . simp [v', dif_pos h_im]
---         exact h_v ⟨i, h_im⟩
---       . simp [v', dif_neg h_im]
---     . show x = ∑ i ∈ (Finset.univ : Finset (Fin n)), a' i • v' i
---       simp [a']
---       rw [Finset.sum_dite, Finset.sum_const_zero, add_zero]
---       --show x = ∑ i ∈ (Finset.univ : Finset (Fin n)), a' i • v' i
---       simp [v']
---       rw [Finset.sum_dite_of_true]
---       simp
---       . sorry
---       . intro i h
---         simp at h
---         rcases i with ⟨val, prop⟩
---         simp
---         convert prop
---         --have : val ∈ {x : Fin n | ↑x < m} := prop
---         sorry
---   . sorry
-
---------------- second try -----------------
+--     rcases h' with ⟨n', h₁, h₂⟩
+--     exact ih n' h₁ h₂
 
 section
 
@@ -509,18 +322,30 @@ theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_au
 
 end
 
+namespace Testing
+variable {ι : Type*}
+
+lemma nonneg_orthant_closed : IsClosed {x : ι → ℝ | ∀ i, 0 ≤ x i } := by
+  rw [Set.setOf_forall fun i (x : ι → ℝ) => 0 ≤ x i]
+  apply isClosed_iInter
+  intro i
+  apply IsClosed.preimage (continuous_apply i) isClosed_Ici
+
+variable [Finite ι] [DecidableEq ι] --why isn't this automatic
+
+def std_basis : ι → (ι → ℝ) := fun i j => if i = j then 1 else 0
+
+lemma nonneg_orthant_gens : {x : ι → ℝ | ∀ i, 0 ≤ x i } = conicalHull'
+
+end Testing
+
 section
 variable {V : Type*} [NormedAddCommGroup V] [Module ℝ V] [FiniteDimensional ℝ V]
 
---variable {ι : Type*} [Finite ι]
---#synth TopologicalSpace (ι →₀ ℝ)
---lemma positive_orthant_closed {ι : Type} : IsClosed {x : ι →₀ ℝ | True} := by sorry
 --maybe easier to work with Cone(T) directly, rather than trying to work with ℝ^d
 
 --proposition 1.3.3(b)
 theorem conical_hull_closed_of_finite (s : Set V) : s.Finite → IsClosed (conicalHull' s) := by sorry
-
-end
 
 --figure out how closure operators work (to define conicalHull like mathlib's convexHull)
 

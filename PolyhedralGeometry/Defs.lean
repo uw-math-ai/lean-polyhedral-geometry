@@ -35,20 +35,6 @@ def PolyhedralCone : Prop :=
 
 #print convexHull
 
-def conicalHull : Set V :=
-  { x | ∃ (t : Finset V) (a : V → ℝ),
-    (∀ v ∈ t, 0 ≤ a v) ∧ ↑t ⊆ s ∧ x = ∑ v ∈ t, a v • v }
-
-def isConicalCombo (x : V) : Prop :=
-  ∃ (ι : Type) (t : Finset ι) (a : t → ℝ) (v : t → V),
-    (∀ i, 0 ≤ a i) ∧ (∀ i, v i ∈ s) ∧ x = ∑ i, a i • v i
-
-def isConicalCombo_aux (x : V) (n : ℕ) : Prop :=
-  ∃ (a : Fin n → ℝ) (v : Fin n → V),
-    (∀ i, 0 ≤ a i) ∧ (∀ i, v i ∈ s) ∧ x = ∑ i, a i • v i
-
---what's best?
-
 def isConicalCombo' (x : V) : Prop :=
   ∃ (ι : Type) (t : Finset ι) (a : ι → ℝ) (v : ι → V),
     (∀ i ∈ t, a i = 0 ∨ 0 ≤ a i ∧ v i ∈ s) ∧ x = ∑ i ∈ t, a i • v i
