@@ -128,11 +128,11 @@ lemma Finset.sum_enlarge {ι α : Type*} [AddCommMonoid α] {t s : Finset ι} {f
 
 end
 
-lemma reindex_conicalCombo' (s : Set V) (x : V) : isConicalCombo' s x ↔ ∃ n, isConicalCombo_aux' s x n := by
+lemma reindex_conicalCombo (s : Set V) (x : V) : isConicalCombo s x ↔ ∃ n, isConicalCombo_aux s x n := by
   constructor
   . rintro ⟨α, t, a, v, h_av, h_x_combo⟩
     use t.card
-    unfold isConicalCombo_aux'
+    unfold isConicalCombo_aux
     have := (Finset.equivFin t).symm
     set N := t.card
     by_cases hN : N = 0
@@ -178,11 +178,19 @@ lemma reindex_conicalCombo' (s : Set V) (x : V) : isConicalCombo' s x ↔ ∃ n,
       . simp; convert h_F; simp [h_F]
       . ext; simp
   . rintro ⟨n, a, v, h_av, h_x_combo⟩
-    use ℕ, Finset.range n, a, v
-    simp [Finset.mem_range]
+    let ℕ' := ULift ℕ
+    let I := Finset.map (Function.Embedding.mk (@ULift.up Nat) (@ULift.up.inj Nat)) (Finset.range n)
+    let a' : ℕ' → ℝ := fun i ↦ a i.down
+    let v' : ℕ' → V := fun i ↦ v i.down
+    use ℕ', I, a', v'
+    simp [ℕ', I, a', v', Finset.mem_range]
     use h_av
 
-lemma isconicalCombo_aux_le' (s : Set V) (x : V) : m ≤ n → isConicalCombo_aux' s x m → isConicalCombo_aux' s x n := by
+def ULift.list.{u, v} {α : Type v} : List α → List (ULift.{u, v} α)
+  | [] => []
+  | a :: t => ULift.up a :: ULift.list t
+
+lemma isconicalCombo_aux_le (s : Set V) (x : V) : m ≤ n → isConicalCombo_aux s x m → isConicalCombo_aux s x n := by
   intro h_mn
   rintro ⟨a, v, h_av, h_x_combo⟩
   let a' : ℕ → ℝ := fun i => if h_im : i < m then a i else 0
@@ -208,18 +216,18 @@ lemma isconicalCombo_aux_le' (s : Set V) (x : V) : m ≤ n → isConicalCombo_au
 variable [FiniteDimensional ℝ V]
 open Finset Module
 
-theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_aux' s x (finrank ℝ V) := by
+theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalCombo_aux s x (finrank ℝ V) := by
   rintro x h
-  rcases (reindex_conicalCombo' s x).mp h with ⟨n, h⟩
+  rcases (reindex_conicalCombo s x).mp h with ⟨n, h⟩
   induction' n with N ih
-  . exact isconicalCombo_aux_le' s x (Nat.zero_le _) h
+  . exact isconicalCombo_aux_le s x (Nat.zero_le _) h
   by_cases hN : N + 1 ≤ finrank ℝ V
-  . exact isconicalCombo_aux_le' s x hN h
+  . exact isconicalCombo_aux_le s x hN h
   push_neg at hN
   rcases h with ⟨a, v, h_av, h_x_combo⟩
   apply ih
   by_cases coefficents_all_zero : ∀ i ∈ (range (N + 1)), a i = 0
-  · unfold isConicalCombo_aux'
+  · unfold isConicalCombo_aux
     · use a, v
       constructor
       · intro i i_lt_N
@@ -322,8 +330,8 @@ theorem caratheordory' (s : Set V) : ∀ x ∈ conicalHull' s, isConicalCombo_au
 
 end
 
-namespace Testing
-variable {ι : Type*}
+section
+variable {ι : Type u}
 
 lemma nonneg_orthant_closed : IsClosed {x : ι → ℝ | ∀ i, 0 ≤ x i } := by
   rw [Set.setOf_forall fun i (x : ι → ℝ) => 0 ≤ x i]
@@ -331,21 +339,46 @@ lemma nonneg_orthant_closed : IsClosed {x : ι → ℝ | ∀ i, 0 ≤ x i } := b
   intro i
   apply IsClosed.preimage (continuous_apply i) isClosed_Ici
 
-variable [Finite ι] [DecidableEq ι] --why isn't this automatic
+variable [Finite ι] [DecidableEq ι]
 
 def std_basis : ι → (ι → ℝ) := fun i j => if i = j then 1 else 0
 
-lemma nonneg_orthant_gens : {x : ι → ℝ | ∀ i, 0 ≤ x i } = conicalHull'
+lemma nonneg_orthant_gens : {x : ι → ℝ | ∀ i, 0 ≤ x i } = conicalHull.{_, u} (std_basis '' Set.univ) := by
+  ext x; constructor <;> intro h
+  have := Fintype.ofFinite ι
+  . use ι, Finset.univ, x, std_basis
+    constructor
+    . intro i h'
+      right
+      constructor
+      . exact h i
+      . use i, ?_
+        apply Set.mem_univ
+    . exact pi_eq_sum_univ x
+  . rcases h with ⟨α, t, a, v, h₁, rfl⟩
+    intro i
+    simp
+    apply Finset.sum_nonneg
+    intro x h_xt
+    rcases h₁ x h_xt with h | h
+    . simp [h]
+    . apply mul_nonneg
+      . exact h.left
+      . rcases h.right with ⟨j, _, h⟩
+        rw [←h]
+        unfold std_basis
+        apply ite_nonneg <;> norm_num
 
-end Testing
+--lemma nonneg_orthant_gens' : {x : ι → ℝ | ∀ i, 0 ≤ x i } = conicalHull {x : ι → ℝ | ∃ i, x i = 1 ∧ ∀ j ≠ i, x j = 0 } := by sorry
+end
 
 section
 variable {V : Type*} [NormedAddCommGroup V] [Module ℝ V] [FiniteDimensional ℝ V]
 
---maybe easier to work with Cone(T) directly, rather than trying to work with ℝ^d
-
 --proposition 1.3.3(b)
-theorem conical_hull_closed_of_finite (s : Set V) : s.Finite → IsClosed (conicalHull' s) := by sorry
+theorem conical_hull_closed_of_finite (s : Set V) : s.Finite → IsClosed (conicalHull s) := by
+  --use nonneg_orthant_gens and nonneg_orthant_closed
+  sorry
 
 --figure out how closure operators work (to define conicalHull like mathlib's convexHull)
 
