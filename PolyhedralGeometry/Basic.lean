@@ -8,6 +8,8 @@ import Mathlib.LinearAlgebra.LinearIndependent.Defs
 import Mathlib.Topology.MetricSpace.HausdorffDistance
 import Mathlib.LinearAlgebra.Dimension.Basic
 import Mathlib.Analysis.InnerProductSpace.Basic
+import Mathlib.Algebra.Order.Ring.Unbundled.Basic
+import Mathlib.Algebra.Group.Defs
 --import Mathlib.Topology.MetricSpace.Defs
 --import Mathlib.LinearAlgebra.Dual
 --import Mathlib.Topology.Defs.Basic
@@ -554,6 +556,8 @@ open Bornology
 #check dist_nonneg
 #check Metric.continuous_infDist_pt
 #check Convex
+#check real_inner_self_eq_norm_sq
+
 --theorem Metric.isCompact_iff_isClosed_bounded {α : Type u} [PseudoMetricSpace α] {s : Set α} [T2Space α] [ProperSpace α] :
 --IsCompact s ↔ IsClosed s ∧ Bornology.IsBounded s
 
@@ -660,16 +664,138 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex ℝ
     intro b₀ hb₀
     have lin_dep (γ : ℝ) : (0 ≤ γ) ∧ (γ ≤ 1) → γ • b' + (1-γ) • b₀  ∈ B :=
       fun ⟨h, _⟩ => hB (Set.mem_of_mem_inter_right hb'.1) hb₀ h (by linarith) (by simp)
-    have ineq (γ : ℝ) (hγ: γ ≥ 0) (hγ': γ ≤ 1): ‖b'-a'‖^2 + γ^2*‖b'-a'‖^2 + 2*γ * ⟪b'-a', b₀ - b'⟫ ≥ 0 := by
+    have equality_inner_prods (γ : ℝ) (hγ: γ ≥ 0) (hγ': γ ≤ 1): ‖γ•b' + (1-γ)•b₀-a'‖^2 = ‖b'-a'‖^2 + (1-γ)^2*‖b₀-b'‖^2 + 2*(1-γ) * ⟪b'-a', b₀ - b'⟫  := by
       calc
-        0 ≤ ‖γ•b' + (1-γ)•b₀-a'‖^2  := by simp[norm_nonneg]
-        _ = ‖γ•b' + b' - b' + (1-γ)•b₀-a'‖^2 := by simp
-        _ = ‖b' - a' + γ•b' + (1-γ)•b₀ - b'‖^2 := by congr 2; module
-        _ = ‖b'-a'‖^2 + γ^2*‖b'-a'‖^2 + 2*γ * ⟪b'-a', b₀ - b'⟫ := by sorry
+        ‖γ•b' + (1-γ)•b₀-a'‖^2 = ‖γ•b' + b' - b' + (1-γ)•b₀-a'‖^2 := by simp
+        _ = ‖(b' - a') + (1-γ )•(b₀- b')‖^2 := by congr 2; module
+        _ = ⟪ (b' - a') + ((1-γ )•(b₀- b')) ,  (b' - a') + ((1-γ )•(b₀- b')) ⟫  := by simp[real_inner_self_eq_norm_sq]
+        _ = ⟪b'-a', b'-a'⟫ + ⟪b'-a', (1-γ )• (b₀-b')⟫ + ⟪ (1-γ )• (b₀-b'), b'-a' ⟫  + ⟪(1-γ)• (b₀-b'), (1-γ)• (b₀-b')⟫ := by simp[inner_add_add_self]
+        _ = ⟪b'-a', b'-a'⟫ + (1-γ)*⟪b'-a', b₀-b'⟫ + (1-γ)*⟪ b'-a', b₀ -b' ⟫  + (1-γ)*(⟪(1-γ)•(b₀-b'),  b₀-b'⟫) := by simp[real_inner_smul_left , real_inner_smul_right, real_inner_comm]
+        _ = ⟪b'-a', b'-a'⟫ + 2*(1-γ)*⟪ b'-a', b₀ -b' ⟫  + (1-γ)*(⟪(1-γ)• (b₀-b'), b₀-b'⟫):= by ring
+        _ = ⟪b'-a', b'-a'⟫ + 2*(1-γ)*⟪ b'-a', b₀ -b' ⟫  + (1-γ)*((1-γ)*⟪ b₀-b', b₀-b'⟫) := by simp[real_inner_smul_left]
+        _ = ⟪(b'-a'), (b'-a')⟫ + (1-γ)^2 * ⟪(b₀-b'), (b₀-b')⟫ + 2*(1-γ)*⟪ b'- a', b₀ - b'⟫:= by ring
+        _ = ‖b'-a'‖^2 + (1-γ)^2 * ‖b₀-b'‖^2  + 2*(1-γ) * ⟪b'-a', b₀ - b'⟫ := by simp [real_inner_self_eq_norm_sq]
+
+
+    have ineq1 (γ : ℝ)(hγ: γ ≥ 0) (hγ': γ ≤ 1): 0 ≤  ‖b'-a'‖^2 + (1-γ)^2 * ‖b₀-b'‖^2  + 2*(1-γ) * ⟪b'-a', b₀ - b'⟫ := by
+      rw[← equality_inner_prods]; simp[norm_nonneg]; exact hγ; exact hγ'
+
+    have ineq2 (γ : ℝ)(hγ: γ ≥ 0) (hγ': γ ≤ 1):  ‖b' - a'‖ ≤ ‖(γ • b' + (1-γ) • b₀) - a'‖ := by
+      repeat rw[ ← dist_eq_norm]
+      have inclusion_intersection: (γ • b' + (1-γ) • b₀) ∈ (K r₀ ∩ B) → dist b' a'≤ dist (γ • b' + (1-γ) • b₀)  a' := by
+        intro h
+        have byDef: Metric.infDist b' A ≤ Metric.infDist (γ • b' + (1-γ) • b₀)  A := by
+          apply hb'.2
+          exact h
+        rw[← ha'.2]
+        have set_and_point: Metric.infDist (γ • b' + (1-γ) • b₀)  A ≤ dist (γ • b' + (1-γ) • b₀)  a' := by apply Metric.infDist_le_dist_of_mem; apply ha'.1
+        linarith
+      have exclusion_intersection: ¬(γ • b' + (1-γ) • b₀) ∈ (K r₀ ∩ B) → dist b' a'≤ dist (γ • b' + (1-γ) • b₀)  a' := by
+        intro h
+        have greaterR: Metric.infDist (γ • b' + (1-γ) • b₀) A > r₀ := by
+          by_contra evil_b
+          have implication_b: Metric.infDist (γ • b' + (1-γ) • b₀) A ≤ r₀ := by linarith
+          have inclusion_K: (γ • b' + (1-γ) • b₀) ∈ K r₀ := by unfold K; simp; apply implication_b
+          have inclusion_B: (γ • b' + (1-γ) • b₀) ∈ B := by apply lin_dep; simp[hγ, hγ']
+          have in_interKB: (γ • b' + (1-γ) • b₀) ∈ (K r₀ ∩ B) := by
+            rw [Set.mem_inter_iff]
+            exact ⟨inclusion_K, inclusion_B⟩
+          contradiction
+        have intermediate_to_r_ineq: dist (γ • b' + (1-γ) • b₀)  a' ≥ Metric.infDist (γ • b' + (1-γ) • b₀)  A := by
+          apply Metric.infDist_le_dist_of_mem; apply ha'.1
+        have r₀_elim: dist (γ • b' + (1-γ) • b₀)  a' > r₀ := by linarith
+        have r₀_other_elim_statement: dist b' a' ≤ r₀ := by
+          rw[← ha'.2]; dsimp[K] at hb'; simp at hb'
+          exact hb'.1.1
+        linarith
+      by_cases h_mem : γ • b' + (1 - γ) • b₀ ∈ K r₀ ∩ B
+      · exact inclusion_intersection h_mem
+      · exact exclusion_intersection h_mem
+
+    have combo_inequalities (γ : ℝ)(hγ: γ ≥ 0) (hγ': γ ≤ 1) : 0 ≤ (1-γ)^2*‖b₀-b'‖^2 + 2*(1-γ) * ⟪b'-a', b₀ - b'⟫ := by
+      --have intermediate: ‖‖ ≤ ‖b'-a'‖^2 + (1-γ)^2*‖b₀-b'‖^2 + 2*(1-γ) * ⟪b'-a', b₀ - b'⟫
+      have dummy: ‖b'-a'‖^2  ≤ ‖b'-a'‖^2 + (1-γ)^2 * ‖b₀-b'‖^2  + 2*(1-γ) * ⟪b'-a', b₀ - b'⟫:= by
+        rw[← equality_inner_prods]
+        rw[sq_le_sq]; repeat rw[abs_norm]
+        apply ineq2; exact hγ; exact hγ'; exact hγ; exact hγ'
+      linarith
+
+    have almost_done (γ : ℝ)(hγ: γ ≥ 0) (hγ': γ ≤ 1) (hb_ne_b : b₀ ≠ b'): 2* ⟪b'-a', b₀ - b'⟫ ≥ 0 := by
+      by_contra
+      have h_contra: 2* ⟪b'-a', b₀ - b'⟫ < 0 := by linarith
+      have hcase_not_1: 1 ≠ γ → 2* ⟪b'-a', b₀ - b'⟫ ≥ 0 := by
+        intro γ_ne1
+        have h_pos_γ: 0 < 1-γ  := by
+            by_contra; have h'_1 : 1 -γ ≤ 0 := by linarith
+            have h'_2: 1 ≤ γ := by linarith
+            have h'_3: 1 < γ := by rw[lt_iff_le_and_ne]; exact ⟨h'_2, γ_ne1⟩
+            linarith [h'_3, hγ']
+
+        have not_zero_denom: ‖b₀-b'‖^2 ≠ 0 := by
+           simp; have hb_minus_b: b₀ - b' ≠ 0 := by rw[sub_ne_zero]; exact hb_ne_b
+           by_contra; contradiction
+        have greater_zero_denom : 0 < ‖b₀ -b'‖^2 := by
+          apply LE.le.lt_of_ne'
+          simp[norm_nonneg]
+          exact not_zero_denom
+        have factored:  -2* ⟪b'-a', b₀ - b'⟫ ≤ (1-γ)*‖b₀-b'‖^2  := by
+         have h: 0 ≤ (1-γ)*((1-γ )*‖b₀-b'‖^2 + 2 * ⟪b'-a', b₀ - b'⟫) := by
+           calc
+             0 ≤ (1-γ)^2*‖b₀-b'‖^2 + 2*(1-γ) * ⟪b'-a', b₀ - b'⟫ := by apply combo_inequalities; exact hγ; exact hγ'
+             _ = (1-γ)*(1-γ)*‖b₀-b'‖^2 + (1-γ) * 2 * ⟪b'-a', b₀ - b'⟫ := by simp[sq, mul_comm]
+             _ = (1-γ)*((1-γ)*‖b₀-b'‖^2) + (1-γ) * (2 * ⟪b'-a', b₀ - b'⟫) := by repeat rw[mul_assoc]
+             _ = (1-γ)*((1-γ)*‖b₀-b'‖^2 + 2*⟪b'-a', b₀ - b'⟫) := by rw[← mul_add]
+         have simplify: 0 ≤ ((1-γ )*‖b₀-b'‖^2 + 2 * ⟪b'-a', b₀ - b'⟫) := by apply nonneg_of_mul_nonneg_right h h_pos_γ
+         simp[simplify]; linarith
+        have nonneg_non_γ: -2* ⟪b'-a', b₀ - b'⟫ > 0 := by simp; exact h_contra
+        have choice_γ : 1- |2* ⟪b'-a', b₀ - b'⟫| / (‖b₀ - b'‖^2) < γ →  (1-γ)*‖b₀-b'‖^2 < -2* ⟪b'-a', b₀ - b'⟫ := by
+          intro assumed
+          have refined: 1- γ < |2* ⟪b'-a', b₀ - b'⟫| / (‖b₀ - b'‖^2) := by linarith
+          calc
+            (1-γ)*‖b₀-b'‖^2 < (|2* ⟪b'-a', b₀ - b'⟫| / (‖b₀ - b'‖^2)) * ‖b₀-b'‖^2 := by
+              rw[mul_lt_mul_right]
+              exact refined; exact greater_zero_denom
+            _ = |2* ⟪b'-a', b₀ - b'⟫| * 1 / ‖b₀ - b'‖^2 * ‖b₀-b'‖^2 := by simp
+            _ = |2* ⟪b'-a', b₀ - b'⟫| * (1 / ‖b₀ - b'‖^2 * ‖b₀-b'‖^2) := by ring
+            _ = |2* ⟪b'-a', b₀ - b'⟫| *1 := by rw[one_div_mul_cancel not_zero_denom]
+            _ = -2* ⟪b'-a', b₀ - b'⟫ := by simp; apply LT.lt.le; exact h_contra
+        have inRange:  1 - |2* ⟪b'-a', b₀ - b'⟫| / ‖b₀ - b'‖ ^ 2 < 1 := by
+          have h1: |2* ⟪b'-a', b₀ - b'⟫| / ‖b₀ - b'‖ ^ 2 = |2* ⟪b'-a', b₀ - b'⟫| / |‖b₀ - b'‖ ^ 2| := by simp[← sq_abs]
+          have h2: |2* ⟪b'-a', b₀ - b'⟫| / |‖b₀ - b'‖ ^ 2| = |2* ⟪b'-a', b₀ - b'⟫ / ‖b₀ - b'‖ ^ 2| := by simp[abs_div]
+          have h3: |2* ⟪b'-a', b₀ - b'⟫ / ‖b₀ - b'‖ ^ 2| > 0 := by sorry
+          simp; rw[h1]; rw[h2]; exact h3
+
+
+
+
+
+
+        --linarith[choice_γ, factored]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        sorry
+
+
+      sorry
+
+
+
     sorry
   sorry
-  --#check IsCompact.exists_isMinOn
 
+#check mul_lt_mul_right
   --rcases this
 
  --WLOG, let A Construct a Set K_r compact around A, defined as all points within r of A, the compact
