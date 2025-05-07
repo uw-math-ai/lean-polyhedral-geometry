@@ -18,7 +18,7 @@ def Halfspace : Prop :=
 
 -- why does making `I` of Type* screw up `Polytope`?
 def Polyhedron : Prop :=
-  ∃ (I : Type) (H : I → Set V), Finite I ∧ (∀ i : I, Halfspace (H i)) ∧ s = ⋂ (i : I), H i
+  ∃ (I : Type*) (H : I → Set V), Finite I ∧ (∀ i : I, Halfspace (H i)) ∧ s = ⋂ (i : I), H i
 
 --todo: eliminate the need to have an explicit inner product on V; i.e., show that it doesn't depend on the choice of inner product, so the definition can be made without such a choice)
 
@@ -30,35 +30,21 @@ def Polyhedron : Prop :=
 def Cone : Prop :=
   s.Nonempty ∧ ∀ c ≥ (0 : ℝ), ∀ x ∈ s, c • x ∈ s
 
-def PolyhedralCone : Prop :=
-  Polyhedron s ∧ Cone s
+def PolyhedralCone.{u} : Prop :=
+  Polyhedron.{_, u} s ∧ Cone s
 
 #print convexHull
 
-def conicalHull : Set V :=
-  { x | ∃ (t : Finset V) (a : V → ℝ),
-    (∀ v ∈ t, 0 ≤ a v) ∧ ↑t ⊆ s ∧ x = ∑ v ∈ t, a v • v }
-
 def isConicalCombo (x : V) : Prop :=
-  ∃ (ι : Type) (t : Finset ι) (a : t → ℝ) (v : t → V),
-    (∀ i, 0 ≤ a i) ∧ (∀ i, v i ∈ s) ∧ x = ∑ i, a i • v i
-
-def isConicalCombo_aux (x : V) (n : ℕ) : Prop :=
-  ∃ (a : Fin n → ℝ) (v : Fin n → V),
-    (∀ i, 0 ≤ a i) ∧ (∀ i, v i ∈ s) ∧ x = ∑ i, a i • v i
-
---what's best?
-
-def isConicalCombo' (x : V) : Prop :=
-  ∃ (ι : Type) (t : Finset ι) (a : ι → ℝ) (v : ι → V),
+  ∃ (ι : Type*) (t : Finset ι) (a : ι → ℝ) (v : ι → V),
     (∀ i ∈ t, a i = 0 ∨ 0 ≤ a i ∧ v i ∈ s) ∧ x = ∑ i ∈ t, a i • v i
 
-def isConicalCombo_aux' (x : V) (n : ℕ) : Prop :=
+def isConicalCombo_aux (x : V) (n : ℕ) : Prop :=
   ∃ (a : ℕ → ℝ) (v : ℕ → V),
     (∀ i < n, a i = 0 ∨ 0 ≤ a i ∧ v i ∈ s) ∧ x = ∑ i ∈ Finset.range n, a i • v i
 
-def conicalHull' : Set V :=
-  { x | isConicalCombo' s x }
+def conicalHull.{u} : Set V :=
+  { x | isConicalCombo.{_, u} s x }
 
 end
 
@@ -74,7 +60,7 @@ variable {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [FiniteDim
 #check (inferInstance : T2Space V)
 #check (inferInstance : ProperSpace V)
 
-def Polytope : Prop :=
-  Polyhedron s ∧ Bornology.IsBounded s
+def Polytope.{u} : Prop :=
+  Polyhedron.{_, u} s ∧ Bornology.IsBounded s
   
 end
