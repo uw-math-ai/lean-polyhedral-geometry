@@ -311,24 +311,81 @@ theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalComb
     . simp at b_j_pos
       exact lt_of_le_of_ne b_j_pos h_j_ne_0
   clear h_j_ne_0
-  let ratios : Finset ℝ := (Finset.range (N + 1)).image (λ i => a i / b i)
+  let ratios : Finset ℝ := ((Finset.range (N + 1)).filter (λ i => b i ≠ 0)).image (λ i => a i / b i)
   let ratios_non_neg : Finset ℝ := ratios.filter (λ r => r ≥ 0)
-  have : ratios_non_neg.Nonempty := by
+  have hratio_nonem : ratios_non_neg.Nonempty := by
     unfold ratios_non_neg
     unfold ratios
-    have a_j : a j ≥ 0 := by
-      #check h_av j
-      sorry
-    sorry
-  have β : ℝ := Finset.min' ratios sorry
+    have a_j_geq_zero : a j ≥ 0 := by
+      cases (h_av j (List.mem_range.mp h_jt)) <;> linarith
+    unfold Finset.Nonempty
+    use a j / b j
+    have hj₁ : j ∈ {i ∈ range (N + 1) | b i ≠ 0} := by
+      simp
+      refine ⟨?_,?_⟩
+      · apply List.mem_range.mp h_jt
+      · linarith
+    simp
+    refine ⟨?_,?_⟩
+    · use j
+      refine ⟨⟨?_,?_⟩,?_⟩
+      · apply List.mem_range.mp h_jt
+      · linarith
+      · rfl
+    apply div_nonneg <;> linarith
+
+
+  have hβ_mem := (ratios_non_neg).min'_mem hratio_nonem
+  have ⟨h_ratios, h_βgeq0⟩ := mem_filter.mp hβ_mem
+  rcases mem_image.mp h_ratios with ⟨i₀,i₀_in_range,hi₀_is_index_β⟩
+  set β := (ratios_non_neg : Finset ℝ).min' hratio_nonem with hβ_def
+
+
+
   replace h_b_combo_eq_0 : ∑ i ∈ range (N + 1),  (β * b i) • v i = 0 := by
-    sorry
+    have : β • (∑ i ∈ range (N + 1),  b i • v i) = 0 := by
+      exact smul_eq_zero_of_right β h_b_combo_eq_0
+    have : ∑ i ∈ range (N + 1),  β • b i • v i = 0 := by
+      rw [← Finset.smul_sum]
+      exact this
+    simp [← smul_assoc] at this
+    exact this
   rw [← sub_zero (∑ i ∈ range (N + 1), a i • v i)] at h_x_combo
   rw [← h_b_combo_eq_0] at h_x_combo
   have x_plus_zero : x = ∑ i ∈ range (N + 1), ((a i - β * b i) • v i) := by
     simp [sub_smul, Finset.sum_sub_distrib]
     exact h_x_combo
-  sorry
+
+
+
+  have h_all_ai_βbi_nonneg : ∀ i < N + 1, 0 ≤ (a i - β * b i)  := by
+    intro j h_j_in_range
+    have h_aj_non_neg : 0 ≤ a j  := by
+          rcases h_av j h_j_in_range with h_aj_zero | ⟨h_ai_geq_zero,_⟩ <;> linarith
+    by_cases h_bj_zero : b j ≤ 0
+    · have : β * b j ≤ 0 := by
+        exact mul_nonpos_of_nonneg_of_nonpos h_βgeq0 h_bj_zero
+      have : - β * b j ≥ 0 := by
+        simp
+        exact this
+      linarith
+    · replace h_bj_zero : 0 ≤ b j := by
+        sorry
+      have h_β_is_min : β ≤ a j / b j  := by
+        sorry
+      have : β * b j ≤ a j / b j * b j  := by
+        exact mul_le_mul_of_nonneg_right h_β_is_min h_bj_zero
+      sorry
+
+  have h_i₀_ai_βbi_zero : a i₀ - β * b i₀ = 0 := by
+    rw [← hi₀_is_index_β]
+    have hbi₀_nonzero : b i₀ ≠ 0 := (mem_filter.mp i₀_in_range).2
+    simp +arith [hbi₀_nonzero]
+
+
+
+
+
 
 end
 
