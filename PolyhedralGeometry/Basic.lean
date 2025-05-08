@@ -334,7 +334,7 @@ theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalComb
 
 
   have hβ_mem := (ratios_non_neg).min'_mem hratio_nonem
-  have ⟨h_ratios, h_geq0⟩ := mem_filter.mp hβ_mem
+  have ⟨h_ratios, h_βgeq0⟩ := mem_filter.mp hβ_mem
   rcases mem_image.mp h_ratios with ⟨i₀,i₀_in_range,hi₀_is_index_β⟩
   set β := (ratios_non_neg : Finset ℝ).min' hratio_nonem with hβ_def
 
@@ -356,14 +356,24 @@ theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalComb
 
 
 
-  have h_all_ai_βbi_nonneg : ∀ i < N + 1, (a i - β * b i) ≥ 0 := by
+  have h_all_ai_βbi_nonneg : ∀ i < N + 1, 0 ≤ (a i - β * b i)  := by
     intro j h_j_in_range
-    by_cases h_bj_zero : b j = 0
-    · have h_aj_non_neg : a j ≥ 0 := by
-        rcases h_av j h_j_in_range with h_aj_zero | ⟨h_ai_geq_zero,_⟩ <;> linarith
-      simp [h_bj_zero,h_aj_non_neg]
-    · sorry
-
+    have h_aj_non_neg : 0 ≤ a j  := by
+          rcases h_av j h_j_in_range with h_aj_zero | ⟨h_ai_geq_zero,_⟩ <;> linarith
+    by_cases h_bj_zero : b j ≤ 0
+    · have : β * b j ≤ 0 := by
+        exact mul_nonpos_of_nonneg_of_nonpos h_βgeq0 h_bj_zero
+      have : - β * b j ≥ 0 := by
+        simp
+        exact this
+      linarith
+    · replace h_bj_zero : 0 ≤ b j := by
+        sorry
+      have h_β_is_min : β ≤ a j / b j  := by
+        sorry
+      have : β * b j ≤ a j / b j * b j  := by
+        exact mul_le_mul_of_nonneg_right h_β_is_min h_bj_zero
+      sorry
 
   have h_i₀_ai_βbi_zero : a i₀ - β * b i₀ = 0 := by
     rw [← hi₀_is_index_β]
