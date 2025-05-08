@@ -577,10 +577,19 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex ℝ
         rw[sq_le_sq]; repeat rw[abs_norm]
         apply ineq2; exact hγ; exact hγ'; exact hγ; exact hγ'
       linarith
+    
+    by_cases h : ⟪b'-a', b₀ - b'⟫ = 0
+    . suffices h' : f b₀ = f b' by linarith
+      sorry
+    have hb_ne_b : b₀ ≠ b' := by
+      intro h'
+      sorry
+    have almost_done' : 2* ⟪b'-a', b₀ - b'⟫ ≥ 0 := by
+      let γ' := 1 - |2* ⟪b'-a', b₀ - b'⟫| / (‖b₀ - b'‖^2)
+      sorry
 
     have almost_done (γ : ℝ)(hγ: γ ≥ 0) (hγ': γ ≤ 1) (hb_ne_b : b₀ ≠ b'): 2* ⟪b'-a', b₀ - b'⟫ ≥ 0 := by
-      by_contra
-      have h_contra: 2* ⟪b'-a', b₀ - b'⟫ < 0 := by linarith
+      by_contra! h_contra
       have hcase_not_1: 1 ≠ γ → 2* ⟪b'-a', b₀ - b'⟫ ≥ 0 := by
         intro γ_ne1
         have h_pos_γ: 0 < 1-γ  := by
@@ -629,18 +638,6 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex ℝ
 
 
         --linarith[choice_γ, factored]
-
-
-
-
-
-
-
-
-
-
-
-
 
 
         sorry
