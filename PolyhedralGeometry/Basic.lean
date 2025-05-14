@@ -10,6 +10,7 @@ import Mathlib.LinearAlgebra.Dimension.Basic
 import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Algebra.Order.Ring.Unbundled.Basic
 import Mathlib.Algebra.Group.Defs
+import Mathlib.Analysis.InnerProductSpace.LinearMap
 --import Mathlib.Topology.MetricSpace.Defs
 --import Mathlib.LinearAlgebra.Dual
 --import Mathlib.Topology.Defs.Basic
@@ -338,7 +339,7 @@ theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalComb
   have hβ_mem : β ∈ ratios_non_neg := (ratios_non_neg).min'_mem hratio_nonem
   have ⟨h_ratios, h_βgeq0⟩ := mem_filter.mp hβ_mem
   rcases mem_image.mp h_ratios with ⟨i₀,i₀_in_range,hi₀_is_index_β⟩
-  
+
   replace h_b_combo_eq_0 : ∑ i ∈ range (N + 1),  (β * b i) • v i = 0 := by
     have : β • (∑ i ∈ range (N + 1),  b i • v i) = 0 := by
       exact smul_eq_zero_of_right β h_b_combo_eq_0
@@ -375,12 +376,12 @@ theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalComb
     rw [← hi₀_is_index_β]
     have hbi₀_nonzero : b i₀ ≠ 0 := (mem_filter.mp i₀_in_range).2
     simp [hbi₀_nonzero]
-    
+
   -- wlog h_impossible : i₀ = N generalizing a b
   -- . sorry
 
   unfold isConicalCombo_aux
-  
+
   sorry
 
 
@@ -465,12 +466,13 @@ open Bornology
 -- The goal: Prove there exists a continuous linear functional `f` and a scalar `c`
 -- such that `f` separates A and B (i.e., `f(a) ≤ c ≤ f(b)` for all `a ∈ A`, `b ∈ B`).
 
-#print Set.Nonempty
-#check Metric.infDist
-#check dist_nonneg
-#check Metric.continuous_infDist_pt
-#check Convex
-#check real_inner_self_eq_norm_sq
+--#print Set.Nonempty
+--#check Metric.infDist
+--#check dist_nonneg
+--#check Metric.continuous_infDist_pt
+--#check Convex
+--#check real_inner_self_eq_norm_sq
+--#check sesqFormOfInner_apply_apply
 
 --theorem Metric.isCompact_iff_isClosed_bounded {α : Type u} [PseudoMetricSpace α] {s : Set α} [T2Space α] [ProperSpace α] :
 --IsCompact s ↔ IsClosed s ∧ Bornology.IsBounded s
@@ -557,10 +559,14 @@ lemma infDist_points (A B : Set V) (h_closed : IsClosed A ∧ IsClosed B) (h_non
       rw [dist_comm]
       exact Metric.infDist_le_dist_of_mem h_aA
 
---changed f : V → L[ℝ] ℝ to f: V → ℝ. Not sure whether we want to cover non-finite-dimensional cases?
+
+
+#check innerₗ
+#check innerₛₗ
 --note from Caelan: we need `f : V →ₗ[ℝ] ℝ` rather than just `f : V → ℝ` because we want to say that there is a linear functional that separates the two sets, not just any function
-theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex ℝ B) (hclosed : IsClosed A ∧ IsClosed B ) (hNempty : A.Nonempty ∧ B.Nonempty) (hA_Bounded: IsBounded A) (hAB : Disjoint A B) : ∃ (f : V →ₗ[ℝ] ℝ) (c : ℝ), (∀ a ∈ A, f a ≤ c) ∧ (∀ b ∈ B, c ≤ f b) := by
+theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex ℝ B) (hclosed : IsClosed A ∧ IsClosed B ) (hNempty : A.Nonempty ∧ B.Nonempty) (hA_Bounded: IsBounded A) (hAB : Disjoint A B) : ∃ (f : V →ₗ[ℝ] ℝ) (c : ℝ), (∀ a ∈ A, f a < c) ∧ (∀ b ∈ B, c < f b) := by
   rcases infDist_points A B hclosed hNempty hA_Bounded with ⟨a', h_a'A, b', h_b'B, h_a'b'_min_dist⟩
+  --let f': V →ₗ[ℝ] ℝ := fun x => ((innerₗ V) (b'-a')) x sorry
   let f: V → ℝ  := fun x => ⟪b'-a', x⟫
   have a_not_b: a' ≠ b' := by
     intro h
@@ -594,7 +600,7 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
         _ = ⟪b'-a', b'⟫ - ⟪b'-a', a'⟫ := by rw [← inner_sub_left]
         _ = f b' - f a' := by simp[f]
     linarith
-  have minf : ∀ b₀ ∈ B, f b' ≥ f b₀ := by
+  have minf : ∀ b₀ ∈ B, f b₀ ≥ f b' := by
     intro b₀ hb₀
     have lin_dep (γ : ℝ) : (0 ≤ γ) ∧ (γ ≤ 1) → γ • b' + (1-γ) • b₀ ∈ B :=
       fun ⟨h, _⟩ => hB h_b'B hb₀ h (by linarith) (by simp)
@@ -625,60 +631,248 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
         rw[sq_le_sq]; repeat rw[abs_norm]
         apply ineq2; exact hγ; exact hγ'; exact hγ; exact hγ'
       linarith
-    
+
     by_cases h : ⟪b'-a', b₀ - b'⟫ = 0
     . suffices h' : f b₀ = f b' by linarith
-      sorry
+      rw[inner_sub_right] at h
+      linarith
     have hb_ne_b : b₀ ≠ b' := by
       intro h'
-      sorry
+      rw[inner_sub_right] at h
+      have h_lemma: ⟪b'-a', b'⟫ - ⟪b'-a', b'⟫ = 0 := by linarith
+      rw[h'] at h
+      contradiction
     have almost_done' : 2* ⟪b'-a', b₀ - b'⟫ ≥ 0 := by
+      by_contra! le_0_inner
       let γ' := 1 - |2* ⟪b'-a', b₀ - b'⟫| / (‖b₀ - b'‖^2)
-      sorry
 
-    have almost_done (γ : ℝ)(hγ: γ ≥ 0) (hγ': γ ≤ 1) (hb_ne_b : b₀ ≠ b'): 2* ⟪b'-a', b₀ - b'⟫ ≥ 0 := by
-      by_contra! h_contra
-      have hcase_not_1: 1 ≠ γ → 2* ⟪b'-a', b₀ - b'⟫ ≥ 0 := by
-        intro γ_ne1
+      have not_zero_denom: ‖b₀-b'‖^2 ≠ 0 := by
+           simp; have hb_minus_b: b₀ - b' ≠ 0 := by rw[sub_ne_zero]; exact hb_ne_b
+           by_contra; contradiction
+      have greater_zero_denom : 0 < ‖b₀ -b'‖^2 := by
+          apply LE.le.lt_of_ne'
+          simp[norm_nonneg]
+          exact not_zero_denom
+
+
+      have choice_γ (γ : ℝ) (h_ineqγ: γ' < γ ): (1-γ)*‖b₀-b'‖^2 < -2* ⟪b'-a', b₀ - b'⟫ := by
+        have refined: 1- γ < |2* ⟪b'-a', b₀ - b'⟫| / (‖b₀ - b'‖^2) := by
+          unfold γ' at h_ineqγ; linarith
+        calc
+          (1-γ)*‖b₀-b'‖^2 < (|2* ⟪b'-a', b₀ - b'⟫| / (‖b₀ - b'‖^2)) * ‖b₀-b'‖^2 := by
+            rw[mul_lt_mul_right]
+            exact refined; exact greater_zero_denom
+          _ = |2* ⟪b'-a', b₀ - b'⟫| * 1 / ‖b₀ - b'‖^2 * ‖b₀-b'‖^2 := by simp
+          _ = |2* ⟪b'-a', b₀ - b'⟫| * (1 / ‖b₀ - b'‖^2 * ‖b₀-b'‖^2) := by ring
+          _ = |2* ⟪b'-a', b₀ - b'⟫| *1 := by rw[one_div_mul_cancel]; exact not_zero_denom
+          _ = -2* ⟪b'-a', b₀ - b'⟫ := by simp; apply LT.lt.le; simp[le_0_inner]
+
+      have factored (γ : ℝ)(hγ: γ ≥ 0) (hγ': γ ≤ 1)(γ_ne1: 1 ≠ γ)  :  -2* ⟪b'-a', b₀ - b'⟫ ≤ (1-γ)*‖b₀-b'‖^2  := by
         have h_pos_γ: 0 < 1-γ  := by
             by_contra; have h'_1 : 1 -γ ≤ 0 := by linarith
             have h'_2: 1 ≤ γ := by linarith
             have h'_3: 1 < γ := by rw[lt_iff_le_and_ne]; exact ⟨h'_2, γ_ne1⟩
             linarith [h'_3, hγ']
-
-        have not_zero_denom: ‖b₀-b'‖^2 ≠ 0 := by
-           simp; have hb_minus_b: b₀ - b' ≠ 0 := by rw[sub_ne_zero]; exact hb_ne_b
-           by_contra; contradiction
-        have greater_zero_denom : 0 < ‖b₀ -b'‖^2 := by
-          apply LE.le.lt_of_ne'
-          simp[norm_nonneg]
-          exact not_zero_denom
-        have factored:  -2* ⟪b'-a', b₀ - b'⟫ ≤ (1-γ)*‖b₀-b'‖^2  := by
-         have h: 0 ≤ (1-γ)*((1-γ)*‖b₀-b'‖^2 + 2 * ⟪b'-a', b₀ - b'⟫) := by
+        have h: 0 ≤ (1-γ)*((1-γ)*‖b₀-b'‖^2 + 2 * ⟪b'-a', b₀ - b'⟫) := by
            calc
              0 ≤ (1-γ)^2*‖b₀-b'‖^2 + 2*(1-γ) * ⟪b'-a', b₀ - b'⟫ := by apply combo_inequalities; exact hγ; exact hγ'
              _ = (1-γ)*(1-γ)*‖b₀-b'‖^2 + (1-γ) * 2 * ⟪b'-a', b₀ - b'⟫ := by simp[sq, mul_comm]
              _ = (1-γ)*((1-γ)*‖b₀-b'‖^2) + (1-γ) * (2 * ⟪b'-a', b₀ - b'⟫) := by repeat rw[mul_assoc]
              _ = (1-γ)*((1-γ)*‖b₀-b'‖^2 + 2*⟪b'-a', b₀ - b'⟫) := by rw[← mul_add]
-         have simplify: 0 ≤ ((1-γ )*‖b₀-b'‖^2 + 2 * ⟪b'-a', b₀ - b'⟫) := by apply nonneg_of_mul_nonneg_right h h_pos_γ
-         simp[simplify]; linarith
-        have nonneg_non_γ: -2* ⟪b'-a', b₀ - b'⟫ > 0 := by simp; exact h_contra
-        have choice_γ : 1- |2* ⟪b'-a', b₀ - b'⟫| / (‖b₀ - b'‖^2) < γ →  (1-γ)*‖b₀-b'‖^2 < -2* ⟪b'-a', b₀ - b'⟫ := by
-          intro assumed
-          have refined: 1- γ < |2* ⟪b'-a', b₀ - b'⟫| / (‖b₀ - b'‖^2) := by linarith
-          calc
-            (1-γ)*‖b₀-b'‖^2 < (|2* ⟪b'-a', b₀ - b'⟫| / (‖b₀ - b'‖^2)) * ‖b₀-b'‖^2 := by
-              rw[mul_lt_mul_right]
-              exact refined; exact greater_zero_denom
-            _ = |2* ⟪b'-a', b₀ - b'⟫| * 1 / ‖b₀ - b'‖^2 * ‖b₀-b'‖^2 := by simp
-            _ = |2* ⟪b'-a', b₀ - b'⟫| * (1 / ‖b₀ - b'‖^2 * ‖b₀-b'‖^2) := by ring
-            _ = |2* ⟪b'-a', b₀ - b'⟫| *1 := by rw[one_div_mul_cancel not_zero_denom]
-            _ = -2* ⟪b'-a', b₀ - b'⟫ := by simp; apply LT.lt.le; exact h_contra
-        have inRange:  1 - |2* ⟪b'-a', b₀ - b'⟫| / ‖b₀ - b'‖ ^ 2 < 1 := by
+        have simplify: 0 ≤ ((1-γ )*‖b₀-b'‖^2 + 2 * ⟪b'-a', b₀ - b'⟫) := by apply nonneg_of_mul_nonneg_right h h_pos_γ
+        simp[simplify]; linarith
+
+      have inRange:  γ' < 1 := by
           have h1: |2* ⟪b'-a', b₀ - b'⟫| / ‖b₀ - b'‖ ^ 2 = |2* ⟪b'-a', b₀ - b'⟫| / |‖b₀ - b'‖ ^ 2| := by simp[← sq_abs]
           have h2: |2* ⟪b'-a', b₀ - b'⟫| / |‖b₀ - b'‖ ^ 2| = |2* ⟪b'-a', b₀ - b'⟫ / ‖b₀ - b'‖ ^ 2| := by simp[abs_div]
-          have h3: |2* ⟪b'-a', b₀ - b'⟫ / ‖b₀ - b'‖ ^ 2| > 0 := by sorry
-          simp; rw[h1]; rw[h2]; exact h3
+          have h3: |2* ⟪b'-a', b₀ - b'⟫ / ‖b₀ - b'‖ ^ 2| > 0 := by
+            simp[abs_pos]
+            have h_right: ¬b₀ - b' = 0 := by
+              exact sub_ne_zero_of_ne hb_ne_b
+            have h_left: ¬⟪b' - a', b₀ - b'⟫ = 0 := by
+              exact h
+            exact ⟨h_left, h_right⟩
+          simp; unfold γ'; rw[h1]; rw[h2]; linarith
+
+      have cases_γ : γ' < 0 := by
+        by_contra! h
+        let γ_fit := (γ' + 1)/2
+        have less_upper: γ_fit < 1 :=  by
+          unfold γ_fit; rw[add_div_two_lt_right]; exact inRange
+        have greater_lower: γ' < γ_fit := by
+          unfold γ_fit; rw[left_lt_add_div_two]; exact inRange
+        have ge_zero: γ_fit ≥ 0 := by linarith
+        have le_one: γ_fit ≤ 1 := by linarith
+        have not_one: 1 ≠ γ_fit  := by symm; exact ne_of_lt less_upper
+        absurd factored γ_fit ge_zero le_one not_one
+        exact LT.lt.not_le (choice_γ γ_fit greater_lower)
+      have cases_γ2 : 0 ≤ γ' := by
+        by_contra! h
+        let γ_fit: ℝ := 0
+        have ge_zero: γ_fit ≥ 0 := by unfold γ_fit; linarith
+        have le_one: γ_fit ≤ 1 := by unfold γ_fit; linarith
+        have not_one: 1 ≠ γ_fit  := by unfold γ_fit; linarith
+        absurd factored γ_fit ge_zero le_one not_one
+        exact LT.lt.not_le (choice_γ γ_fit h)
+      absurd LT.lt.not_le cases_γ
+      exact cases_γ2
+    rw[inner_sub_right] at almost_done'
+    unfold f
+    linarith
+
+
+  have minf' : ∀ a₀ ∈ A, f a₀ ≤ f a' := by
+    intro a₀ ha₀
+    have lin_dep (γ : ℝ) : (0 ≤ γ) ∧ (γ ≤ 1) → γ • a' + (1-γ) • a₀ ∈ A :=
+      fun ⟨h, _⟩ => hA h_a'A ha₀ h (by linarith) (by simp)
+
+    have equality_inner_prods (γ : ℝ) (hγ: γ ≥ 0) (hγ': γ ≤ 1): ‖γ•a' + (1-γ)•a₀-b'‖^2 = ‖b'-a'‖^2 + (1-γ)^2*‖a₀-a'‖^2 + 2*(1-γ) * ⟪a'-b', a₀ - a'⟫  := by
+      calc
+        ‖γ•a' + (1-γ)•a₀-b'‖^2 = ‖γ•a' + a' - a' + (1-γ)•a₀-b'‖^2 := by simp
+        _ = ‖(a' - b') + (1-γ )•(a₀- a')‖^2 := by congr 2; module
+        _ = ⟪ (a' - b') + ((1-γ )•(a₀- a')) ,  (a' - b') + ((1-γ )•(a₀- a')) ⟫  := by simp[real_inner_self_eq_norm_sq]
+        _ = ⟪a'-b', a'-b'⟫ + ⟪a'-b', (1-γ )• (a₀-a')⟫ + ⟪ (1-γ )• (a₀-a'), a'-b' ⟫  + ⟪(1-γ)• (a₀-a'), (1-γ)• (a₀-a')⟫ := by simp[inner_add_add_self]
+        _ = ⟪a'-b', a'-b'⟫ + (1-γ)*⟪a'-b', a₀-a'⟫ + (1-γ)*⟪ a'-b', a₀ -a' ⟫  + (1-γ)*(⟪(1-γ)•(a₀-a'),  a₀-a'⟫) := by simp[real_inner_smul_left , real_inner_smul_right, real_inner_comm]
+        _ = ⟪a'-b', a'-b'⟫ + 2*(1-γ)*⟪ a'-b', a₀ -a' ⟫  + (1-γ)*(⟪(1-γ)• (a₀-a'), a₀-a'⟫):= by ring
+        _ = ⟪a'-b', a'-b'⟫ + 2*(1-γ)*⟪ a'-b', a₀ -a' ⟫  + (1-γ)*((1-γ)*⟪ a₀-a', a₀-a'⟫) := by simp[real_inner_smul_left]
+        _ = ⟪(a'-b'), (a'-b')⟫ + (1-γ)^2 * ⟪(a₀-a'), (a₀-a')⟫ + 2*(1-γ)*⟪ a'- b', a₀ - a'⟫:= by ring
+        _ = ‖a'-b'‖^2 + (1-γ)^2 * ‖a₀-a'‖^2  + 2*(1-γ) * ⟪a'-b', a₀ - a'⟫ := by simp [real_inner_self_eq_norm_sq]
+        _ = ‖b'-a'‖^2 + (1-γ)^2 * ‖a₀-a'‖^2  + 2*(1-γ) * ⟪a'-b', a₀ - a'⟫ := by simp[norm_sub_rev]
+
+    have ineq1 (γ : ℝ)(hγ: γ ≥ 0) (hγ': γ ≤ 1): 0 ≤  ‖b'-a'‖^2 + (1-γ)^2 * ‖a₀-a'‖^2  + 2*(1-γ) * ⟪a'-b', a₀ - a'⟫ := by
+      rw[← equality_inner_prods]; simp[norm_nonneg]; exact hγ; exact hγ'
+
+    have ineq2 (γ : ℝ)(hγ: γ ≥ 0) (hγ': γ ≤ 1):  ‖b' - a'‖ ≤ ‖(γ • a' + (1-γ) • a₀) - b'‖ := by
+      repeat rw[ ←dist_eq_norm]
+      rw[dist_comm]
+      apply h_a'b'_min_dist
+      exact (lin_dep γ ⟨hγ, hγ'⟩); exact h_b'B
+
+    have combo_inequalities (γ : ℝ)(hγ: γ ≥ 0) (hγ': γ ≤ 1) : 0 ≤ (1-γ)^2*‖a₀-a'‖^2 + 2*(1-γ) * ⟪a'-b', a₀ - a'⟫ := by
+      --have intermediate: ‖‖ ≤ ‖b'-a'‖^2 + (1-γ)^2*‖b₀-b'‖^2 + 2*(1-γ) * ⟪b'-a', b₀ - b'⟫
+      have dummy: ‖b'-a'‖^2  ≤ ‖b'-a'‖^2 + (1-γ)^2 * ‖a₀-a'‖^2  + 2*(1-γ) * ⟪a'-b', a₀ - a'⟫:= by
+        rw[← equality_inner_prods]
+        rw[sq_le_sq]; repeat rw[abs_norm]
+        apply ineq2; exact hγ; exact hγ'; exact hγ; exact hγ'
+      linarith
+
+    by_cases h : ⟪a'-b', a₀ - a'⟫ = 0
+    . suffices h' : f a₀ = f a' by linarith
+      rw[inner_sub_right] at h
+      unfold f
+      have this_neg_case : ⟪-(b' - a'), a₀⟫ = ⟪-(b' - a'), a'⟫ := by simp; linarith
+      repeat rw[inner_neg_left] at this_neg_case
+      linarith
+    have ha_ne_a : a₀ ≠ a' := by
+      intro h'
+      rw[inner_sub_right] at h
+      have h_lemma: ⟪a'-b', a'⟫ - ⟪a'-b', a'⟫ = 0 := by linarith
+      rw[h'] at h
+      absurd h; exact h_lemma
+    have almost_done' : 2* ⟪a'-b', a₀ - a'⟫ ≥ 0 := by
+      by_contra! le_0_inner
+      let γ' := 1 - |2* ⟪a'-b', a₀ - a'⟫| / (‖a₀ - a'‖^2)
+
+      have not_zero_denom: ‖a₀-a'‖^2 ≠ 0 := by
+           simp; have ha_minus_a: a₀ - a' ≠ 0 := by rw[sub_ne_zero]; exact ha_ne_a
+           by_contra; contradiction
+      have greater_zero_denom : 0 < ‖a₀ -a'‖^2 := by
+          apply LE.le.lt_of_ne'
+          simp[norm_nonneg]
+          exact not_zero_denom
+
+
+      have choice_γ (γ : ℝ) (h_ineqγ: γ' < γ ): (1-γ)*‖a₀-a'‖^2 < -2* ⟪a'-b', a₀ - a'⟫ := by
+        have refined: 1- γ < |2* ⟪a'-b', a₀ - a'⟫| / (‖a₀ - a'‖^2) := by
+          unfold γ' at h_ineqγ; linarith
+        calc
+          (1-γ)*‖a₀-a'‖^2 < (|2* ⟪a'-b', a₀ - a'⟫| / (‖a₀ - a'‖^2)) * ‖a₀-a'‖^2 := by
+            rw[mul_lt_mul_right]
+            exact refined; exact greater_zero_denom
+          _ = |2* ⟪a'-b', a₀ - a'⟫| * 1 / ‖a₀ - a'‖^2 * ‖a₀-a'‖^2 := by simp
+          _ = |2* ⟪a'-b', a₀ - a'⟫| * (1 / ‖a₀ - a'‖^2 * ‖a₀-a'‖^2) := by ring
+          _ = |2* ⟪a'-b', a₀ - a'⟫| *1 := by rw[one_div_mul_cancel]; exact not_zero_denom
+          _ = -2* ⟪a'-b', a₀ - a'⟫ := by simp; apply LT.lt.le; simp[le_0_inner]
+
+      have factored (γ : ℝ)(hγ: γ ≥ 0) (hγ': γ ≤ 1)(γ_ne1: 1 ≠ γ)  :  -2* ⟪a'-b', a₀ - a'⟫ ≤ (1-γ)*‖a₀-a'‖^2  := by
+        have h_pos_γ: 0 < 1-γ  := by
+            by_contra; have h'_1 : 1 -γ ≤ 0 := by linarith
+            have h'_2: 1 ≤ γ := by linarith
+            have h'_3: 1 < γ := by rw[lt_iff_le_and_ne]; exact ⟨h'_2, γ_ne1⟩
+            linarith [h'_3, hγ']
+        have h: 0 ≤ (1-γ)*((1-γ)*‖a₀-a'‖^2 + 2 * ⟪a'-b', a₀ - a'⟫) := by
+           calc
+             0 ≤ (1-γ)^2*‖a₀-a'‖^2 + 2*(1-γ) * ⟪a'-b', a₀ - a'⟫ := by apply combo_inequalities; exact hγ; exact hγ'
+             _ = (1-γ)*(1-γ)*‖a₀-a'‖^2 + (1-γ) * 2 * ⟪a'-b', a₀ - a'⟫ := by simp[sq, mul_comm]
+             _ = (1-γ)*((1-γ)*‖a₀-a'‖^2) + (1-γ) * (2 * ⟪a'-b', a₀ - a'⟫) := by repeat rw[mul_assoc]
+             _ = (1-γ)*((1-γ)*‖a₀-a'‖^2 + 2*⟪a'-b', a₀ - a'⟫) := by rw[← mul_add]
+        have simplify: 0 ≤ ((1-γ )*‖a₀-a'‖^2 + 2 * ⟪a'-b', a₀ - a'⟫) := by apply nonneg_of_mul_nonneg_right h h_pos_γ
+        simp[simplify]; linarith
+
+      have inRange:  γ' < 1 := by
+          have h1: |2* ⟪a'-b', a₀ - a'⟫| / ‖a₀ - a'‖ ^ 2 = |2* ⟪a'-b', a₀ - a'⟫| / |‖a₀ - a'‖ ^ 2| := by simp[← sq_abs]
+          have h2: |2* ⟪a'-b', a₀ - a'⟫| / |‖a₀ - a'‖ ^ 2| = |2* ⟪a'-b', a₀ - a'⟫ / ‖a₀ - a'‖ ^ 2| := by simp[abs_div]
+          have h3: |2* ⟪a'-b', a₀ - a'⟫ / ‖a₀ - a'‖ ^ 2| > 0 := by
+            simp[abs_pos]
+            have h_right: ¬a₀ - a' = 0 := by
+              exact sub_ne_zero_of_ne ha_ne_a
+            have h_left: ¬⟪a' - b', a₀ - a'⟫ = 0 := by
+              exact h
+            exact ⟨h_left, h_right⟩
+          simp; unfold γ'; rw[h1]; rw[h2]; linarith
+
+      have cases_γ : γ' < 0 := by
+        by_contra! h
+        let γ_fit := (γ' + 1)/2
+        have less_upper: γ_fit < 1 :=  by
+          unfold γ_fit; rw[add_div_two_lt_right]; exact inRange
+        have greater_lower: γ' < γ_fit := by
+          unfold γ_fit; rw[left_lt_add_div_two]; exact inRange
+        have ge_zero: γ_fit ≥ 0 := by linarith
+        have le_one: γ_fit ≤ 1 := by linarith
+        have not_one: 1 ≠ γ_fit  := by symm; exact ne_of_lt less_upper
+        absurd factored γ_fit ge_zero le_one not_one
+        exact LT.lt.not_le (choice_γ γ_fit greater_lower)
+      have cases_γ2 : 0 ≤ γ' := by
+        by_contra! h
+        let γ_fit: ℝ := 0
+        have ge_zero: γ_fit ≥ 0 := by unfold γ_fit; linarith
+        have le_one: γ_fit ≤ 1 := by unfold γ_fit; linarith
+        have not_one: 1 ≠ γ_fit  := by unfold γ_fit; linarith
+        absurd factored γ_fit ge_zero le_one not_one
+        exact LT.lt.not_le (choice_γ γ_fit h)
+      absurd LT.lt.not_le cases_γ
+      exact cases_γ2
+    rw[inner_sub_right] at almost_done'
+    unfold f
+    have intermed_this: ⟪-(b' - a'), a₀⟫ - ⟪-(b' - a'), a'⟫ ≥ 0 := by simp; linarith
+    repeat rw[inner_neg_left] at intermed_this
+    linarith
+
+  let fc := (f a'+f b')/2
+  have lt_fb: fc < f b' := by unfold fc; rw[add_div_two_lt_right]; apply h_prods_ineq
+  have gt_fa: f a' < fc := by unfold fc; rw[left_lt_add_div_two]; exact h_prods_ineq
+  have lt_b (b : B): fc < f b := by
+    sorry
+  have gt_a (a : A): f a < fc := by
+    sorry
+  
+
+
+  --have f_linear : f = bilinFormOfRealInner ℝ V  := by sorry
+  --constructor
+  --use f
+  --apply LE.le.trans_lt minf gt_fa
+
+
+  sorry
+
+
+
+
+
+
+
 
 
 
@@ -687,16 +881,6 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
 
         --linarith[choice_γ, factored]
 
-
-        sorry
-
-
-      sorry
-
-
-
-    sorry
-  sorry
 
 #check mul_lt_mul_right
   --rcases this
