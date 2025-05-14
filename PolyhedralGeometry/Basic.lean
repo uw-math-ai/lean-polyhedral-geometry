@@ -533,14 +533,11 @@ theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalComb
       · exact h_all_ai_βbi_nonneg (j+1) h_j1_lt_N1
       · exact ((h_av (j + 1) h_j1_lt_N1).resolve_left (h_a_all_pos (j + 1) h_j1_lt_N1)).right
 
-  have h_i₀_in_N1 : i₀ ∈ range (N + 1) := by
-        exact mem_of_mem_filter i₀ i₀_in_range
+  have h_i₀_in_N1 : i₀ ∈ range (N + 1) := mem_of_mem_filter i₀ i₀_in_range
 
   · have drop : ∑ i ∈ range (N+1), (a i - β*b i) • v i = ∑ i ∈ (erase (range (N+1)) i₀), (a i - β*b i) • v i := by
       rw [sum_erase]
       exact smul_eq_zero_of_left h_i₀_ai_βbi_zero (v i₀)
-
-
 
     have inj_shift : ∀ (L : ℕ), ∀ c ∈ (range L), ∀ d ∈ (range L), shift c = shift d → c = d := by
       intro L c c_in_range d d_in_range
@@ -549,8 +546,7 @@ theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalComb
         · unfold shift
           rw [if_pos h_c_i₀]
           rw [if_pos h_d_i₀]
-          intro this
-          exact this
+          tauto
         · intro h_sc_eq_sd
           unfold shift at h_sc_eq_sd
           rw [if_pos h_c_i₀] at h_sc_eq_sd
