@@ -10,9 +10,6 @@ import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Algebra.Order.Ring.Unbundled.Basic
 import Mathlib.Algebra.Group.Defs
 import Mathlib.Analysis.InnerProductSpace.LinearMap
---import Mathlib.Topology.MetricSpace.Defs
---import Mathlib.LinearAlgebra.Dual
---import Mathlib.Topology.Defs.Basic
 
 section
 variable {V : Type*} [AddCommGroup V] [Module ℝ V]
@@ -363,10 +360,8 @@ theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalComb
 
       exact h_x_combo
 
-
   push_neg at h_a_not_all_pos
   rename ∀ i < N + 1, a i ≠ 0 => h_a_all_pos
-
 
   have : ¬ LinearIndepOn ℝ v (range (N + 1)) := by
     intro h
@@ -377,8 +372,6 @@ theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalComb
     simp at this
     have := ENat.toNat_le_toNat this
       (by simp; exact Module.rank_lt_aleph0 ℝ V)
-    -- simp at this
-    -- rw [←finrank] at this
     exact this
   replace := (not_congr linearIndepOn_iff'').mp this
   push_neg at this
@@ -497,18 +490,10 @@ theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalComb
     have hbi₀_nonzero : b i₀ ≠ 0 := (mem_filter.mp i₀_in_range).2
     simp [hbi₀_nonzero]
 
-
-  -- wlog h_impossible : i₀ = N generalizing a b
-  -- . sorry
-
   let shift : ℕ → ℕ := fun i =>
     if i < i₀ then i else i + 1
 
   unfold isConicalCombo_aux
-
-  sorry
-
-
 
   use fun i => (a ∘ shift) i - β * (b ∘ shift) i, v ∘ shift
   refine ⟨?_,?_⟩
@@ -651,7 +636,6 @@ theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalComb
       _ = ∑ i ∈ (erase (range (N+1)) i₀), (a i - β*b i) • v i := by rw [drop]
       _ = ∑ i ∈ (range N), (a (shift i) - β * b (shift i)) • v (shift i) := by rw [reidx]
 
-
 end
 
 section
@@ -704,45 +688,9 @@ theorem conical_hull_closed_of_finite (s : Set V) : s.Finite → IsClosed (conic
   --use nonneg_orthant_gens and nonneg_orthant_closed
   sorry
 
---figure out how closure operators work (to define conicalHull like mathlib's convexHull)
-
--- 𝕜 is the underlying scalar field (e.g., ℝ or ℚ), assumed to be an ordered ring.
---variable {𝕜 : Type*} [OrderedRing 𝕜]
-
---Seems like this migh just be (`exists_closed_hyperplane_separating`) in Mathlib
---Requirements: both A,B convex, at least one compact, A,B disjoint, Normed Vector Space V.
---So theorem HyperPlaneSeparation is just apply exists_closed_hyperplane_separating
-
--- E is the vector space type, equipped with:
--- 1. An additive commutative group structure (`AddCommGroup`).
--- 2. A module structure over 𝕜 (generalizing vector spaces to arbitrary rings).
--- 3. A topology (`TopologicalSpace`) compatible with addition (`TopologicalAddGroup`).
--- 4. Continuous scalar multiplication (`ContinuousConstSMul`).
-
 section
 variable {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [FiniteDimensional ℝ V]
 open Bornology RealInnerProductSpace
-
-#check PseudoMetricSpace
--- A and B are the convex sets we want to separate.
-
-open Bornology
-
--- The goal: Prove there exists a continuous linear functional `f` and a scalar `c`
--- such that `f` separates A and B (i.e., `f(a) ≤ c ≤ f(b)` for all `a ∈ A`, `b ∈ B`).
-
---#print Set.Nonempty
---#check Metric.infDist
---#check dist_nonneg
---#check Metric.continuous_infDist_pt
---#check Convex
---#check real_inner_self_eq_norm_sq
---#check sesqFormOfInner_apply_apply
-
---theorem Metric.isCompact_iff_isClosed_bounded {α : Type u} [PseudoMetricSpace α] {s : Set α} [T2Space α] [ProperSpace α] :
---IsCompact s ↔ IsClosed s ∧ Bornology.IsBounded s
-
---gonna have to add Metric.hausdorffDist_nonneg for latest goal
 
 lemma infDist_points (A B : Set V) (h_closed : IsClosed A ∧ IsClosed B) (h_nonempty : A.Nonempty ∧ B.Nonempty) (hA_Bounded : IsBounded A) : ∃ a₀ ∈ A, ∃ b₀ ∈ B, ∀ a ∈ A, ∀ b ∈ B, dist a₀ b₀ ≤ dist a b := by
   rcases h_nonempty.left with ⟨a, h_aA⟩
@@ -824,14 +772,8 @@ lemma infDist_points (A B : Set V) (h_closed : IsClosed A ∧ IsClosed B) (h_non
       rw [dist_comm]
       exact Metric.infDist_le_dist_of_mem h_aA
 
-
-
-#check innerₗ
-#check innerₛₗ
---note from Caelan: we need `f : V →ₗ[ℝ] ℝ` rather than just `f : V → ℝ` because we want to say that there is a linear functional that separates the two sets, not just any function
 theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex ℝ B) (hclosed : IsClosed A ∧ IsClosed B ) (hNempty : A.Nonempty ∧ B.Nonempty) (hA_Bounded: IsBounded A) (hAB : Disjoint A B) : ∃ (f : V →ₗ[ℝ] ℝ) (c : ℝ), (∀ a ∈ A, f a < c) ∧ (∀ b ∈ B, c < f b) := by
   rcases infDist_points A B hclosed hNempty hA_Bounded with ⟨a', h_a'A, b', h_b'B, h_a'b'_min_dist⟩
-  --let f': V →ₗ[ℝ] ℝ := fun x => ((innerₗ V) (b'-a')) x sorry
   let f: V → ℝ  := fun x => ⟪b'-a', x⟫
   have a_not_b: a' ≠ b' := by
     intro h
@@ -881,7 +823,6 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
         _ = ⟪(b'-a'), (b'-a')⟫ + (1-γ)^2 * ⟪(b₀-b'), (b₀-b')⟫ + 2*(1-γ)*⟪ b'- a', b₀ - b'⟫:= by ring
         _ = ‖b'-a'‖^2 + (1-γ)^2 * ‖b₀-b'‖^2  + 2*(1-γ) * ⟪b'-a', b₀ - b'⟫ := by simp [real_inner_self_eq_norm_sq]
 
-
     have ineq1 (γ : ℝ)(hγ: γ ≥ 0) (hγ': γ ≤ 1): 0 ≤  ‖b'-a'‖^2 + (1-γ)^2 * ‖b₀-b'‖^2  + 2*(1-γ) * ⟪b'-a', b₀ - b'⟫ := by
       rw[← equality_inner_prods]; simp[norm_nonneg]; exact hγ; exact hγ'
 
@@ -896,7 +837,6 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
         rw[sq_le_sq]; repeat rw[abs_norm]
         apply ineq2; exact hγ; exact hγ'; exact hγ; exact hγ'
       linarith
-
 
     by_cases h : ⟪b'-a', b₀ - b'⟫ = 0
     . suffices h' : f b₀ = f b' by linarith
@@ -919,7 +859,6 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
           apply LE.le.lt_of_ne'
           simp[norm_nonneg]
           exact not_zero_denom
-
 
       have choice_γ (γ : ℝ) (h_ineqγ: γ' < γ ): (1-γ)*‖b₀-b'‖^2 < -2* ⟪b'-a', b₀ - b'⟫ := by
         have refined: 1- γ < |2* ⟪b'-a', b₀ - b'⟫| / (‖b₀ - b'‖^2) := by
@@ -986,7 +925,6 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
     unfold f
     linarith
 
-
   have minf' : ∀ a₀ ∈ A, f a₀ ≤ f a' := by
     intro a₀ ha₀
     have lin_dep (γ : ℝ) : (0 ≤ γ) ∧ (γ ≤ 1) → γ • a' + (1-γ) • a₀ ∈ A :=
@@ -1046,7 +984,6 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
           apply LE.le.lt_of_ne'
           simp[norm_nonneg]
           exact not_zero_denom
-
 
       have choice_γ (γ : ℝ) (h_ineqγ: γ' < γ ): (1-γ)*‖a₀-a'‖^2 < -2* ⟪a'-b', a₀ - a'⟫ := by
         have refined: 1- γ < |2* ⟪a'-b', a₀ - a'⟫| / (‖a₀ - a'‖^2) := by
@@ -1118,34 +1055,18 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
   let fc := (f a'+f b')/2
   have lt_fb: fc < f b' := by unfold fc; rw[add_div_two_lt_right]; apply h_prods_ineq
   have gt_fa: f a' < fc := by unfold fc; rw[left_lt_add_div_two]; exact h_prods_ineq
-  have lt_b (b : B): fc < f b := by
-    sorry
-  have gt_a (a : A): f a < fc := by
-    sorry
+  have lt_b : ∀ b ∈ B, fc < f b := fun b hbB => lt_of_lt_of_le lt_fb (minf b hbB)
+  have gt_a : ∀ a ∈ A, f a < fc := fun a haA => lt_of_le_of_lt (minf' a haA) gt_fa
 
-
-
-  --have f_linear : f = bilinFormOfRealInner ℝ V  := by sorry
-  --constructor
-  --use f
-  --apply LE.le.trans_lt minf gt_fa
-
-
-  sorry
-
-        --linarith[choice_γ, factored]
-
-
-#check mul_lt_mul_right
-  --rcases this
-
- --WLOG, let A Construct a Set K_r compact around A, defined as all points within r of A, the compact
- --set within the relation. Let r such that K_r ∩ B ≠ ∅ ∧ K_r ∩ A = A
-
- --K_r ∩ B ∪ A is compact (show) implies existence of a∈ A, b∈ B ∩ K_r such that d(a,b) is minimal.
-
-  -- f' is norm to hyperplane separating A,B. Use this to define hyperplane with f = ⟨f', _ ⟩
-  -- hyperplane P = f x = c, x ∈ E. Choose c by middle line segment between a,b.
+  let inner_bilin := @bilinFormOfRealInner V inferInstance inferInstance 
+  unfold LinearMap.BilinForm LinearMap.BilinMap at inner_bilin
+  let f_lin := inner_bilin (b' - a')
+  have f_eq : f_lin = f := by
+    ext v
+    rfl
+  use f_lin, fc
+  rw [f_eq]
+  exact ⟨gt_a, lt_b⟩
 
 end
 
