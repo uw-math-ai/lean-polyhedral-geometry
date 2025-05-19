@@ -127,63 +127,80 @@ lemma Finset.sum_enlarge {ι α : Type*} [AddCommMonoid α] {t s : Finset ι} {f
 
 end
 
+lemma reindex_conicalCombo' {s : Set V} {x : V} {ι : Type*} (t : Finset ι) (a : ι → ℝ) (v : ι → V) : isConicalCombo' s x t a v → isConicalCombo_aux s x t.card := by
+  rintro ⟨h_av, h_x_combo⟩
+  have := (Finset.equivFin t).symm
+  set N := t.card
+  by_cases hN : N = 0
+  . rw [hN]
+    use (λ n ↦ 0), (λ n ↦ 0), by simp
+    rw [Finset.sum_range_zero, h_x_combo]
+    have : t = ∅ := Finset.card_eq_zero.mp hN
+    rw [this]
+    simp
+  replace hN : N > 0 := Nat.zero_lt_of_ne_zero hN
+  set F : ℕ → ι := Subtype.val ∘ (Finset.equivFin t).symm ∘ λ n ↦ if hn : n < N then (⟨n, hn⟩ : Fin N) else (⟨0, hN⟩ : Fin N)
+  have h_F : Set.BijOn F (Finset.range N) t := by
+    repeat' constructor
+    . simp [Set.MapsTo, F]
+    . simp [Set.InjOn, F]
+      intro n₁ hn₁ n₂ hn₂ h_eq
+      rw [dif_pos hn₁, dif_pos hn₂] at h_eq
+      have : Function.Injective (Subtype.val : { x // x ∈ t } → ι) := by simp
+      replace h_eq := this h_eq
+      have : Function.Injective t.equivFin.symm := t.equivFin.symm.injective
+      have := this h_eq
+      exact Fin.val_congr this
+    . intro i h_it
+      simp
+      have : Function.Surjective t.equivFin.symm := t.equivFin.symm.surjective
+      rcases this ⟨i, h_it⟩ with ⟨⟨n, hn⟩, h_eq⟩
+      use n, hn
+      simp [F]
+      rw [dif_pos hn, h_eq]
+  set a' : ℕ → ℝ := a ∘ F
+  set v' : ℕ → V := v ∘ F
+  use a', v'
+  repeat' constructor
+  . intro i _
+    dsimp [a', v']
+    apply h_av
+    apply h_F.1
+    simpa
+  . dsimp [a', v']
+    rw [h_x_combo]
+    symm
+    apply sum_bijon
+    . simp; convert h_F; simp [h_F]
+    . ext; simp
+
 lemma reindex_conicalCombo (s : Set V) (x : V) : isConicalCombo s x ↔ ∃ n, isConicalCombo_aux s x n := by
   constructor
-  . rintro ⟨α, t, a, v, h_av, h_x_combo⟩
+  . rintro ⟨ι, t, a, v, h⟩
     use t.card
-    unfold isConicalCombo_aux
-    have := (Finset.equivFin t).symm
-    set N := t.card
-    by_cases hN : N = 0
-    . rw [hN]
-      use (λ n ↦ 0), (λ n ↦ 0), by simp
-      rw [Finset.sum_range_zero, h_x_combo]
-      have : t = ∅ := Finset.card_eq_zero.mp hN
-      rw [this]
-      simp
-    replace hN : N > 0 := Nat.zero_lt_of_ne_zero hN
-    set F : ℕ → α := Subtype.val ∘ (Finset.equivFin t).symm ∘ λ n ↦ if hn : n < N then (⟨n, hn⟩ : Fin N) else (⟨0, hN⟩ : Fin N)
-    have h_F : Set.BijOn F (Finset.range N) t := by
-      repeat' constructor
-      . simp [Set.MapsTo, F]
-      . simp [Set.InjOn, F]
-        intro n₁ hn₁ n₂ hn₂ h_eq
-        rw [dif_pos hn₁, dif_pos hn₂] at h_eq
-        have : Function.Injective (Subtype.val : { x // x ∈ t } → α) := by simp
-        replace h_eq := this h_eq
-        have : Function.Injective t.equivFin.symm := t.equivFin.symm.injective
-        have := this h_eq
-        exact Fin.val_congr this
-      . intro i h_it
-        simp
-        have : Function.Surjective t.equivFin.symm := t.equivFin.symm.surjective
-        rcases this ⟨i, h_it⟩ with ⟨⟨n, hn⟩, h_eq⟩
-        use n, hn
-        simp [F]
-        rw [dif_pos hn, h_eq]
-    set a' : ℕ → ℝ := a ∘ F
-    set v' : ℕ → V := v ∘ F
-    use a', v'
-    repeat' constructor
-    . intro i _
-      dsimp [a', v']
-      apply h_av
-      apply h_F.1
-      simpa
-    . dsimp [a', v']
-      rw [h_x_combo]
-      symm
-      apply sum_bijon
-      . simp; convert h_F; simp [h_F]
-      . ext; simp
+    exact reindex_conicalCombo' _ _ _ h
   . rintro ⟨n, a, v, h_av, h_x_combo⟩
     let ℕ' := ULift ℕ
     let I := Finset.map (Function.Embedding.mk (@ULift.up Nat) (@ULift.up.inj Nat)) (Finset.range n)
     let a' : ℕ' → ℝ := fun i ↦ a i.down
     let v' : ℕ' → V := fun i ↦ v i.down
     use ℕ', I, a', v'
-    simp [ℕ', I, a', v', Finset.mem_range]
+    simp [isConicalCombo', ℕ', I, a', v', Finset.mem_range]
     use h_av
+
+lemma reduce_conicalCombo (s : Set V) (x : V) {n : ℕ} {a : ℕ → ℝ} (v : ℕ → V) : (∃ j < n + 1, a j = 0) → isConicalCombo_aux' s x (n + 1) a v → isConicalCombo_aux s x n := by
+  rintro ⟨j, h_j⟩ ⟨h_av, h_x_combo⟩
+  convert reindex_conicalCombo' ((Finset.range (n + 1)).erase j) a v ?_
+  . have := Finset.card_erase_add_one (Finset.mem_range.mpr h_j.1)
+    simp at this
+    rw [this]
+  . unfold isConicalCombo'
+    constructor
+    . intro i h_i
+      rw [Finset.mem_erase, Finset.mem_range] at h_i
+      exact h_av i h_i.2
+    . have : a j • v j = 0 := by rw [h_j.2]; simp
+      rw[Finset.sum_erase (Finset.range (n + 1)) this]
 
 def ULift.list.{u, v} {α : Type v} : List α → List (ULift.{u, v} α)
   | [] => []
@@ -226,143 +243,11 @@ theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalComb
   rcases h with ⟨a, v, h_av, h_x_combo⟩
   apply ih
 
-  by_cases h_a_not_all_pos : ∃ i < N + 1, a i = 0
-  · rcases h_a_not_all_pos with ⟨i₀,h_i_in_range,h_ai_eq_0⟩
-    let shift : ℕ → ℕ := fun i =>
-    if i < i₀ then i else i + 1
-
-    unfold isConicalCombo_aux
-    use a ∘ shift, v ∘ shift
-    refine ⟨?_,?_⟩
-    · intro j h_j_in_range
-      by_cases h_j_i₀ : j < i₀
-      · have h_j_lt_N1 : j < N + 1 := by exact Nat.lt_add_right 1 h_j_in_range
-        unfold Function.comp shift
-        rw [if_pos h_j_i₀]
-        exact h_av j h_j_lt_N1
-      · have h_j1_lt_N1 : j + 1 < N + 1 := by exact Nat.add_lt_add_right h_j_in_range 1
-        unfold Function.comp shift
-        rw [if_neg h_j_i₀]
-        exact h_av (j + 1) h_j1_lt_N1
-    · have h_ai₀_vi₀_eq_0 : a i₀ • v i₀ = 0 := by
-        exact smul_eq_zero_of_left h_ai_eq_0 (v i₀)
-
-      have drop : ∑ i ∈ range (N+1), a i • v i = ∑ i ∈ (erase (range (N+1)) i₀), a i • v i := by
-        rw [sum_erase]
-        exact h_ai₀_vi₀_eq_0
-
-      have inj_shift : ∀ (L : ℕ), ∀ c ∈ (range L), ∀ d ∈ (range L), shift c = shift d → c = d := by
-        intro L c c_in_range d d_in_range
-        by_cases h_c_i₀ : c < i₀
-        · by_cases h_d_i₀ : d < i₀
-          · unfold shift
-            rw [if_pos h_c_i₀]
-            rw [if_pos h_d_i₀]
-            intro this
-            exact this
-          · intro h_sc_eq_sd
-            unfold shift at h_sc_eq_sd
-            rw [if_pos h_c_i₀] at h_sc_eq_sd
-            rw [if_neg h_d_i₀] at h_sc_eq_sd
-            push_neg at h_d_i₀
-            have : d + 1 < i₀ := by
-              exact lt_of_eq_of_lt (id (Eq.symm h_sc_eq_sd)) h_c_i₀
-            have : d + 1 < d := by
-              exact Nat.lt_of_lt_of_le this h_d_i₀
-            linarith
-        · by_cases h_d_i₀ : d < i₀
-          · unfold shift
-            rw [if_neg h_c_i₀, if_pos h_d_i₀]
-            intro h_c1_eq_d
-            have : c + 1 < i₀ := by
-              exact lt_of_eq_of_lt h_c1_eq_d h_d_i₀
-            push_neg at h_c_i₀
-            have : c + 1 < c := by
-              exact Nat.lt_of_lt_of_le this h_c_i₀
-            linarith
-          · unfold shift
-            rw [if_neg h_c_i₀, if_neg h_d_i₀]
-            intro h_c1_eq_d1
-            linarith
-
-      have img_shift : (range N).image shift = (erase (range (N+1)) i₀ : Finset ℕ) := by
-        ext j
-        apply Iff.intro
-        · intro h_in_im
-          simp
-          refine ⟨?_,?_⟩
-          · push_neg
-            simp at h_in_im
-            unfold shift at h_in_im
-            rcases h_in_im with ⟨a,h_a_lt_N,h_if⟩
-            by_cases h_a_lt_i₀ : a < i₀
-            · rw [if_pos h_a_lt_i₀] at h_if
-              linarith
-            · rw [if_neg h_a_lt_i₀] at h_if
-              linarith
-          · simp at h_in_im
-            unfold shift at h_in_im
-            rcases h_in_im with ⟨a,h_a_lt_N,h_if⟩
-            by_cases h_a_lt_i₀ : a < i₀
-            · rw [if_pos h_a_lt_i₀] at h_if
-              linarith
-            · rw [if_neg h_a_lt_i₀] at h_if
-              linarith
-        · intro h_in_erase
-          rw [mem_image]
-          by_cases h₁ : j < i₀
-          · use j
-            refine ⟨?_,?_⟩
-            · have : i₀ ≤ N := by
-                have h_i₀_in_N1 : j < N + 1 := by
-                  exact Nat.lt_trans h₁ h_i_in_range
-                simp at h_i₀_in_N1
-                linarith
-              simp
-              linarith
-            unfold shift
-            rw [if_pos h₁]
-          · use j - 1
-            push_neg at h₁
-            simp at h_in_erase
-            have h_0_lt_j : 0 < j := by
-                have : 0 ≤ i₀ := by
-                  exact Nat.zero_le i₀
-                have : i₀ < j := by
-                  refine Nat.lt_of_le_of_ne h₁ ?_
-                  push_neg
-                  push_neg at h_in_erase
-                  exact h_in_erase.left.symm
-                exact Nat.zero_lt_of_lt this
-            refine ⟨?_,?_⟩
-            · simp
-              have : 1 ≤ j := by
-                exact h_0_lt_j
-              (expose_names; refine Nat.sub_lt_right_of_lt_add h_0_lt_j ?_)
-              exact h_in_erase.right
-            · unfold shift
-              rw [if_neg]
-              exact Nat.sub_add_cancel h_0_lt_j
-              push_neg
-              push_neg at h_in_erase
-              refine (Nat.le_sub_one_iff_lt h_0_lt_j).mpr ?_
-              refine Nat.lt_of_le_of_ne h₁ ?_
-              exact h_in_erase.left.symm
-
-      have reidx : ∑ i ∈ (erase (range (N+1)) i₀), a i • v i = ∑ i ∈ (range N), a (shift i) • v (shift i) := by
-        rw [← img_shift]
-        apply (sum_image (inj_shift N)).trans
-        rfl
-
-      unfold Function.comp
-
-      rw[← reidx,← drop]
-
-      exact h_x_combo
-
-  push_neg at h_a_not_all_pos
-  rename ∀ i < N + 1, a i ≠ 0 => h_a_all_pos
-
+  wlog h_a_all_pos : ∀ i < N + 1, a i ≠ 0 generalizing
+  . push_neg at h_a_all_pos
+    apply reduce_conicalCombo s x v h_a_all_pos
+    exact ⟨h_av, h_x_combo⟩
+    
   have : ¬ LinearIndepOn ℝ v (range (N + 1)) := by
     intro h
     absurd hN
@@ -398,14 +283,15 @@ theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalComb
       exact this
   rw [h'] at h_b_combo_eq_0 h_jt
   clear h_t_sub_range h_b_comp h' t
-  wlog b_j_pos : b j > 0 generalizing b
+  wlog h_b_j_pos : b j > 0 generalizing b
   . let b' := -b
     apply this b' <;> simp [b']
     . assumption
     . simp [h_b_combo_eq_0]
-    . simp at b_j_pos
-      exact lt_of_le_of_ne b_j_pos h_j_ne_0
+    . simp at h_b_j_pos
+      exact lt_of_le_of_ne h_b_j_pos h_j_ne_0
   clear h_j_ne_0
+
   let ratios : Finset ℝ := ((Finset.range (N + 1)).filter (λ i => b i ≠ 0)).image (λ i => a i / b i)
   let ratios_non_neg : Finset ℝ := ratios.filter (λ r => r ≥ 0)
   have hratio_nonem : ratios_non_neg.Nonempty := by
@@ -434,7 +320,6 @@ theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalComb
   have ⟨h_ratios, h_βgeq0⟩ := mem_filter.mp hβ_mem
   rcases mem_image.mp h_ratios with ⟨i₀,i₀_in_range,hi₀_is_index_β⟩
 
-
   replace h_b_combo_eq_0 : ∑ i ∈ range (N + 1),  (β * b i) • v i = 0 := by
     have : β • (∑ i ∈ range (N + 1),  b i • v i) = 0 := by
       exact smul_eq_zero_of_right β h_b_combo_eq_0
@@ -445,7 +330,7 @@ theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalComb
     exact this
   rw [← sub_zero (∑ i ∈ range (N + 1), a i • v i)] at h_x_combo
   rw [← h_b_combo_eq_0] at h_x_combo
-  have x_plus_zero : x = ∑ i ∈ range (N + 1), ((a i - β * b i) • v i) := by
+  have x_plus_zero : x = ∑ i ∈ range (N + 1), ((a - β • b) i • v i) := by
     simp [sub_smul, Finset.sum_sub_distrib]
     exact h_x_combo
 
@@ -485,156 +370,24 @@ theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalComb
 
       exact sub_nonneg_of_le this
 
-  have h_i₀_ai_βbi_zero : a i₀ - β * b i₀ = 0 := by
+  have h_i₀_ai_βbi_zero : (a - β • b) i₀ = 0 := by
     rw [← hi₀_is_index_β]
     have hbi₀_nonzero : b i₀ ≠ 0 := (mem_filter.mp i₀_in_range).2
     simp [hbi₀_nonzero]
 
-  let shift : ℕ → ℕ := fun i =>
-    if i < i₀ then i else i + 1
-
-  unfold isConicalCombo_aux
-
-  use fun i => (a ∘ shift) i - β * (b ∘ shift) i, v ∘ shift
-  refine ⟨?_,?_⟩
-  · intro j h_j_N
-    by_cases h_j_i₀ : j < i₀
-    · have h_j_lt_N1 : j < N + 1 := Nat.lt_add_right 1 h_j_N
-      have h_aj_eq_ashiftj : (a ∘ shift) j - β * (b ∘ shift) j = a j - β * b j := by
-        unfold Function.comp shift
-        rw [if_pos h_j_i₀]
-      have h_aj_eq_vshiftj : (v ∘ shift) j = v j := by
-        unfold Function.comp shift
-        rw [if_pos h_j_i₀]
-      apply Or.inr
-      rw [h_aj_eq_ashiftj, h_aj_eq_vshiftj]
-      refine ⟨?_,?_⟩
-      · exact h_all_ai_βbi_nonneg j h_j_lt_N1
-      · exact ((h_av j h_j_lt_N1).resolve_left (h_a_all_pos j h_j_lt_N1)).right
-    · have h_j1_lt_N1 : j + 1 < N + 1 := Nat.add_lt_add_right h_j_N 1
-      have h_aj_eq_ashiftj1 : (a ∘ shift) j - β * (b ∘ shift) j = a (j + 1) - β * b (j + 1) := by
-        unfold Function.comp shift
-        rw [if_neg h_j_i₀]
-      have h_aj_eq_vshiftj1 : (v ∘ shift) j = v (j + 1) := by
-        unfold Function.comp shift
-        rw [if_neg h_j_i₀]
-      apply Or.inr
-      rw [h_aj_eq_ashiftj1, h_aj_eq_vshiftj1]
-      refine ⟨?_,?_⟩
-      · exact h_all_ai_βbi_nonneg (j+1) h_j1_lt_N1
-      · exact ((h_av (j + 1) h_j1_lt_N1).resolve_left (h_a_all_pos (j + 1) h_j1_lt_N1)).right
-
-  have h_i₀_in_N1 : i₀ ∈ range (N + 1) := mem_of_mem_filter i₀ i₀_in_range
-
-  · have drop : ∑ i ∈ range (N+1), (a i - β*b i) • v i = ∑ i ∈ (erase (range (N+1)) i₀), (a i - β*b i) • v i := by
-      rw [sum_erase]
-      exact smul_eq_zero_of_left h_i₀_ai_βbi_zero (v i₀)
-
-    have inj_shift : ∀ (L : ℕ), ∀ c ∈ (range L), ∀ d ∈ (range L), shift c = shift d → c = d := by
-      intro L c c_in_range d d_in_range
-      by_cases h_c_i₀ : c < i₀
-      · by_cases h_d_i₀ : d < i₀
-        · unfold shift
-          rw [if_pos h_c_i₀]
-          rw [if_pos h_d_i₀]
-          tauto
-        · intro h_sc_eq_sd
-          unfold shift at h_sc_eq_sd
-          rw [if_pos h_c_i₀] at h_sc_eq_sd
-          rw [if_neg h_d_i₀] at h_sc_eq_sd
-          push_neg at h_d_i₀
-          have : d + 1 < i₀ := by
-            exact lt_of_eq_of_lt (id (Eq.symm h_sc_eq_sd)) h_c_i₀
-          have : d + 1 < d := by
-            exact Nat.lt_of_lt_of_le this h_d_i₀
-          linarith
-      · by_cases h_d_i₀ : d < i₀
-        · unfold shift
-          rw [if_neg h_c_i₀, if_pos h_d_i₀]
-          intro h_c1_eq_d
-          have : c + 1 < i₀ := by
-            exact lt_of_eq_of_lt h_c1_eq_d h_d_i₀
-          push_neg at h_c_i₀
-          have : c + 1 < c := by
-            exact Nat.lt_of_lt_of_le this h_c_i₀
-          linarith
-        · unfold shift
-          rw [if_neg h_c_i₀, if_neg h_d_i₀]
-          intro h_c1_eq_d1
-          linarith
-
-    have img_shift : (range N).image shift = (erase (range (N+1)) i₀ : Finset ℕ) := by
-      ext j
-      apply Iff.intro
-      · intro h_in_im
-        simp
-        refine ⟨?_,?_⟩
-        · push_neg
-          simp at h_in_im
-          unfold shift at h_in_im
-          rcases h_in_im with ⟨a,h_a_lt_N,h_if⟩
-          by_cases h_a_lt_i₀ : a < i₀
-          · rw [if_pos h_a_lt_i₀] at h_if
-            linarith
-          · rw [if_neg h_a_lt_i₀] at h_if
-            linarith
-        · simp at h_in_im
-          unfold shift at h_in_im
-          rcases h_in_im with ⟨a,h_a_lt_N,h_if⟩
-          by_cases h_a_lt_i₀ : a < i₀
-          · rw [if_pos h_a_lt_i₀] at h_if
-            linarith
-          · rw [if_neg h_a_lt_i₀] at h_if
-            linarith
-      · intro h_in_erase
-        rw [mem_image]
-        by_cases h₁ : j < i₀
-        · use j
-          refine ⟨?_,?_⟩
-          · have : i₀ ≤ N := by
-              simp at h_i₀_in_N1
-              linarith
-            simp
-            linarith
-          unfold shift
-          rw [if_pos h₁]
-        · use j - 1
-          push_neg at h₁
-          simp at h_in_erase
-          have h_0_lt_j : 0 < j := by
-              have : 0 ≤ i₀ := by
-                exact Nat.zero_le i₀
-              have : i₀ < j := by
-                refine Nat.lt_of_le_of_ne h₁ ?_
-                push_neg
-                push_neg at h_in_erase
-                exact h_in_erase.left.symm
-              exact Nat.zero_lt_of_lt this
-          refine ⟨?_,?_⟩
-          · simp
-            have : 1 ≤ j := by
-              exact h_0_lt_j
-            (expose_names; refine Nat.sub_lt_right_of_lt_add h_0_lt_j ?_)
-            exact h_in_erase.right
-          · unfold shift
-            rw [if_neg]
-            exact Nat.sub_add_cancel h_0_lt_j
-            push_neg
-            push_neg at h_in_erase
-            refine (Nat.le_sub_one_iff_lt h_0_lt_j).mpr ?_
-            refine Nat.lt_of_le_of_ne h₁ ?_
-            exact h_in_erase.left.symm
-
-    have reidx : ∑ i ∈ (erase (range (N+1)) i₀), (a i - β*b i) • v i = ∑ i ∈ (range N), (a (shift i) - β*b (shift i)) • v (shift i) := by
-      rw [← img_shift]
-      apply (sum_image (inj_shift N)).trans
-      rfl
-
-    unfold Function.comp
-    calc
-      x = _ := x_plus_zero
-      _ = ∑ i ∈ (erase (range (N+1)) i₀), (a i - β*b i) • v i := by rw [drop]
-      _ = ∑ i ∈ (range N), (a (shift i) - β * b (shift i)) • v (shift i) := by rw [reidx]
+  have : i₀ < N + 1 := by
+    rw [←mem_range]
+    exact (mem_filter.mp i₀_in_range).1
+  apply reduce_conicalCombo s x v ⟨i₀, this, h_i₀_ai_βbi_zero⟩
+  refine ⟨?_, x_plus_zero⟩
+  intro i h_i
+  right
+  constructor
+  . exact h_all_ai_βbi_nonneg i h_i
+  . rcases h_av i h_i with h | h
+    . absurd h
+      exact h_a_all_pos i h_i
+    . exact h.2
 
 end
 

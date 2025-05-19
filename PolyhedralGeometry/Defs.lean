@@ -35,13 +35,17 @@ def PolyhedralCone.{u} : Prop :=
 
 #print convexHull
 
+def isConicalCombo' (x : V) {ι : Type*} (t : Finset ι) (a : ι → ℝ) (v : ι → V) : Prop :=
+  (∀ i ∈ t, a i = 0 ∨ 0 ≤ a i ∧ v i ∈ s) ∧ x = ∑ i ∈ t, a i • v i
+
 def isConicalCombo (x : V) : Prop :=
-  ∃ (ι : Type*) (t : Finset ι) (a : ι → ℝ) (v : ι → V),
-    (∀ i ∈ t, a i = 0 ∨ 0 ≤ a i ∧ v i ∈ s) ∧ x = ∑ i ∈ t, a i • v i
+  ∃ (ι : Type*) (t : Finset ι) (a : ι → ℝ) (v : ι → V), isConicalCombo' s x t a v
+
+def isConicalCombo_aux' (x : V) (n : ℕ) (a : ℕ → ℝ) (v : ℕ → V) : Prop :=
+  (∀ i < n, a i = 0 ∨ 0 ≤ a i ∧ v i ∈ s) ∧ x = ∑ i ∈ Finset.range n, a i • v i
 
 def isConicalCombo_aux (x : V) (n : ℕ) : Prop :=
-  ∃ (a : ℕ → ℝ) (v : ℕ → V),
-    (∀ i < n, a i = 0 ∨ 0 ≤ a i ∧ v i ∈ s) ∧ x = ∑ i ∈ Finset.range n, a i • v i
+  ∃ (a : ℕ → ℝ) (v : ℕ → V), isConicalCombo_aux' s x n a v
 
 def conicalHull.{u} : Set V :=
   { x | isConicalCombo.{_, u} s x }
