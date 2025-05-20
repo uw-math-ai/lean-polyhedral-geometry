@@ -435,11 +435,24 @@ end
 
 section
 variable {V : Type*} [NormedAddCommGroup V] [Module ℝ V] [FiniteDimensional ℝ V]
+open Set Module
 
 --proposition 1.3.3(b)
 theorem conical_hull_closed_of_finite (s : Set V) : s.Finite → IsClosed (conicalHull s) := by
-  --use nonneg_orthant_gens and nonneg_orthant_closed
-  sorry
+  generalize h_dim : finrank ℝ V = n
+  revert V
+  induction' n with n ih <;> intro V _ _ _ s h_dim h_s
+  . rw [finrank_zero_iff] at h_dim
+    have : s = ∅ ∨ ∃ (x : V), s = {x} := Subsingleton.eq_empty_or_singleton subsingleton_of_subsingleton
+    rcases this with h | h <;> exact isClosed_discrete (conicalHull s)
+  . --use caratheordory to get a finset t of s of card n+1
+    --proof by cases : t linearly independent or not
+    --if not, induct
+    --else:
+    --use basisOfLinearIndependentOfCardEqFinrank
+    --unpack the Basis to get the linear equiv to ℝ^n that we want
+    --use nonneg_orthant_gens and nonneg_orthant_closed
+    sorry
 
 section
 variable {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [FiniteDimensional ℝ V]
@@ -821,8 +834,6 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
   rw [f_eq]
   exact ⟨gt_a, lt_b⟩
 
-
-
 lemma farkas (u: V)(C: Set V) (convC: Convex ℝ C) (closedC: IsClosed C)(coneC: Cone C): u ∉ C → ∃(y : V →ₗ[ℝ] ℝ), (y u > 0) ∧ (∀ x ∈ C, y x ≤ 0):= by
   intro hu
   have cu_Nempty :  (Set.singleton u).Nonempty ∧ C.Nonempty := by
@@ -834,8 +845,7 @@ lemma farkas (u: V)(C: Set V) (convC: Convex ℝ C) (closedC: IsClosed C)(coneC:
   have disjoint_cu: Disjoint {u} C := by
     rw[Set.disjoint_singleton_left]; exact hu
   have boundedU : IsBounded {u} := by exact Bornology.isBounded_singleton
-  rcases hyperplane_separation {u} C convex_u convC andCU cu_Nempty boundedU disjoint_cu with ⟨f, hf⟩
-  rcases hf with ⟨c, hfc⟩
+  rcases hyperplane_separation {u} C convex_u convC andCU cu_Nempty boundedU disjoint_cu with ⟨f, c, hfc⟩
   let g : V →ₗ[ℝ] ℝ := -f
   let c' :ℝ := -c
   --apply (translate_halfspace_of_cone_subset C g c)
@@ -852,12 +862,8 @@ lemma farkas (u: V)(C: Set V) (convC: Convex ℝ C) (closedC: IsClosed C)(coneC:
       unfold c' at le_hyp; linarith
     linarith
   exact ⟨u_gt, le_hyp.2⟩
-
-
-
-  end
-
-
+  
+end
 
 section
 variable {V : Type*} [NormedAddCommGroup V] [Module ℝ V] [FiniteDimensional ℝ V]
@@ -874,8 +880,6 @@ theorem conical_hull_closed_of_finite' (s : Set V) : s.Finite → IsClosed (coni
 
   --use nonneg_orthant_gens and nonneg_orthant_closed
   sorry
-
-
 
 section
 variable {V : Type*} [AddCommGroup V] [Module ℝ V]
