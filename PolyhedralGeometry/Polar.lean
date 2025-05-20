@@ -5,29 +5,6 @@ import Mathlib.Topology.Order.OrderClosed
 --import Mathlib.Topology.Algebra.Module.WeakDual
 import Mathlib.Topology.Algebra.Module.ModuleTopology
 
--- variable {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V]
--- open NormedSpace
-
---NOTE: wrong polar!! shouldn't have abs val
--- #check polar ℝ (_ : Set V)
--- #check isClosed_polar ℝ (_ : Set V)
--- #check zero_mem_polar ℝ (_ : Set V)
--- lemma polar_cone (s : Set V) : Cone s → polar ℝ s = { f | ∀ x ∈ s, f x ≤ 0 } := by
---   intro h_s_cone
---   ext f
---   constructor
---   . sorry
---   . simp [mem_polar_iff]
--- lemma polar_convex (s : Set V) : Convex ℝ (polar ℝ s) := (LinearMap.polar_AbsConvex s).2
--- lemma subset_double_polar (s : Set V) : inclusionInDoubleDual ℝ V '' s ⊆ polar ℝ (polar ℝ s) := by
---   rintro _ ⟨x, h_xs, rfl⟩
---   rw [mem_polar_iff]
---   intro f h_f
---   rw [dual_def]
---   rw [mem_polar_iff] at h_f
---   exact h_f x h_xs
--- lemma eq_double_polar_iff (s : Set V) : inclusionInDoubleDual ℝ V '' s = polar ℝ (polar ℝ s) := by
-
 section
 variable {V : Type*} [AddCommGroup V] [Module ℝ V]
 open Module
@@ -79,7 +56,7 @@ theorem τ_eq_τ' [FiniteDimensional ℝ V] : (τ : TopologicalSpace (Dual ℝ V
     simp only [LinearEquiv.apply_symm_apply, le_refl]
 
 section
-instance : letI _ : TopologicalSpace V := τ; ContinuousAdd V := by
+instance (priority := low) : letI _ : TopologicalSpace V := τ; ContinuousAdd V := by
   letI _ : TopologicalSpace V := τ
   apply ContinuousAdd.mk
   rw [continuous_iff_le_induced, instTopologicalSpaceProd]
@@ -92,7 +69,10 @@ instance : letI _ : TopologicalSpace V := τ; ContinuousAdd V := by
   rw [TopologicalSpace.le_def]
   intro s h_s_open_f_add
   sorry
+
 end
+
+#synth letI _ : TopologicalSpace V := τ; ContinuousAdd V
 
 open scoped Topology
 
@@ -110,8 +90,6 @@ open scoped Topology
 -- set_option pp.explicit true in
 -- example (s : Set α) : @IsClosed α (foo α) s := IsClosed.mk trivial --fails
 
-set_option pp.deepTerms.threshold 2 in
-set_option pp.explicit true in
 theorem polar_isClosed [FiniteDimensional ℝ V] (s : Set V) :
   let _ : TopologicalSpace (Dual ℝ V) := τ; IsClosed (sᵒ) := by
   intro τ_
@@ -165,6 +143,3 @@ theorem polar_eq_double_iff [FiniteDimensional ℝ V] (s : Set V) :
       . simp only [φ, LinearEquiv.apply_symm_apply]
   
 end Polyhedral
-
-example (t1 t2 : TopologicalSpace X) (s : Set X) : t1 ≤ t2 → @IsClosed X t2 s → @IsClosed X t1 s := by
-  exact fun a a_1 ↦ IsClosed.mono a_1 a
