@@ -811,7 +811,7 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
   have lt_b : ∀ b ∈ B, fc < f b := fun b hbB => lt_of_lt_of_le lt_fb (minf b hbB)
   have gt_a : ∀ a ∈ A, f a < fc := fun a haA => lt_of_le_of_lt (minf' a haA) gt_fa
 
-  let inner_bilin := @bilinFormOfRealInner V inferInstance inferInstance 
+  let inner_bilin := @bilinFormOfRealInner V inferInstance inferInstance
   unfold LinearMap.BilinForm LinearMap.BilinMap at inner_bilin
   let f_lin := inner_bilin (b' - a')
   have f_eq : f_lin = f := by
@@ -821,7 +821,61 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
   rw [f_eq]
   exact ⟨gt_a, lt_b⟩
 
-end
+
+
+lemma farkas (u: V)(C: Set V) (convC: Convex ℝ C) (closedC: IsClosed C)(coneC: Cone C): u ∉ C → ∃(y : V →ₗ[ℝ] ℝ), (y u > 0) ∧ (∀ x ∈ C, y x ≤ 0):= by
+  intro hu
+  have cu_Nempty :  (Set.singleton u).Nonempty ∧ C.Nonempty := by
+    unfold Cone at coneC
+    exact ⟨Set.singleton_nonempty u, coneC.1⟩
+  have andCU :  IsClosed (Set.singleton u) ∧ IsClosed C:= by
+    exact ⟨isClosed_singleton, closedC⟩
+  have convex_u: Convex ℝ {u} := convex_singleton u
+  have disjoint_cu: Disjoint {u} C := by
+    rw[Set.disjoint_singleton_left]; exact hu
+  have boundedU : IsBounded {u} := by exact Bornology.isBounded_singleton
+  rcases hyperplane_separation {u} C convex_u convC andCU cu_Nempty boundedU disjoint_cu with ⟨f, hf⟩
+  rcases hf with ⟨c, hfc⟩
+  let g : V →ₗ[ℝ] ℝ := -f
+  let c' :ℝ := -c
+  --apply (translate_halfspace_of_cone_subset C g c)
+  have le_hyp: c' ≥ 0 ∧ ∀ x ∈ C, g x ≤ 0 := by
+    apply (translate_halfspace_of_cone_subset C g c')
+    exact coneC; unfold g; unfold c'; simp
+    intro x hx
+    exact le_of_lt (hfc.right x hx)
+  use g
+  have u_gt: g u > 0 := by
+    unfold g; simp
+    have obvious: f u < c := by apply hfc.left; simp
+    have le_c : c ≤ 0 := by
+      unfold c' at le_hyp; linarith
+    linarith
+  exact ⟨u_gt, le_hyp.2⟩
+
+
+
+  end
+
+
+
+section
+variable {V : Type*} [NormedAddCommGroup V] [Module ℝ V] [FiniteDimensional ℝ V]
+
+--proposition 1.3.3(b)
+theorem conical_hull_closed_of_finite' (s : Set V) : s.Finite → IsClosed (conicalHull s) := by
+  intro hs
+  let sFin := hs.toFinset
+  revert s  
+  #check Finset.induction
+
+
+
+
+  --use nonneg_orthant_gens and nonneg_orthant_closed
+  sorry
+
+
 
 section
 variable {V : Type*} [AddCommGroup V] [Module ℝ V]
