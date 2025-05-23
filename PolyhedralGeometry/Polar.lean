@@ -1,10 +1,11 @@
 import PolyhedralGeometry.Defs
+import PolyhedralGeometry.DualTopology
 import Mathlib.LinearAlgebra.Dual.Defs
 import Mathlib.LinearAlgebra.Dual.Lemmas
 --import Mathlib.Topology.Bases
 import Mathlib.Topology.Order.OrderClosed
 --import Mathlib.Topology.Algebra.Module.WeakDual
-import Mathlib.Topology.Algebra.Module.ModuleTopology
+--import Mathlib.Topology.Algebra.Module.ModuleTopology
 
 section
 open TopologicalSpace Set
@@ -132,71 +133,54 @@ theorem polar_subset_double (s : Set V) : Dual.eval ℝ V '' s ⊆ sᵒᵒ := by
   intro f h
   exact h x h_x
 
-def τ : TopologicalSpace V := ⨅ f : Dual ℝ V, TopologicalSpace.induced f inferInstance
+-- abbrev τ : TopologicalSpace V := DualTopology ℝ V
+-- abbrev τ' [FiniteDimensional ℝ V] : TopologicalSpace (Dual ℝ V) := ⨅ x : V, TopologicalSpace.induced (Module.evalEquiv ℝ V x) inferInstance
 
-def τ' [FiniteDimensional ℝ V] : TopologicalSpace (Dual ℝ V) := ⨅ x : V, TopologicalSpace.induced (Module.evalEquiv ℝ V x) inferInstance  
+-- theorem τ_eq_τ' [FiniteDimensional ℝ V] : (τ : TopologicalSpace (Dual ℝ V)) = τ' :=
+--   DualTopology.DualTopology_eq_CodualTopology_of_finite ℝ V
 
-theorem τ_eq_τ' [FiniteDimensional ℝ V] : (τ : TopologicalSpace (Dual ℝ V)) = τ' := by
-  simp only [τ]
-  apply le_antisymm <;> apply le_iInf
-  . intro x
-    exact iInf_le _ (Module.evalEquiv ℝ V x)
-  . intro x'
-    apply iInf_le_of_le ((Module.evalEquiv ℝ V).symm x')
-    simp only [LinearEquiv.apply_symm_apply, le_refl]
+-- instance (priority := low) : letI _ : TopologicalSpace V := τ; ContinuousAdd V := by
+--   letI _ : TopologicalSpace V := τ
+--   apply ContinuousAdd.mk
+--   rw [continuous_iff_le_induced, instTopologicalSpaceProd]
+--   rw [τ, induced_iInf, induced_iInf, induced_iInf]
+--   rw [←iInf_inf_eq]
+--   simp only [le_iInf_iff]
+--   intro f
+--   rw [induced_compose]
+--   apply iInf_le_of_le f
+--   rw [induced_compose, induced_compose]
+--   rw [←coinduced_le_iff_le_induced]
+--   rw [TopologicalSpace.le_def]
+--   have : OrderTopology ℝ := inferInstance
+--   intro U h_U
+--   rw [isOpen_iff_generate_intervals] at h_U
+--   sorry
 
-instance (priority := low) : letI _ : TopologicalSpace V := τ; ContinuousAdd V := by
-  letI _ : TopologicalSpace V := τ
-  apply ContinuousAdd.mk
-  rw [continuous_iff_le_induced, instTopologicalSpaceProd]
-  rw [τ, induced_iInf, induced_iInf, induced_iInf]
-  rw [←iInf_inf_eq]
-  simp only [le_iInf_iff]
-  intro f
-  rw [induced_compose]
-  apply iInf_le_of_le f
-  rw [induced_compose, induced_compose]
-  rw [←coinduced_le_iff_le_induced]
-  rw [TopologicalSpace.le_def]
-  have : OrderTopology ℝ := inferInstance
-  intro U h_U
-  rw [isOpen_iff_generate_intervals] at h_U
-  sorry
+--open scoped Topology
 
-open scoped Topology
+variable {V : Type*} [AddCommGroup V] [Module ℝ V] [TopologicalSpace (Dual ℝ V)] [IsDualTopology ℝ (Dual ℝ V)]
 
-theorem polar_isClosed [FiniteDimensional ℝ V] (s : Set V) :
-  let _ : TopologicalSpace (Dual ℝ V) := τ; IsClosed (sᵒ) := by
-  rw [τ_eq_τ', polar_eq_iInter]
-  apply @isClosed_biInter _ _ τ'
-  intro x h_xs
-  let τ'' : TopologicalSpace (Dual ℝ V) := TopologicalSpace.induced (fun f => f x) inferInstance
-  have : IsClosed[τ''] {f | f x ≤ 1} := by
-    rw [isClosed_induced_iff]
-    use Set.Iic 1
-    constructor
-    . exact isClosed_Iic
-    . ext f
-      simp
-  exact IsClosed.mono this (iInf_le _ x)
+theorem polar_isClosed [FiniteDimensional ℝ V] (s : Set V) : IsClosed (sᵒ) := by
+  rw [polar_eq_iInter]
+  exact isClosed_biInter fun x _ => IsClosed.preimage (DualTopology.continuous_functional ((Dual.eval ℝ V) x)) isClosed_Iic
 
-theorem LinearEquiv.preimage_eq_iff_eq_image {R α β : Type*} [Semiring R] [AddCommMonoid α] [Module R α] [AddCommMonoid β] [Module R β]
-  (f : α ≃ₗ[R] β) (s : Set β) (t : Set α)  : f ⁻¹' s = t ↔ s = f '' t := Set.preimage_eq_iff_eq_image <| LinearEquiv.bijective f
+theorem LinearEquiv.preimage_eq_iff_eq_image {R α β : Type*} [Semiring R] [AddCommMonoid α] [Module R α] [AddCommMonoid β] [Module R β] (f : α ≃ₗ[R] β) (s : Set β) (t : Set α) : f ⁻¹' s = t ↔ s = f '' t :=
+  Set.preimage_eq_iff_eq_image <| LinearEquiv.bijective f
 
-theorem polar_eq_double_iff [FiniteDimensional ℝ V] (s : Set V) :
-  let _ : TopologicalSpace V := τ
-  let _ : TopologicalSpace (Dual ℝ (Dual ℝ V)) := τ
-  evalEquiv ℝ V '' s = sᵒᵒ ↔ 0 ∈ s ∧ Convex ℝ s ∧ IsClosed s := by
-  intro _ _
+variable [TopologicalSpace V] [IsDualTopology ℝ V]
+
+theorem polar_eq_double_iff [FiniteDimensional ℝ V] (s : Set V) : evalEquiv ℝ V '' s = sᵒᵒ ↔ 0 ∈ s ∧ Convex ℝ s ∧ IsClosed s := by
   let φ := evalEquiv ℝ V
   constructor
   . intro h
     have h_s_closed : IsClosed s := by
       rw [eq_comm, ←LinearEquiv.preimage_eq_iff_eq_image] at h
       rw [←h]
-      refine IsClosed.preimage ?_ ?_
-      . sorry
-      . exact polar_isClosed (sᵒ)
+      --refine IsClosed.preimage ?_ ?_
+      --. sorry
+      --. exact polar_isClosed (sᵒ)
+      sorry
     rw [LinearEquiv.image_eq_preimage] at h
     replace h : φ.symm '' (φ.symm ⁻¹' s) = φ.symm '' (sᵒᵒ) :=
       congrArg (Set.image φ.symm) h
@@ -207,8 +191,7 @@ theorem polar_eq_double_iff [FiniteDimensional ℝ V] (s : Set V) :
     . exact Convex.is_linear_image (polar_convex _)
             { map_add := (by apply LinearEquiv.map_add),
               map_smul := (by apply LinearEquiv.map_smul) }
-    . exact h ▸ h_s_closed
-      
+    . exact h ▸ h_s_closed  
   . rintro ⟨h_zero, h_convex, h_closed⟩
     ext x'
     simp only [Set.mem_image, Polar, Set.mem_setOf_eq]
