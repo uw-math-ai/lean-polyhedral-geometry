@@ -133,12 +133,6 @@ theorem polar_subset_double (s : Set V) : Dual.eval ℝ V '' s ⊆ sᵒᵒ := by
   intro f h
   exact h x h_x
 
--- abbrev τ : TopologicalSpace V := DualTopology ℝ V
--- abbrev τ' [FiniteDimensional ℝ V] : TopologicalSpace (Dual ℝ V) := ⨅ x : V, TopologicalSpace.induced (Module.evalEquiv ℝ V x) inferInstance
-
--- theorem τ_eq_τ' [FiniteDimensional ℝ V] : (τ : TopologicalSpace (Dual ℝ V)) = τ' :=
---   DualTopology.DualTopology_eq_CodualTopology_of_finite ℝ V
-
 -- instance (priority := low) : letI _ : TopologicalSpace V := τ; ContinuousAdd V := by
 --   letI _ : TopologicalSpace V := τ
 --   apply ContinuousAdd.mk
@@ -157,8 +151,6 @@ theorem polar_subset_double (s : Set V) : Dual.eval ℝ V '' s ⊆ sᵒᵒ := by
 --   rw [isOpen_iff_generate_intervals] at h_U
 --   sorry
 
---open scoped Topology
-
 variable {V : Type*} [AddCommGroup V] [Module ℝ V] [TopologicalSpace (Dual ℝ V)] [IsDualTopology ℝ (Dual ℝ V)]
 
 theorem polar_isClosed [FiniteDimensional ℝ V] (s : Set V) : IsClosed (sᵒ) := by
@@ -171,27 +163,29 @@ theorem LinearEquiv.preimage_eq_iff_eq_image {R α β : Type*} [Semiring R] [Add
 variable [TopologicalSpace V] [IsDualTopology ℝ V]
 
 theorem polar_eq_double_iff [FiniteDimensional ℝ V] (s : Set V) : evalEquiv ℝ V '' s = sᵒᵒ ↔ 0 ∈ s ∧ Convex ℝ s ∧ IsClosed s := by
-  let φ := evalEquiv ℝ V
+  let _ := EvalTopology ℝ V
+  let _ : IsEvalTopology ℝ V := { eq_EvalTopology' := by rfl }
+  let φ := evalEquivTop ℝ V
   constructor
   . intro h
-    have h_s_closed : IsClosed s := by
-      rw [eq_comm, ←LinearEquiv.preimage_eq_iff_eq_image] at h
-      rw [←h]
-      --refine IsClosed.preimage ?_ ?_
-      --. sorry
-      --. exact polar_isClosed (sᵒ)
-      sorry
+    -- have h_s_closed : IsClosed s := by
+    --   rw [eq_comm, ←LinearEquiv.preimage_eq_iff_eq_image] at h
+    --   rw [←h]
+    --   refine IsClosed.preimage ?_ ?_
+    --   . sorry
+    --   . exact polar_isClosed (sᵒ)
+    --   sorry
     rw [LinearEquiv.image_eq_preimage] at h
     replace h : φ.symm '' (φ.symm ⁻¹' s) = φ.symm '' (sᵒᵒ) :=
       congrArg (Set.image φ.symm) h
-    rw [Set.image_preimage_eq _ (LinearEquiv.surjective φ.symm)] at h
+    rw [Set.image_preimage_eq _ (ContinuousLinearEquiv.surjective φ.symm)] at h
     rw [h]
     refine ⟨?_, ?_, ?_⟩
-    . use 0, polar_zero_mem _, LinearEquiv.map_zero φ.symm
+    . use 0, polar_zero_mem _, ContinuousLinearEquiv.map_zero φ.symm
     . exact Convex.is_linear_image (polar_convex _)
             { map_add := (by apply LinearEquiv.map_add),
               map_smul := (by apply LinearEquiv.map_smul) }
-    . exact h ▸ h_s_closed  
+    . exact (ContinuousLinearEquiv.isClosed_image φ.symm).mpr (polar_isClosed _)
   . rintro ⟨h_zero, h_convex, h_closed⟩
     ext x'
     simp only [Set.mem_image, Polar, Set.mem_setOf_eq]
@@ -202,7 +196,14 @@ theorem polar_eq_double_iff [FiniteDimensional ℝ V] (s : Set V) : evalEquiv �
     . intro h
       use φ.symm x'
       constructor
-      . sorry
-      . simp only [φ, LinearEquiv.apply_symm_apply]
+      . set x := φ.symm x'
+        have : x' = φ x := by simp [x]
+        rw [this] at h
+        simp [φ] at h
+        sorry
+      . simp only [φ]
+        ext f
+        simp only [evalEquiv_apply, Dual.eval_apply, apply_evalEquivTop_symm_apply, φ]
+        
   
 end Polyhedral
