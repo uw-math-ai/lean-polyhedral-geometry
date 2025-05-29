@@ -10,6 +10,7 @@ import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Algebra.Order.Ring.Unbundled.Basic
 import Mathlib.Algebra.Group.Defs
 import Mathlib.Analysis.InnerProductSpace.LinearMap
+import Mathlib.LinearAlgebra.LinearIndependent.Defs
 
 section
 variable {V : Type*} [AddCommGroup V] [Module ℝ V]
@@ -437,22 +438,95 @@ section
 variable {V : Type*} [NormedAddCommGroup V] [Module ℝ V] [FiniteDimensional ℝ V]
 open Set Module
 
+private def d_subsets (s : Set V) := {t : Finset V | ↑t ⊆ s ∧ t.card = finrank ℝ V}
+
+lemma d_subsets_finite (s : Set V) : s.Finite → (d_subsets s).Finite := by
+  sorry
+
+lemma conical_hull_union_conical_hull_d_subsets.{u} (s : Set V) : conicalHull.{_,u} s = ⋃ t ∈ d_subsets s, conicalHull.{_,u} t.toSet := by
+  --use caratheordory to get a finset t of s of card n+1
+  sorry
+
 --proposition 1.3.3(b)
-theorem conical_hull_closed_of_finite (s : Set V) : s.Finite → IsClosed (conicalHull s) := by
+theorem conical_hull_closed_of_finite.{u} (s : Set V) : s.Finite → IsClosed (conicalHull.{_,u} s) := by
   generalize h_dim : finrank ℝ V = n
   revert V
-  induction' n with n ih <;> intro V _ _ _ s h_dim h_s
-  . rw [finrank_zero_iff] at h_dim
+  induction' n using Nat.strong_induction_on with n ih
+  intro V _ _ _ s h_dim h_s
+  by_cases h_n : n = 0
+  . rw [h_n] at h_dim
+    rw [finrank_zero_iff] at h_dim
     have : s = ∅ ∨ ∃ (x : V), s = {x} := Subsingleton.eq_empty_or_singleton subsingleton_of_subsingleton
     rcases this with h | h <;> exact isClosed_discrete (conicalHull s)
-  . --use caratheordory to get a finset t of s of card n+1
-    --proof by cases : t linearly independent or not
-    --if not, induct
-    --else:
-    --use basisOfLinearIndependentOfCardEqFinrank
-    --unpack the Basis to get the linear equiv to ℝ^n that we want
-    --use nonneg_orthant_gens and nonneg_orthant_closed
+  replace h_n : n > 0 := Nat.zero_lt_of_ne_zero h_n
+  rw [conical_hull_union_conical_hull_d_subsets.{_,u} s]
+  apply Finite.isClosed_biUnion (d_subsets_finite s h_s)
+  intro t ⟨h_ts, h_tcard⟩
+  clear h_ts h_s s
+  let t' : t → V := fun x => x
+  by_cases h_t_lin_ind : LinearIndependent ℝ t'
+  . sorry
+  --if not, induct
+  --else:
+  --use basisOfLinearIndependentOfCardEqFinrank
+  --unpack the Basis to get the linear equiv to ℝ^n that we want
+  --use nonneg_orthant_gens and nonneg_orthant_closed
+  . let V' := Submodule.span ℝ t.toSet
+    have : finrank ℝ V' < finrank ℝ V := by
+      refine Submodule.finrank_lt ?_
+      intro h_V'
+      apply h_t_lin_ind
+      simp [V'] at h_V'
+      have : t = range t' := by
+        sorry
+      have : finrank ℝ V ≤ Fintype.card { x // x ∈ t } := finrank_le_of_span_eq_top (this ▸ h_V')
+      sorry
     sorry
+#print Basis.mk
+open Classical
+example (f : ι → V) [Fintype ι] (h_card : Fintype.card ι = finrank ℝ V ) : LinearIndependent ℝ f ↔ Submodule.span ℝ (Set.range f) = (⊤ : Submodule ℝ V) := by
+  constructor
+  . exact fun hf => LinearIndependent.span_eq_top_of_card_eq_finrank' hf h_card
+  intro hf
+  generalize h_dim : finrank ℝ V = n
+  rw [h_dim] at h_card
+  revert V ι
+  induction' n with n ih
+  . intro _ _ _ _ ι _ _ _ h_card h_dim
+    rw [finrank_eq_zero_iff] at h_dim
+    have : IsEmpty ι := Fintype.card_eq_zero_iff.mp h_card
+    exact linearIndependent_empty_type
+  intro V _ _ _ ι f _ hf h_card h_dim
+  rw [Fintype.linearIndependent_iff]
+  intro c h_sum j
+  by_contra h
+  let s : Finset ι := Finset.erase Finset.univ j
+  let V'_sub := Submodule.span ℝ (range fun i : s => f i)
+  let V' := { x : V // x ∈ V'_sub }
+  let f' : s → V' := Subtype.map f fun i hi => by
+    simp [V'_sub]
+    rw [Submodule.mem_span_range_iff_exists_fun]
+    use fun i' => if ⟨i, hi⟩ = i' then 1 else 0
+    simp only [ne_eq, ite_smul, one_smul, zero_smul]
+    rw [Fintype.sum_ite_eq]
+  have := ih f' (by
+    rw [Submodule.eq_top_iff']
+    intro x
+    have := x.property
+    unfold V'_sub at this
+    unfold f' Subtype.map
+    sorry
+    ) (by
+      rw [←Finset.card_univ]
+      have : s.card + 1 = n + 1 := by
+        rw [←h_card]
+        rw [←Finset.card_univ]
+        --suffices
+        --apply Finset.card_erase_of_mem
+        sorry
+      sorry
+      )
+  sorry
 
 section
 variable {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [FiniteDimensional ℝ V]
@@ -918,6 +992,7 @@ theorem conical_hull_closed_of_finite' (s : Set V) : s.Finite → IsClosed (coni
           sorry
       rw[h_empty]
       simp
+      
 
 
 
