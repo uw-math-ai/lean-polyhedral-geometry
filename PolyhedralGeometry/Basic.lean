@@ -463,7 +463,7 @@ theorem conical_hull_closed_of_finite.{u} (s : Set V) : s.Finite → IsClosed (c
   apply Finite.isClosed_biUnion (d_subsets_finite s h_s)
   intro t ⟨h_ts, h_tcard⟩
   clear h_ts h_s s
-  let t' : t → V := fun x => x
+  let t' : { x // x ∈ t} → V := Subtype.val
   by_cases h_t_lin_ind : LinearIndependent ℝ t'
   . sorry
   --if not, induct
@@ -471,62 +471,38 @@ theorem conical_hull_closed_of_finite.{u} (s : Set V) : s.Finite → IsClosed (c
   --use basisOfLinearIndependentOfCardEqFinrank
   --unpack the Basis to get the linear equiv to ℝ^n that we want
   --use nonneg_orthant_gens and nonneg_orthant_closed
-  . let V' := Submodule.span ℝ t.toSet
-    have : finrank ℝ V' < finrank ℝ V := by
-      refine Submodule.finrank_lt ?_
-      intro h_V'
-      apply h_t_lin_ind
-      simp [V'] at h_V'
-      have : t = range t' := by
-        sorry
-      have : finrank ℝ V ≤ Fintype.card { x // x ∈ t } := finrank_le_of_span_eq_top (this ▸ h_V')
-      sorry
+  . have h_eq_t : range t' = t := Subtype.range_val
+    rw [←h_eq_t]
+    let V' := Submodule.span ℝ (range t')
+    rw [linearIndependent_iff_card_eq_finrank_span.not, Fintype.card_coe, h_tcard] at h_t_lin_ind
+    push_neg at h_t_lin_ind
+    replace h_t_lin_ind : Set.finrank ℝ (range t') < finrank ℝ V := lt_of_le_of_ne (Submodule.finrank_le _) h_t_lin_ind.symm
+    have : V' < ⊤ := Submodule.lt_top_of_finrank_lt_finrank h_t_lin_ind
+    replace h_t_lin_ind : finrank ℝ V' < n := h_dim ▸ h_t_lin_ind
+    let t'' : { x // x ∈ t } → V' := fun x => ⟨t' x, Submodule.subset_span (mem_range_self x)⟩
+    have := ih (finrank ℝ V') h_t_lin_ind (range t'') rfl
     sorry
-#print Basis.mk
-open Classical
-example (f : ι → V) [Fintype ι] (h_card : Fintype.card ι = finrank ℝ V ) : LinearIndependent ℝ f ↔ Submodule.span ℝ (Set.range f) = (⊤ : Submodule ℝ V) := by
-  constructor
-  . exact fun hf => LinearIndependent.span_eq_top_of_card_eq_finrank' hf h_card
-  intro hf
-  generalize h_dim : finrank ℝ V = n
-  rw [h_dim] at h_card
-  revert V ι
-  induction' n with n ih
-  . intro _ _ _ _ ι _ _ _ h_card h_dim
-    rw [finrank_eq_zero_iff] at h_dim
-    have : IsEmpty ι := Fintype.card_eq_zero_iff.mp h_card
-    exact linearIndependent_empty_type
-  intro V _ _ _ ι f _ hf h_card h_dim
-  rw [Fintype.linearIndependent_iff]
-  intro c h_sum j
-  by_contra h
-  let s : Finset ι := Finset.erase Finset.univ j
-  let V'_sub := Submodule.span ℝ (range fun i : s => f i)
-  let V' := { x : V // x ∈ V'_sub }
-  let f' : s → V' := Subtype.map f fun i hi => by
-    simp [V'_sub]
-    rw [Submodule.mem_span_range_iff_exists_fun]
-    use fun i' => if ⟨i, hi⟩ = i' then 1 else 0
-    simp only [ne_eq, ite_smul, one_smul, zero_smul]
-    rw [Fintype.sum_ite_eq]
-  have := ih f' (by
-    rw [Submodule.eq_top_iff']
-    intro x
-    have := x.property
-    unfold V'_sub at this
-    unfold f' Subtype.map
-    sorry
-    ) (by
-      rw [←Finset.card_univ]
-      have : s.card + 1 = n + 1 := by
-        rw [←h_card]
-        rw [←Finset.card_univ]
-        --suffices
-        --apply Finset.card_erase_of_mem
-        sorry
-      sorry
-      )
-  sorry
+
+-- theorem linearIndepOn_iff_card_eq_finrank_span (s : Finset V) :
+--     LinearIndepOn ℝ id s.toSet ↔ s.card = finrank ℝ (Submodule.span ℝ s.toSet) := by
+--   rw [linearIndepOn_id_range_iff]
+  
+    
+example (f : ι → V) [Fintype ι] : finrank ℝ (Submodule.span ℝ (range f)) ≤ Fintype.card ι := finrank_range_le_card f
+
+#check finrank_span_le_card
+#check span_lt_top_of_card_lt_finrank
+#check Submodule.lt_top_of_finrank_lt_finrank
+#check Submodule.finrank_le
+
+example (f : ι → V) [Fintype ι] : LinearIndependent ℝ f ↔ Fintype.card ι = finrank ℝ (Submodule.span ℝ (range f)) := linearIndependent_iff_card_eq_finrank_span
+
+example (f : ι → V) [Fintype ι] : Submodule.span ℝ (range f) = ⊤ ↔ finrank ℝ (Submodule.span ℝ (range f)) = finrank ℝ V :=
+  Iff.intro
+    (fun h => h ▸ finrank_top ℝ V)
+    (fun h => Submodule.eq_top_of_finrank_eq h)
+
+end
 
 section
 variable {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [FiniteDimensional ℝ V]
