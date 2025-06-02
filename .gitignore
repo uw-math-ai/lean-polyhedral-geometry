@@ -2,3 +2,7 @@
 lake-manifest.json
 *~
 .DS_Store
+
+poster/poster.*
+!poster/*.tex
+!poster/*.bib
