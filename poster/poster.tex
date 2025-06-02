@@ -1,4 +1,4 @@
-remote Desktop Connection% Gemini theme
+% Gemini theme
 % https://github.com/anishathalye/gemini
 
 \documentclass[final]{beamer}
@@ -115,18 +115,28 @@ remote Desktop Connection% Gemini theme
 
 \begin{document}
 
-\begin{frame}[t]
+\begin{frame}[fragile]
     \begin{columns}[t]
         \separatorcolumn
 
         \begin{column}{\colwidth}
 
             \begin{block}{Background}
+                Write about the motivations for the project, what polyhedral geometry studies, what lean is, and what ``polyhedral geomoetry'' in lean is. 
                 \vspace{20em}
+                
             \end{block}
 
-            \begin{block}{Tropical preliminaries}
+            \begin{block}{Polyhedra, Conical Sets, and Convex Sets}
+                Begin formal definitions of polyhedra in math mode (half spaces, polyhedra, conical sets, etc). Then provide the related definitions we have provided in lean in code mode like below:
 
+                \begin{verbatim}
+                    def hello_world():
+                        # Print greeting
+                        print("Hello from within a block!")
+                \end{verbatim}
+
+                \vspace{30em}
             \end{block}
         \end{column}
 
@@ -139,7 +149,7 @@ remote Desktop Connection% Gemini theme
 
             \end{block*}
 
-            \begin{block}{The canonical $\mathbf{(1,1)}$-form}
+            \begin{block}{Carath\'eodory's Theorem}
 
 
             \end{block}
@@ -151,6 +161,11 @@ remote Desktop Connection% Gemini theme
 
         \begin{column}{\colwidth}
 
+            \begin{block}{Hyperplane seperation theorem}
+                Include the theorem itself, ideas about how we approached it.
+
+                Mention Farka's Lemma, and perhaps mention the existance and use of Lemma 1.2.2. 
+            \end{block}
             
 
             \begin{block}{References}

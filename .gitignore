@@ -6,3 +6,5 @@ lake-manifest.json
 poster/poster.*
 !poster/*.tex
 !poster/*.bib
+
+poster/.vscode/*
