@@ -19,6 +19,8 @@
 \pgfplotsset{compat=1.14}
 \usepackage{anyfontsize}
 
+\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]
+
 \usepackage{tikz}
 \usetikzlibrary{cd,decorations.markings,arrows.meta,calc}
 
@@ -122,8 +124,7 @@
         \begin{column}{\colwidth}
 
             \begin{block}{Background}
-                Write about the motivations for the project, what polyhedral geometry studies, what lean is, and what ``polyhedral geomoetry'' in lean is. 
-                \vspace{20em}
+           
                 The primary focus of this quarter was in the formalization of two important theorems in polyhedral combinatorics:
                 Caratheordory's Theorem, and The Hyperplane Separation Theorem. The formalization of each was successfully accomplished in the
                 span of the ten-week cycle, as well as preliminary work in the formalization of Polar Spaces and Dual Topologies, with the enduring
@@ -134,41 +135,26 @@
                 
             \end{block}
 
-            \begin{block}{Polyhedra, Conical Sets, and Convex Sets}
-                Begin formal definitions of polyhedra in math mode (half spaces, polyhedra, conical sets, etc). Then provide the related definitions we have provided in lean in code mode like below:
+            \begin{block}{Finite Polyhedra, Conical Sets, and Convex Sets}
+                Have $V = \RR^d$ be the ambient finite-dimensional vector space. The \textbf{halfspace} is commonly defined as the set of points on one side of an affine hyperplane:
+                $$ \{\mathbf{x} \in V \;|\; \mathbf{ax} \leq b\}$$
+                where $\mathbf{a} \in \RR^d$ is the normal vector of the hyperplane with $b \in \RR$ as the affine constant term.
 
-                \begin{verbatim}
-                    def hello_world():
-                        # Print greeting
-                        print("Hello from within a block!")
-                \end{verbatim}
+                We define the \textbf{finite polyhedron} as the intersection of finitely many halfspaces $\{H_1,H_2,\dots,H_n\}$:
+                $$ \bigcap_{1 \leq i \leq n} H_i. $$
+                A \textbf{convex} set $S \subseteq V$ is any set with the property that given two elements $\mathbf{x}, \mathbf{y} \in S$, we have
+                $$ (1 - t)\mathbf{x} + t\mathbf{y} \in S \quad \text{ for all real } t \in [0,1].$$
+                A \textbf{convex hull} is the closure of any $S \subseteq V$ under the property of convexity. Equivalently, $\text{conv}S$ is the smallest convex set of $V$ which contains $S$. 
 
-                \vspace{30em}
+                A \textbf{polytope} can be defined a bounded polyhedron or, equivalently, the convex hull of finitely many points in $\RR^d$. We provide a proof of this in our Lean formalization. 
+                
+                It turns out that \textbf{conical sets} are a nice generalization of the idea of a \textbf{convex set}. As a result, much of our formulation relies on the definition of the \textbf{conical combination} and \textbf{conical set} which we wil define below:
+                
+                NOT FINISHED
+                               
             \end{block}
-
-            \begin{alertblock}{Hyperplane Separation Theorem}
-              The Hyperplane Separation Theorem is a key result in proving the existence of certain polyhedral constructs, deduced from no more than an inner product space, and the
-              definition of convexity. Let $A$, $B$ two convex subsets of $V$, a vector space over $\mathbb{R}$ equipped with an inner product, and let $A$ compact. Then \begin{equation}
-                \exists c\in \mathbb{R}, f \in V^*: fa < c\ \forall a\in A, \ c < f(b)\ \forall b\in B
-              \end{equation} Where $V^*$ is the dual of $V$, the vector space which consists of all linear functionals from $V\to \mathbb{R}$.
-              \\\\The formal proof involves exhibiting an infimal distance between the sets, and the corresponding points, $a_{min}, b_{min} \in V$ which define this infimal distance.
-              $f:= b_{min}-a_{min}$ is thus a vector in $V$, and defining a functional by $\langle f, \_\rangle$ constructs a linear functional in the dual. Any hyperplane to which $f$
-              is normal, and which does not intesect $A$ or $B$, then separates the two sets as desired, after unraveling the convexity of each set.
-              \\\\Convexity is used to provide contradiction, in the proof, by providing a linear combination of points within each set which, though the norm of a vector,
-              must be negative for certain small coefficients. In the process of formalization, this meant providing an explicit, sufficiently small value for which the contradiction arose.
-             
-            \end{alertblock}
-             
-            \begin{alertblock}{Farkas's Lemma--Application of the Hyperplane Separation Theorem}
-              Let $C \subset V$ be a convex cone, $u\in V$. Then there exists a separating hyperplane between $u, C$, defined by a linear functional $f \in V^*$, such that \begin{equation}
-              f(u)> 0, \ \forall x\in C, \ f(x) \le 0
-              \end{equation} This result is  a combination of the Hyperplane Separation Theorem, for which the conclusion \begin{equation}
-                \exists c\in \mathbb{R}, f \in V^*: fa \le c\ \forall x\in C, \ c < f(x)\ \forall b\in B
-              \end{equation}
            
-            \end{alertblock}
-           
-
+            
         \end{column}
 
         \separatorcolumn
@@ -189,6 +175,44 @@
                 \begin{equation}
                     e^{2\pi i} - 1 = 0
                 \end{equation}
+
+
+                \begin{tikzpicture}[scale=2]
+                    % 1) The six true vertices of a regular hexagon of radius 1
+                    \foreach \i in {0,...,5} {
+                        \coordinate (P\i) at ({2*cos(60*\i)},{2*sin(60*\i)});
+                    }
+
+                    % 2) Draw each extended edge in dotted style and name it E<i>
+                    \foreach \i/\j in {0/1,1/2,2/3,3/4,4/5,5/0} {
+                        \draw[name path=E\i,dotted]
+                        ($(P\i)!-2!(P\j)$) -- ($(P\j)!-2!(P\i)$);
+                    }
+
+                    % 3) Over‐draw the actual hexagon edges in solid
+                    \draw[thick] (P0)--(P1)--(P2)--(P3)--(P4)--(P5)--cycle;
+
+                    % (Optional) put dots at the true hexagon vertices, too
+                    \foreach \i in {0,...,5} {
+                        \fill (P\i) circle (1pt);
+                    }
+
+                    % 4) Shade the triangle P0–P2–P4
+                    \fill[purple!30,opacity=0.5] (P0) -- (P1) -- (P4) -- cycle;
+
+                    % 5) Construct two medians of that triangle and name their intersection G
+                    \coordinate (m02) at ($ (P0)!0.5!(P2) $);   % midpoint of P0–P2
+                    \coordinate (m24) at ($ (P2)!0.5!(P4) $);   % midpoint of P2–P4
+
+                    \path[name path=med1] (P4) -- (m02);  
+                    \path[name path=med2] (P0) -- (m24);
+
+                    \path[name intersections={of=med1 and med2, by=G}];
+
+                    % 6) Draw a dot at the centroid G
+                    \coordinate (Gshift) at,(,(G)+(-0.3cm,0.15cm),);\quad
+                    \fill (Gshift) circle (1pt);
+                \end{tikzpicture}
             \end{block}
 
             
@@ -199,9 +223,34 @@
         \begin{column}{\colwidth}
 
             \begin{block}{Hyperplane seperation theorem}
-                Include the theorem itself, ideas about how we approached it.
+                            \begin{alertblock}{Hyperplane Separation Theorem}
+              The Hyperplane Separation Theorem is a key result in proving the existence of certain polyhedral constructs, deduced from no more than an inner product space, and the
+              definition of convexity. Let $A$, $B$ two convex subsets of $V$, a vector space over $\mathbb{R}$ equipped with an inner product, and let $A$ compact. Then \begin{equation}
+                \exists c\in \mathbb{R}, f \in V^*: fa < c\ \forall a\in A, \ c < f(b)\ \forall b\in B
+              \end{equation} Where $V^*$ is the dual of $V$, the vector space which consists of all linear functionals from $V\to \mathbb{R}$.
+              \\\\The formal proof involves exhibiting an infimal distance between the sets, and the corresponding points, $a_{min}, b_{min} \in V$ which define this infimal distance.
+              $f:= b_{min}-a_{min}$ is thus a vector in $V$, and defining a functional by $\langle f, \_\rangle$ constructs a linear functional in the dual. Any hyperplane to which $f$
+              is normal, and which does not intesect $A$ or $B$, then separates the two sets as desired, after unraveling the convexity of each set.
+              \\\\Convexity is used to provide contradiction, in the proof, by providing a linear combination of points within each set which, though the norm of a vector,
+              must be negative for certain small coefficients. In the process of formalization, this meant providing an explicit, sufficiently small value for which the contradiction arose.
 
-                Mention Farka's Lemma, and perhaps mention the existance and use of Lemma 1.2.2. 
+
+              \begin{verbatim}
+              theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex ℝ B) (hclosed : IsClosed A ∧ IsClosed B ) (hNempty : A.Nonempty ∧ B.Nonempty) (hA_Bounded: IsBounded A) (hAB : Disjoint A B) : ∃ (f : V →ₗ[ℝ] ℝ) (c : ℝ), (∀ a ∈ A, f a < c) ∧ (  ∀ b ∈ B, c < f b)
+            \end{verbatim}
+             
+            \end{alertblock}
+
+            
+             
+            \begin{alertblock}{Farkas's Lemma--Application of the Hyperplane Separation Theorem}
+              Let $C \subset V$ be a convex cone, $u\in V$. Then there exists a separating hyperplane between $u, C$, defined by a linear functional $f \in V^*$, such that \begin{equation}
+              f(u)> 0, \ \forall x\in C, \ f(x) \le 0
+              \end{equation} This result is  a combination of the Hyperplane Separation Theorem, for which the conclusion \begin{equation}
+                \exists c\in \mathbb{R}, f \in V^*: fa \le c\ \forall x\in C, \ c < f(x)\ \forall b\in B
+              \end{equation}
+           
+            \end{alertblock}
             \end{block}
             
 
