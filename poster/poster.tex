@@ -179,43 +179,20 @@
               \end{verbatim}
 
                 
+          
+                \begin{alertblock}{Example Theorem}
+                    Consider 0, the real number. Therefore, $\mathbb{R}$ is nonempty. 
+                \end{alertblock}
 
-                \begin{tikzpicture}[scale=2]
-                    % 1) The six true vertices of a regular hexagon of radius 1
-                    \foreach \i in {0,...,5} {
-                        \coordinate (P\i) at ({2*cos(60*\i)},{2*sin(60*\i)});
-                    }
-
-                    % 2) Draw each extended edge in dotted style and name it E<i>
-                    \foreach \i/\j in {0/1,1/2,2/3,3/4,4/5,5/0} {
-                        \draw[name path=E\i,dotted]
-                        ($(P\i)!-2!(P\j)$) -- ($(P\j)!-2!(P\i)$);
-                    }
-
-                    % 3) Over‐draw the actual hexagon edges in solid
-                    \draw[thick] (P0)--(P1)--(P2)--(P3)--(P4)--(P5)--cycle;
-
-                    % (Optional) put dots at the true hexagon vertices, too
-                    \foreach \i in {0,...,5} {
-                        \fill (P\i) circle (1pt);
-                    }
-
-                    % 4) Shade the triangle P0–P2–P4
-                    \fill[purple!30,opacity=0.5] (P0) -- (P1) -- (P4) -- cycle;
-
-                    % 5) Construct two medians of that triangle and name their intersection G
-                    \coordinate (m02) at ($ (P0)!0.5!(P2) $);   % midpoint of P0–P2
-                    \coordinate (m24) at ($ (P2)!0.5!(P4) $);   % midpoint of P2–P4
-
-                    \path[name path=med1] (P4) -- (m02);  
-                    \path[name path=med2] (P0) -- (m24);
-
-                    \path[name intersections={of=med1 and med2, by=G}];
-
-                    % 6) Draw a dot at the centroid G
-                    \coordinate (Gshift) at,(,(G)+(-0.3cm,0.15cm),);\quad
-                    \fill (Gshift) circle (1pt);
-                \end{tikzpicture}
+                \begin{equation}
+                    e^{2\pi i} - 1 = 0
+                \end{equation}
+                  
+                \begin{figure}[htbp]
+                    \centering
+                    \input{figures/caratheodory.tex}
+                    \caption{Insert caption here\label{fig:caratheodory}}
+                \end{figure}
             \end{block*}
 
             
@@ -241,15 +218,11 @@
              
             \end{alertblock}
 
-            Our formalization in Lean is as follows:
-            \begin{verbatim}
-theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) 
-(hB : Convex ℝ B) (hclosed : IsClosed A ∧ IsClosed B ) 
-(hNempty : A.Nonempty ∧ B.Nonempty) (hA_Bounded: IsBounded A) 
-(hAB : Disjoint A B) : ∃ (f : V →ₗ[ℝ] ℝ) (c : ℝ), (∀ a ∈ A, f a < c) ∧ (∀ b ∈ B, c < f b)
-            \end{verbatim}
-            \vspace{-2em}
-            Simply, given two sets, one of which is convex and the 
+            \begin{figure}[htbp]
+                \centering
+                \input{figures/hyperplane-separation.tex}
+                \caption{Insert caption here\label{fig:hyperplane-separation}}
+            \end{figure}
              
             \begin{alertblock}{Farkas's Lemma--Application of the Hyperplane Separation Theorem}
               Let $C \subset V$ be a convex cone, $u\in V$. Then there exists a separating hyperplane between $u, C$, defined by a linear functional $f \in V^*$, such that \begin{equation}

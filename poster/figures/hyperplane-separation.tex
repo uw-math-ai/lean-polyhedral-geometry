@@ -1,0 +1,24 @@
+\begin{tikzpicture}[scale=3, very thick, >=Stealth, decoration={markings,mark=at position 0.5 with {\arrow[xshift={4pt + 2.25\pgflinewidth}]{Latex[scale=1.5]},}}]
+  \clip (-0.25,-0.25) rectangle (4,2);
+  \filldraw[fill=lightpurple] (0,0) circle [radius=1];
+  \node[anchor=south west] at (0,0) {$A$};
+  \filldraw[fill=lightpurple] (5,0) -- (3,0.5) -- (45:2) -- (0, 3) -- (5,3) -- cycle;
+  \node[anchor=north east] at (3.75,1.75) {$B$};
+  \filldraw (45:1) circle [radius=0.04];
+  \filldraw (45:2) circle [radius=0.04];
+  \draw[dotted] (45:1) -- (45:2);
+  \draw (45:1.5) + (-45:3) -- + (135:3);
+  % \filldraw (0,-2) circle [radius=0.06];
+  % \draw[postaction={decorate}] (-90:2) arc [start angle=-90, end angle=90, radius=2];
+  % \draw[postaction={decorate}] (-90:2) arc [start angle=-90, end angle=-270, radius=2];
+  % \draw[postaction={decorate}] (0,2) -- (0,-2);
+  % \draw (0,2.6) node {$q$};
+  % \draw (180:2.6) node {$e_{1}$};
+  % \draw (0:2.6) node {$e_{2}$};
+  % \draw (0.6,0) node {$e_{3}$};
+\end{tikzpicture}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../poster"
+%%% End:
