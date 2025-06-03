@@ -124,6 +124,13 @@
             \begin{block}{Background}
                 Write about the motivations for the project, what polyhedral geometry studies, what lean is, and what ``polyhedral geomoetry'' in lean is. 
                 \vspace{20em}
+                The primary focus of this quarter was in the formalization of two important theorems in polyhedral combinatorics:
+                Caratheordory's Theorem, and The Hyperplane Separation Theorem. The formalization of each was successfully accomplished in the
+                span of the ten-week cycle, as well as preliminary work in the formalization of Polar Spaces and Dual Topologies, with the enduring
+                focus of the project, to prove the "main" theorem of Polyhedral Geometry, that is, that a subset of a vector space, $V$, is a polyhedral cone
+                if and only if it is the conical hull of a finite subset of $V$.
+                \\\\This result provides a combinatoric approach to the finite generation of polyhedra, allowing one to choose a subset of points from a vector space,
+                $V$, and in doing so, to uniquely determine a polyhedral cone.
                 
             \end{block}
 
@@ -138,6 +145,30 @@
 
                 \vspace{30em}
             \end{block}
+
+            \begin{alertblock}{Hyperplane Separation Theorem}
+              The Hyperplane Separation Theorem is a key result in proving the existence of certain polyhedral constructs, deduced from no more than an inner product space, and the
+              definition of convexity. Let $A$, $B$ two convex subsets of $V$, a vector space over $\mathbb{R}$ equipped with an inner product, and let $A$ compact. Then \begin{equation}
+                \exists c\in \mathbb{R}, f \in V^*: fa < c\ \forall a\in A, \ c < f(b)\ \forall b\in B
+              \end{equation} Where $V^*$ is the dual of $V$, the vector space which consists of all linear functionals from $V\to \mathbb{R}$.
+              \\\\The formal proof involves exhibiting an infimal distance between the sets, and the corresponding points, $a_{min}, b_{min} \in V$ which define this infimal distance.
+              $f:= b_{min}-a_{min}$ is thus a vector in $V$, and defining a functional by $\langle f, \_\rangle$ constructs a linear functional in the dual. Any hyperplane to which $f$
+              is normal, and which does not intesect $A$ or $B$, then separates the two sets as desired, after unraveling the convexity of each set.
+              \\\\Convexity is used to provide contradiction, in the proof, by providing a linear combination of points within each set which, though the norm of a vector,
+              must be negative for certain small coefficients. In the process of formalization, this meant providing an explicit, sufficiently small value for which the contradiction arose.
+             
+            \end{alertblock}
+             
+            \begin{alertblock}{Farkas's Lemma--Application of the Hyperplane Separation Theorem}
+              Let $C \subset V$ be a convex cone, $u\in V$. Then there exists a separating hyperplane between $u, C$, defined by a linear functional $f \in V^*$, such that \begin{equation}
+              f(u)> 0, \ \forall x\in C, \ f(x) \le 0
+              \end{equation} This result is  a combination of the Hyperplane Separation Theorem, for which the conclusion \begin{equation}
+                \exists c\in \mathbb{R}, f \in V^*: fa \le c\ \forall x\in C, \ c < f(x)\ \forall b\in B
+              \end{equation}
+           
+            \end{alertblock}
+           
+
         \end{column}
 
         \separatorcolumn
