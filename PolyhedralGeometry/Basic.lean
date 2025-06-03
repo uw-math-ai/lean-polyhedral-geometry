@@ -486,8 +486,8 @@ theorem conical_hull_closed_of_finite.{u} (s : Set V) : s.Finite → IsClosed (c
 -- theorem linearIndepOn_iff_card_eq_finrank_span (s : Finset V) :
 --     LinearIndepOn ℝ id s.toSet ↔ s.card = finrank ℝ (Submodule.span ℝ s.toSet) := by
 --   rw [linearIndepOn_id_range_iff]
-  
-    
+
+
 example (f : ι → V) [Fintype ι] : finrank ℝ (Submodule.span ℝ (range f)) ≤ Fintype.card ι := finrank_range_le_card f
 
 #check finrank_span_le_card
@@ -919,56 +919,58 @@ section
 variable {V : Type*} [NormedAddCommGroup V] [Module ℝ V] [FiniteDimensional ℝ V]
 
 lemma subset_conicalHull_of_set (s: Set V): s ⊆ conicalHull s := by
-  intro y hy
-  unfold conicalHull isConicalCombo isConicalCombo'
-  use ULift.{u_3} ℕ , {1}, (λ x => 1), (λ x => y)
-  simp; exact hy
+--  intro y hy
+--  unfold conicalHull isConicalCombo isConicalCombo'
+--  use ULift.{u_3} ℕ , {1}, (λ x => 1), (λ x => y)
+--  simp; exact hy
+  sorry
 
 --proposition 1.3.3(b)
 theorem conical_hull_closed_of_finite' (s : Set V) : s.Finite → IsClosed (conicalHull s) := by
-  generalize h_dim : finrank ℝ V = n
-  revert V
-  induction' n with n ih <;> intro V _ _ _ s h_dim h_s
-  . rw [finrank_zero_iff] at h_dim
-    have : s = ∅ ∨ ∃ (x : V), s = {x} := Subsingleton.eq_empty_or_singleton subsingleton_of_subsingleton
-    rcases this with h | h <;> exact isClosed_discrete (conicalHull s)
-  . by_cases hs : s.Nonempty
-    · rcases hs with ⟨x, hx⟩
-      rcases caratheordory s x with h
-      have hCon: x ∈  conicalHull s := by
-        apply subset_conicalHull_of_set s at hx; exact hx
-      have ofRank: isConicalCombo_aux s x (finrank ℝ V) := by
-        exact (h hCon)
-      unfold isConicalCombo_aux isConicalCombo_aux' at ofRank
-      rcases ofRank with ⟨ a, v, hv, h_basis⟩
-      let N_Fin : Finset ℕ := Finset.range (finrank ℝ V)
-      --let v_fin := v.restrict N_Fin
-      --let a_fin := a.restrict N_Fin
-      by_cases lin_ind: LinearIndependent ℝ v
-      · have form_Basis: Basis ℕ ℝ V := by
-          sorry
+--  generalize h_dim : finrank ℝ V = n
+--  revert V
+--  induction' n with n ih <;> intro V _ _ _ s h_dim h_s
+--  . rw [finrank_zero_iff] at h_dim
+--    have : s = ∅ ∨ ∃ (x : V), s = {x} := Subsingleton.eq_empty_or_singleton subsingleton_of_subsingleton
+--    rcases this with h | h <;> exact isClosed_discrete (conicalHull s)
+--  . by_cases hs : s.Nonempty
+--    · rcases hs with ⟨x, hx⟩
+--      rcases caratheordory s x with h
+--      have hCon: x ∈  conicalHull s := by
+--        apply subset_conicalHull_of_set s at hx; exact hx
+--      have ofRank: isConicalCombo_aux s x (finrank ℝ V) := by
+--        exact (h hCon)
+--      unfold isConicalCombo_aux isConicalCombo_aux' at ofRank
+--      rcases ofRank with ⟨ a, v, hv, h_basis⟩
+--      let N_Fin : Finset ℕ := Finset.range (finrank ℝ V)
+--      --let v_fin := v.restrict N_Fin
+--      --let a_fin := a.restrict N_Fin
+--      by_cases lin_ind: LinearIndependent ℝ v
+--      · have form_Basis: Basis ℕ ℝ V := by
+--          sorry
         --#check basisOfLinearIndependentOfCardEqFinrank lin_ind
         --#check LinearIndependent
         --#check FiniteDimensional
-        sorry
-      · sorry
+--        sorry
+--      · sorry
 
-    · push_neg at hs
-      have h_empty : conicalHull s = {0} := by
-        rw[hs]
-        simp only [conicalHull, mem_setOf_eq]
-        unfold isConicalCombo isConicalCombo'
-        simp only [mem_empty_iff_false, and_false, or_false]
-        ext x; simp[Set.mem_setOf]
-        constructor
-        · rintro ⟨ι, t, a, ha, v, pv⟩
-          sorry
+--    · push_neg at hs
+--      have h_empty : conicalHull s = {0} := by
+--        rw[hs]
+--        simp only [conicalHull, mem_setOf_eq]
+--        unfold isConicalCombo isConicalCombo'
+--        simp only [mem_empty_iff_false, and_false, or_false]
+--        ext x; simp[Set.mem_setOf]
+--        constructor
+--        · rintro ⟨ι, t, a, ha, v, pv⟩
+--          sorry
           --simp only [ha, zero_smul, Finset.sum_const_zero]
-        · intro hx
-          sorry
-      rw[h_empty]
-      simp
-      
+--        · intro hx
+--          sorry
+--      rw[h_empty]
+--      simp
+  sorry
+
 
 
 
