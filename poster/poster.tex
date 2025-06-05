@@ -232,7 +232,7 @@ theorem IsCompact.exists_isMinOn : {s : Set β} (hs : IsCompact s) (ne_s :
         \begin{column}{\colwidth}
 
             
-          \begin{alertblock}{Hyperplane Separation Theorem}
+          \begin{alertblock}{Hyperplane Separation Theorem (1.4.1)}
             Let $A$ and $B$ be two convex, closed subsets of $V$, with $A$ compact. Then $
                 \text{there exists } \; c\in \mathbb{R} \text{ and a linear functional } f : V\to \mathbb{R} \; \text{such that} \; f(a) < c \; \text{for all}\; a\in A \text{ and } \ c < f(b)\; \text{for all}\; b\in B.
               $
@@ -254,7 +254,7 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex
 \end{Verbatim}
 \end{block}
 
-        \begin{block}{Approaching Hyperplane Separation Theorem (1.4.1)}
+        \begin{block}{Approaching Hyperplane Separation Theorem }
             The Hyperplane Separation Theorem is a key result in proving the existence of certain polyhedral constructs.
             \\\\The formal proof involves exhibiting an infimal distance between the sets, and the corresponding points, $a_{\text{min}}, b_{\text{min}} \in V$ which define this infimal distance.
             $f:= b_{\text{min}}-a_{\text{min}}$ is thus a vector in $V$, and defining a functional by $\langle f, \_\rangle$ constructs a linear functional from $V\to \mathbb{R}$. Any hyperplane to which $f$
