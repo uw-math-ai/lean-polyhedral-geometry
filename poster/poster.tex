@@ -130,7 +130,7 @@
         \begin{column}{\colwidth}
 
             \begin{block}{Background}    
-                The primary focus of this quarter was in the formalization of two important theorems in polyhedral combinatorics: Carath\'eordory's Theorem, and The Hyperplane Separation Theorem. The formalization of each was successfully accomplished in the span of the ten-week cycle, as well as preliminary work in the formalization of Polar Spaces and Dual Topologies, with the enduring focus of the project, to prove the ``main'' theorem of Polyhedral Geometry, that is, that a subset of a vector space is a polyhedral cone if and only if it is the conical hull of a finite set of vectors.
+                The primary focus of this quarter was in the formalization of two important theorems in polyhedral combinatorics: Carath\'eordory's Theorem, and the Hyperplane Separation Theorem. The formalization of each was successfully accomplished in the span of the ten-week cycle, as well as preliminary work in the formalization of Polar Spaces and Dual Topologies, with the enduring focus of the project, to prove the ``main'' theorem of Polyhedral Geometry, that is, that a subset of a vector space is a polyhedral cone if and only if it is the conical hull of a finite set of vectors.
 
                 This result provides a combinatorial approach to the finite generation of polyhedra, allowing one to choose a subset of points from a vector space and in doing so, to uniquely determine a polyhedral cone.
             \end{block}
@@ -232,19 +232,19 @@ theorem IsCompact.exists_isMinOn : {s : Set β} (hs : IsCompact s) (ne_s :
         \begin{column}{\colwidth}
 
             
-            \begin{alertblock}{Hyperplane Separation Theorem}
-                Let $A$, $B$ two convex subsets of $V$, a vector space over $\mathbb{R}$ equipped with an inner product, and let $A$ compact. Then $
-                    \text{there exists } \; c\in \mathbb{R}, f \in V^* \; \text{such that} \; f(a) < c \; \text{for all}\; a\in A, \ c < f(b)\; \text{for all}\; b\in B
-                  $ Where $V^*$ is the dual of $V$, the vector space which consists of all linear functionals from $V\to \mathbb{R}$.
-            \end{alertblock}
+          \begin{alertblock}{Hyperplane Separation Theorem}
+            Let $A$, and $B$ be two convex, closed subsets of $V$, with $A$ compact. Then $
+                \text{there exists } \; c\in \mathbb{R}, f : V\to \mathbb{R} \; \text{such that} \; f(a) < c \; \text{for all}\; a\in A, \ c < f(b)\; \text{for all}\; b\in B
+              $ Where $f$ is a linear functional from $V\to \mathbb{R}$.
+        \end{alertblock}
 
-            \begin{figure}[htbp]
-                \centering
-                \input{figures/hyperplane-separation.tex}
-                \caption{A separating hyperplane determined by infimal points. \label{fig:hyperplane-separation}}
-            \end{figure}
+        \begin{figure}[htbp]
+            \centering
+            \input{figures/hyperplane-separation.tex}
+            \caption{A separating hyperplane determined by infimal points. \label{fig:hyperplane-separation}}
+        \end{figure}
 
-\begin{block}{Formal Statement in Lean}
+\begin{block}{Formal Statement in Lean4}
 \vspace{-0.5em}
 \begin{Verbatim}
 theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex 
@@ -254,24 +254,24 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex
 \end{Verbatim}
 \end{block}
 
-            \begin{block}{Approaching Hyperplane Separation Theorem}
-                The Hyperplane Separation Theorem is a key result in proving the existence of certain polyhedral constructs.
-                \\\\The formal proof involves exhibiting an infimal distance between the sets, and the corresponding points, $a_{min}, b_{min} \in V$ which define this infimal distance.
-                $f:= b_{min}-a_{min}$ is thus a vector in $V$, and defining a functional by $\langle f, \_\rangle$ constructs a linear functional in the dual. Any hyperplane to which $f$
-                is normal, and which does not intersect $A$ or $B$, then separates the two sets as desired, after unraveling the convexity of each set.
-                \\\\Convexity is used to provide contradiction, by providing a linear combination of points within each set which is simultaneously the norm of a vector,
-                and negative for small coefficients. In the process of formalization, this means providing an explicit, value for which the contradiction arises.         
-            \end{block}
-            
-             
-            \begin{exampleblock}{Corollary. Farkas's Lemma}
-              Let $C \subset V$ be a convex cone, $u\in V$. Then there exists a separating hyperplane between $u, C$, defined by a linear functional $y \in V^*$, such that $
-              y(u)> 0, \; \text{for all } x\in C, \; \text{and} \; y(x) \le 0
-              $
-            \end{exampleblock}
-            This result is  a combination of the Hyperplane Separation Theorem, for which the conclusion "There exists $
+        \begin{block}{Approaching Hyperplane Separation Theorem}
+            The Hyperplane Separation Theorem is a key result in proving the existence of certain polyhedral constructs.
+            \\\\The formal proof involves exhibiting an infimal distance between the sets, and the corresponding points, $a_{min}, b_{min} \in V$ which define this infimal distance.
+            $f:= b_{min}-a_{min}$ is thus a vector in $V$, and defining a functional by $\langle f, \_\rangle$ constructs a linear functional from $V\to \mathbb{R}$. Any hyperplane to which $f$
+            is normal, and which does not intersect $A$ or $B$, then separates the two sets as desired, after unraveling the convexity of each set.
+            \\\\Convexity is used to provide contradiction, by providing a linear combination of points within each set which is simultaneously the norm of a vector,
+            and negative for small coefficients. In the process of formalization, this means providing an explicit, value for which the contradiction arises.         
+        \end{block}
+        
+         
+        \begin{exampleblock}{Corollary. Farkas's Lemma}
+          Let $C$ be a closed, convex cone, in $V$, $u\in V\setminus C$. Then there exists a separating hyperplane between $u$ and $C$, defined by a linear functional $y$ in the space of functions $V\to \mathbb{R}$, such that $
+          y(u)> 0, \; \text{for all } x\in C, \; \text{and} \; y(x) \le 0
+          $
+        \end{exampleblock}
+            This result is  a combination of the Hyperplane Separation Theorem, for which the conclusion ``There exists $
               c\in \mathbb{R}, y \in V^* \text{ such that } y(a) \le c\; \text{for all } x\in C, \; c < f(x)\; \text{for all }  b\in B
-            $" immediately follows, and a translation lemma for cones proven earlier in the project.
+            $'' immediately follows, and a translation lemma for cones proven earlier in the project.
 \begin{Verbatim}
 lemma farkas (u: V)(C: Set V) (convC: Convex ℝ C) (closedC: IsClosed C)
 (coneC: Cone C): u ∉ C → ∃(y : V →ₗ[ℝ] ℝ), (y u > 0) ∧ (∀ x ∈ C, y x ≤ 0)
