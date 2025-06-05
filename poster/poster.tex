@@ -211,7 +211,7 @@ theorem IsCompact.exists_isMinOn : {s : Set β} (hs : IsCompact s) (ne_s :
             \end{figure}
 
             \begin{block}{Formalizing Carath\'eodory's Theorem}
-              An important introductory result of conical sets is the notion that any particular element in the hull of some set $S$ can be constructed as the conical combination of a smaller subset of $S$. This notion can then be extended to the convex case with an additional element.
+              An important introductory result of conical sets is the notion that any particular vector in the hull of some set $S$ can be constructed as the conical combination of a smaller subset of $S$. This idea can then be extended to the convex case with one additional vector.
 
               Our approach to formulating this into Lean is as follows:
 \begin{Verbatim}
@@ -256,9 +256,8 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex
 
         \begin{block}{Approaching Hyperplane Separation Theorem}
             The Hyperplane Separation Theorem is a key result in proving the existence of certain polyhedral constructs.
-            
-            The formal proof involves exhibiting an infimal distance between the sets, and the corresponding points, $a_{min}, b_{min} \in V$ which define this infimal distance.
-            $f:= b_{min}-a_{min}$ is thus a vector in $V$, and defining a functional by $\langle f, \_\rangle$ constructs a linear functional from $V\to \mathbb{R}$. Any hyperplane to which $f$
+            \\\\The formal proof involves exhibiting an infimal distance between the sets, and the corresponding points, $a_{\text{min}}, b_{\text{min}} \in V$ which define this infimal distance.
+            $f:= b_{\text{min}}-a_{\text{min}}$ is thus a vector in $V$, and defining a functional by $\langle f, \_\rangle$ constructs a linear functional from $V\to \mathbb{R}$. Any hyperplane to which $f$
             is normal, and which does not intersect $A$ or $B$, then separates the two sets as desired, after unraveling the convexity of each set.
             
             Convexity is used to provide contradiction, by providing a linear combination of points within each set which is simultaneously the norm of a vector,
