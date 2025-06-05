@@ -125,13 +125,13 @@
             \begin{block}{Background}
            
                 The primary focus of this quarter was in the formalization of two important theorems in polyhedral combinatorics:
-                Caratheordory's Theorem, and The Hyperplane Separation Theorem. The formalization of each was successfully accomplished in the
+                Carath\'eordory's Theorem, and The Hyperplane Separation Theorem. The formalization of each was successfully accomplished in the
                 span of the ten-week cycle, as well as preliminary work in the formalization of Polar Spaces and Dual Topologies, with the enduring
                 focus of the project, to prove the "main" theorem of Polyhedral Geometry, that is, that a subset of a vector space, $V$, is a polyhedral cone
                 if and only if it is the conical hull of a finite subset of $V$.
-                \\\\This result provides a combinatoric approach to the finite generation of polyhedra, allowing one to choose a subset of points from a vector space,
+
+                This result provides a combinatoric approach to the finite generation of polyhedra, allowing one to choose a subset of points from a vector space,
                 $V$, and in doing so, to uniquely determine a polyhedral cone.
-                
             \end{block}
 
             \begin{block}{Finite Polyhedra, Conical Sets, and Convex Sets}
@@ -143,14 +143,32 @@
                 $$ \bigcap_{1 \leq i \leq n} H_i. $$
                 A \textbf{convex} set $S \subseteq V$ is any set with the property that given two elements $\mathbf{x}, \mathbf{y} \in S$, we have
                 $$ (1 - t)\mathbf{x} + t\mathbf{y} \in S \quad \text{ for all real } t \in [0,1].$$
-                A \textbf{convex hull} is the closure of any $S \subseteq V$ under the property of convexity. Equivalently, $\text{conv}\,S$ is the smallest convex set of $V$ which contains $S$. 
+                A \textbf{convex hull} is the closure of any $S \subseteq V$ under the property of convexity. Equivalently, $\text{conv}\,S$ is the smallest convex set of $V$ which contains $S$. A \textbf{convex combination} of elements $x_1,x_2,\dots,x_n \in V$ is a linear combination where the coefficients $\lambda_i$ are nonnegative and sum to 1. 
 
                 A \textbf{polytope} can be defined as a bounded polyhedron or, equivalently, the convex hull of finitely many points in $\RR^d$. One eventual goal of our project is to prove this equivalency. 
                 
-                It turns out that \textbf{conical sets} are a nice generalization of the idea of a \textbf{convex set}. As a result, much of our formulation relies on the definition of the \textbf{conical combination} and \textbf{conical set} which we wil define below:
+                It turns out that \textbf{conical sets} are a nice generalization of the idea of a \textbf{convex set}. As a result, much of our formulation relies on the definitions of the following: A \textbf{conical combination} of elements $x_1,x_2,\dots,x_n \in V$ is a linear combination where the coefficients $\lambda_i$ are nonnegative. A \textbf{conical set} is simply closed under the operation of \textbf{conical combination}. A \textbf{conical hull} is the closer of the set under finite \textbf{conical combinations}.
                 
-                NOT FINISHED
-                               
+                IMPORTANT
+
+                \# TODO % TODO
+                Potentially talk about definitions related to closedness, boundedness, and compactness. 
+            \end{block}
+
+            \begin{block}{Definitions translated to Lean}
+            \vspace{-0.5em}
+\begin{verbatim}
+def Halfspace : Prop := ∃ (f : V →ₗ[ℝ] ℝ) (c : ℝ), s = { x | f x ≤ c }
+def Polyhedron : Prop := ∃ (I : Type*) (H : I → Set V), Finite I ∧ 
+  (∀ i : I, Halfspace (H i)) ∧ s = ⋂ (i : I), H i
+def Cone : Prop := s.Nonempty ∧ ∀ c ≥ (0 : ℝ), ∀ x ∈ s, c • x ∈ s
+def conicalHull.{u} : Set V := { x | isConicalCombo.{_, u} s x }
+def isConicalCombo (x : V) : Prop :=  ∃ (ι : Type*) (t : Finset ι) 
+  (a : ι → ℝ) (v : ι → V), isConicalCombo' s x t a v
+def isConicalCombo' (x : V) {ι : Type*} (t : Finset ι) (a : ι → ℝ) (v : ι → V)
+  : Prop := (∀ i ∈ t, a i = 0 ∨ 0 ≤ a i ∧ v i ∈ s) ∧ x = ∑ i ∈ t, a i • v i
+
+\end{verbatim}
             \end{block}
            
             
@@ -159,40 +177,59 @@
         \separatorcolumn
 
         \begin{column}{\colwidth}
+            \begin{block}{A prelimiary sample proof}
+            \vspace{-0.5em}
+\begin{verbatim}
+  theorem poly_convex : ∀ (s : Set V), Polyhedron s → Convex ℝ s := by
+    intro s h_s_poly
+    unfold Polyhedron at h_s_poly
+    rcases h_s_poly with ⟨I, H, h_I_finite, h_Hi_halfspace, rfl⟩
+    apply convex_iInter
+    intro i
+    exact halfspace_convex _ (h_Hi_halfspace i)
+\end{verbatim}
+            \end{block}
 
-            \begin{block*}
 
+            \begin{alertblock}{Carath\'eodory's Theorem (1.3.2)}
+              Let $S \subseteq V = \RR^d$. For all $x \in \text{cone}\,S$, $x$ is a conical combination of at most $d$ elements of $S$. For all $x \in \text{conv}\,S$, $x$ is a convex combination of at most $d + 1$ elements of $S$. 
+            \end{alertblock}
 
-            \end{block*}
+            \begin{figure}[htbp]
+                    \centering
+                    \input{figures/caratheodory.tex}
+                    \caption{An arbitrary point in the convex hull of 6 points is the convex combination of 3.\label{fig:caratheodory}}
+            \end{figure}
 
             \begin{block}{Formalizing Carath\'eodory's Theorem}
+              An important introductory result of conical sets is the notion that any particular element in the hull of some set $S$ can be constructed as the conical combination of a smaller subset of $S$. This notion can then be extended to the convex case with an additional element.
 
-              An important introductory result of conical sets is the notion that any particular element in the hull of some set $S$ can be constructed as the conical combination of a smaller subset of $S$. This notion can then be extended to the convex case with an additional element. Formally, this is
+              Our approach to formulating this into Lean is as follows:
+\begin{verbatim}
+    theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, 
+      isConicalCombo_aux s x (finrank ℝ V) 
+\end{verbatim}
+              \verb|isConicalCombo_aux| is our definition of the previously defined \verb|isConicalCombo| that exposes the number of elements needed in the \textbf{conical combination} of \verb|x|. Since \verb|finrank ℝ V| is simply the dimension of the space, it corresponds directly to $d$ in the original theorem.
+
+              The proof of this in Lean involves the inducting on the dimension of $V$ and demonstrating that 
+
+              NOT FINISHED,
+              continue talking about how this is equivalent to the previously stated definition and vague details as to how to approach proving this verison of the theorem in lean. 
             \end{block}
-            \begin{alertblock}{Carath\'eodory's Theorem (1.3.2)}
-                Let $S \subseteq V$. For all $x \in \text{cone}\,S$, $x$ is a conical combination of at most $d$ elements of $S$. For all $x \in \text{conv}\,S$, $x$ is a convex combination of at most $d + 1$ elements of $S$. 
-              \end{alertblock}
+
+            
+
+
+            
             \begin{block*}
-              The task of formalating this into Lean ends up taking the form
-              \begin{verbatim}
-                
-              \end{verbatim}
+              
+              
 
                 
           
-                \begin{alertblock}{Example Theorem}
-                    Consider 0, the real number. Therefore, $\mathbb{R}$ is nonempty. 
-                \end{alertblock}
-
-                \begin{equation}
-                    e^{2\pi i} - 1 = 0
-                \end{equation}
+              
                   
-                \begin{figure}[htbp]
-                    \centering
-                    \input{figures/caratheodory.tex}
-                    \caption{Insert caption here\label{fig:caratheodory}}
-                \end{figure}
+                
             \end{block*}
 
             
@@ -216,6 +253,7 @@
             \end{figure}
 
 \begin{block}{Formal Statement in Lean4}
+\vspace{-0.5em}
 \begin{verbatim}
 theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex 
 ℝ B) (hclosed : IsClosed A ∧ IsClosed B )(hNempty : A.Nonempty ∧ B.Nonempty) 
