@@ -254,7 +254,7 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex
 \end{Verbatim}
 \end{block}
 
-        \begin{block}{Approaching Hyperplane Separation Theorem}
+        \begin{block}{Approaching Hyperplane Separation Theorem (1.4.1)}
             The Hyperplane Separation Theorem is a key result in proving the existence of certain polyhedral constructs.
             \\\\The formal proof involves exhibiting an infimal distance between the sets, and the corresponding points, $a_{\text{min}}, b_{\text{min}} \in V$ which define this infimal distance.
             $f:= b_{\text{min}}-a_{\text{min}}$ is thus a vector in $V$, and defining a functional by $\langle f, \_\rangle$ constructs a linear functional from $V\to \mathbb{R}$. Any hyperplane to which $f$
@@ -265,7 +265,7 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex
         \end{block}
         
          
-        \begin{exampleblock}{Corollary (Farkas's Lemma)}
+        \begin{exampleblock}{Farkas's Lemma (Corollary 1.4.2)}
           Let $C$ be a closed, convex cone in $V$ $u\in V\setminus C$. Then there exists a separating hyperplane between $u$ and $C$, defined by a linear functional $y$ in the space of functions $V\to \mathbb{R}$, such that $
           y(u)> 0 \; \text{for all } x\in C, \; \text{and} \; y(x) \le 0
           $.
