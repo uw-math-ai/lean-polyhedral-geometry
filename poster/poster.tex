@@ -118,6 +118,11 @@
 
 \begin{document}
 
+\addtobeamertemplate{headline}{}{\begin{tikzpicture}[remember picture, overlay]
+  \node [anchor=north east, inner sep=1cm, xshift=-0.5cm] at (current page.north east)
+  {\includegraphics[height=6.8cm]{figures/qrcode.png}};
+\end{tikzpicture}}
+
 \begin{frame}[fragile]
     \begin{columns}[t]
         \separatorcolumn
