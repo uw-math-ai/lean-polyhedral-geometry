@@ -52,6 +52,8 @@ def conicalHull.{u} : Set V :=
 
 end
 
+
+
 --figure out how closure operators work (to define conicalHull like mathlib's convexHull)
 
 --make alt defs of polyhedron and polytope in terms of convex hulls
@@ -66,5 +68,5 @@ variable {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [FiniteDim
 
 def Polytope.{u} : Prop :=
   Polyhedron.{_, u} s ∧ Bornology.IsBounded s
-  
+
 end
