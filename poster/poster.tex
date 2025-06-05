@@ -234,8 +234,8 @@ theorem IsCompact.exists_isMinOn : {s : Set β} (hs : IsCompact s) (ne_s :
             
           \begin{alertblock}{Hyperplane Separation Theorem}
             Let $A$, and $B$ be two convex, closed subsets of $V$, with $A$ compact. Then $
-                \text{there exists } \; c\in \mathbb{R}, f : V\to \mathbb{R} \; \text{such that} \; f(a) < c \; \text{for all}\; a\in A, \ c < f(b)\; \text{for all}\; b\in B
-              $ Where $f$ is a linear functional from $V\to \mathbb{R}$.
+                \text{there exists } \; c\in \mathbb{R}, \text{and a linear functional, } f : V\to \mathbb{R} \; \text{such that} \; f(a) < c \; \text{for all}\; a\in A, \ c < f(b)\; \text{for all}\; b\in B.
+              $
         \end{alertblock}
 
         \begin{figure}[htbp]
@@ -256,21 +256,23 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex
 
         \begin{block}{Approaching Hyperplane Separation Theorem}
             The Hyperplane Separation Theorem is a key result in proving the existence of certain polyhedral constructs.
-            \\\\The formal proof involves exhibiting an infimal distance between the sets, and the corresponding points, $a_{min}, b_{min} \in V$ which define this infimal distance.
+            
+            The formal proof involves exhibiting an infimal distance between the sets, and the corresponding points, $a_{min}, b_{min} \in V$ which define this infimal distance.
             $f:= b_{min}-a_{min}$ is thus a vector in $V$, and defining a functional by $\langle f, \_\rangle$ constructs a linear functional from $V\to \mathbb{R}$. Any hyperplane to which $f$
             is normal, and which does not intersect $A$ or $B$, then separates the two sets as desired, after unraveling the convexity of each set.
-            \\\\Convexity is used to provide contradiction, by providing a linear combination of points within each set which is simultaneously the norm of a vector,
+            
+            Convexity is used to provide contradiction, by providing a linear combination of points within each set which is simultaneously the norm of a vector,
             and negative for small coefficients. In the process of formalization, this means providing an explicit value for which the contradiction arises.         
         \end{block}
         
          
-        \begin{exampleblock}{Corollary. Farkas's Lemma}
+        \begin{exampleblock}{Corollary (Farkas's Lemma)}
           Let $C$ be a closed, convex cone, in $V$, $u\in V\setminus C$. Then there exists a separating hyperplane between $u$ and $C$, defined by a linear functional $y$ in the space of functions $V\to \mathbb{R}$, such that $
           y(u)> 0, \; \text{for all } x\in C, \; \text{and} \; y(x) \le 0
-          $
+          $.
         \end{exampleblock}
             This result is  a combination of the Hyperplane Separation Theorem, for which the conclusion ``There exists $
-              c\in \mathbb{R}, y \in V^* \text{ such that } y(a) \le c\; \text{for all } x\in C, \; c < f(x)\; \text{for all }  b\in B
+              c\in \mathbb{R}, $ and a linear functional, $ y: V\to \mathbb{R} $ such that $ y(a) \le c\; $for all $ x\in C, \; c < f(x)\; $for all $  b\in B
             $'' immediately follows, and a translation lemma for cones proven earlier in the project.
 \begin{Verbatim}
 lemma farkas (u: V)(C: Set V) (convC: Convex ℝ C) (closedC: IsClosed C)
