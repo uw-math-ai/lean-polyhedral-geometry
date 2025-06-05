@@ -21,7 +21,7 @@
 
 \setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]
 \usepackage{fancyvrb}
-\fvset{fontsize=\small}
+% \fvset{fontsize=\small}
 
 \usepackage{tikz}
 \usetikzlibrary{cd,decorations.markings,arrows.meta,calc}
@@ -141,7 +141,7 @@
                 $V$, and in doing so, to uniquely determine a polyhedral cone.
             \end{block}
 
-            \begin{block}{Finite Polyhedra, Conical Sets, and Convex Sets}
+            \begin{block}{Textbook Formulations}
                 Have $V = \RR^d$ be the ambient finite-dimensional vector space. The \textbf{halfspace} is commonly defined as the set of points on one side of an affine hyperplane:
                 $$ \{\mathbf{x} \in V \;|\; \mathbf{ax} \leq b\}$$
                 where $\mathbf{a} \in \RR^d$ is the normal vector of the hyperplane with $b \in \RR$ as the affine constant term.
@@ -154,9 +154,9 @@
 
                 A \textbf{polytope} can be defined as a bounded polyhedron or, equivalently, the convex hull of finitely many points in $\RR^d$. One eventual goal of our project is to prove this equivalency. 
                 
-                It turns out that \textbf{conical sets} are a nice generalization of the idea of a \textbf{convex set}. As a result, much of our formulation relies on the definitions of the following: A \textbf{conical combination} of elements $x_1,x_2,\dots,x_n \in V$ is a linear combination where the coefficients $\lambda_i$ are nonnegative. A \textbf{conical set} is simply closed under the operation of \textbf{conical combination}. A \textbf{conical hull} is the closer of the set under finite \textbf{conical combinations}.
-                
-                In proving the Hyperplane Separation Theorem, two widely-known theorems were crucial: \textbf{The Heine-Borel Theorem}, and the existence of an infimum on a compact set. The Mathlib statements of each are outlined below. 
+                It turns out that conical sets are a nice generalization of the idea of a \textbf{convex set}. As a result, much of our formulation relies on the definitions of the following: A \textbf{conical combination} of elements $x_1,x_2,\dots,x_n \in V$ is a linear combination where the coefficients $\lambda_i$ are nonnegative. A \textbf{conical set} is simply closed under the operation of conical combination. A \textbf{conical hull} is the closer of the set under finite conical combinations.
+                 
+                In proving the Hyperplane Separation Theorem, two widely-known theorems were crucial: the \textbf{ Heine-Borel Theorem}, and the existence of an infimum on a compact set.
             \end{block}
 
             \begin{block}{Definitions translated to Lean}
@@ -171,10 +171,7 @@ def isConicalCombo (x : V) : Prop :=  ∃ (ι : Type*) (t : Finset ι)
   (a : ι → ℝ) (v : ι → V), isConicalCombo' s x t a v
 def isConicalCombo' (x : V) {ι : Type*} (t : Finset ι) (a : ι → ℝ) (v : ι → V)
   : Prop := (∀ i ∈ t, a i = 0 ∨ 0 ≤ a i ∧ v i ∈ s) ∧ x = ∑ i ∈ t, a i • v i
-theorem Metric.isCompact_iff_isClosed_bounded.{u} [Extra Qualifiers] :
-  IsCompact s ↔ IsClosed s ∧ Bornology.IsBounded s
-theorem IsCompact.exists_isMinOn : {s : Set β} (hs : IsCompact s) (ne_s :
-  s.Nonempty) {f : β → α}(hf : ContinuousOn f s) : ∃ x ∈ s, IsMinOn f s x
+
 \end{Verbatim}
         \end{block}
            
@@ -184,7 +181,18 @@ theorem IsCompact.exists_isMinOn : {s : Set β} (hs : IsCompact s) (ne_s :
         \separatorcolumn
 
         \begin{column}{\colwidth}
-            \begin{block}{A prelimiary sample proof}
+          \vspace{1em}
+          \begin{verbatim}
+theorem Metric.isCompact_iff_isClosed_bounded.{u} [Extra Qualifiers] :
+  IsCompact s ↔ IsClosed s ∧ Bornology.IsBounded s
+theorem IsCompact.exists_isMinOn : {s : Set β} (hs : IsCompact s) (ne_s :
+  s.Nonempty) {f : β → α}(hf : ContinuousOn f s) : ∃ x ∈ s, IsMinOn f s x
+\end{verbatim}
+
+\vspace{1em}
+
+
+            \begin{block}{A preliminary sample proof}
             \vspace{-0.5em}
 \begin{Verbatim}
   theorem poly_convex : ∀ (s : Set V), Polyhedron s → Convex ℝ s := by
@@ -216,30 +224,15 @@ theorem IsCompact.exists_isMinOn : {s : Set β} (hs : IsCompact s) (ne_s :
     theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, 
       isConicalCombo_aux s x (finrank ℝ V) 
 \end{Verbatim}
-              \verb|isConicalCombo_aux| is our definition of the previously defined \verb|isConicalCombo| that exposes the number of elements needed in the \textbf{conical combination} of \verb|x|. Since \verb|finrank ℝ V| is simply the dimension of the space, it corresponds directly to $d$ in the original theorem.
+              \verb|isConicalCombo_aux| is our definition of the previously defined \verb|isConicalCombo| that exposes the number of elements needed in the conical combination of \verb|x|. Since \verb|finrank ℝ V| is simply the dimension of the space, it corresponds directly to $d$ in the original theorem.
 
               The proof of this in Lean involves the inducting on the dimension of $V$ and demonstrating that 
 
-              NOT FINISHED,
-              continue talking about how this is equivalent to the previously stated definition and vague details as to how to approach proving this verison of the theorem in lean. 
-            \end{block}
-
+              The proof of this in Lean involves a variety of mathematical tools. We have \verb|v| be the set of vectors involved in the conical combination of \verb|x| (which is a subset of \verb|s|). First, we induct on minimum number of elements \verb|N| in \verb|s| required in a conical combination to construct \verb|x|. Then, we do case work on the number of elements \verb|N+1| in \verb|s|: if \verb|N+1| is less than \verb|finrank ℝ V|, we are done; otherwise, we can show that there exists linear dependence in \verb|v| and work to remove the dependent vector while preserving nonnegativity of the coefficients of the remaining vectors in \verb|v|.  
+            \end{block}    
+            
             
 
-
-            
-            \begin{block*}
-              
-              
-
-                
-          
-              
-                  
-                
-            \end{block*}
-
-            
         \end{column}
 
         \separatorcolumn
@@ -248,9 +241,9 @@ theorem IsCompact.exists_isMinOn : {s : Set β} (hs : IsCompact s) (ne_s :
 
             
             \begin{alertblock}{Hyperplane Separation Theorem}
-                Let $A$, $B$ two convex subsets of $V$, a vector space over $\mathbb{R}$ equipped with an inner product, and let $A$ compact. Then \begin{equation}
-                    \exists c\in \mathbb{R}, f \in V^*: f(a) < c\ \forall a\in A, \ c < f(b)\ \forall b\in B
-                  \end{equation} Where $V^*$ is the dual of $V$, the vector space which consists of all linear functionals from $V\to \mathbb{R}$.
+                Let $A$, $B$ two convex subsets of $V$, a vector space over $\mathbb{R}$ equipped with an inner product, and let $A$ compact. Then $
+                    \text{there exists } \; c\in \mathbb{R}, f \in V^* \; \text{such that} \; f(a) < c \; \text{for all}\; a\in A, \ c < f(b)\; \text{for all}\; b\in B
+                  $ Where $V^*$ is the dual of $V$, the vector space which consists of all linear functionals from $V\to \mathbb{R}$.
             \end{alertblock}
 
             \begin{figure}[htbp]
@@ -280,14 +273,13 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex
             
              
             \begin{exampleblock}{Corollary. Farkas's Lemma}
-              Let $C \subset V$ be a convex cone, $u\in V$. Then there exists a separating hyperplane between $u, C$, defined by a linear functional $y \in V^*$, such that \begin{equation}
-              y(u)> 0, \ \forall x\in C, \ y(x) \le 0
-              \end{equation} 
+              Let $C \subset V$ be a convex cone, $u\in V$. Then there exists a separating hyperplane between $u, C$, defined by a linear functional $y \in V^*$, such that $
+              y(u)> 0, \; \text{for all } x\in C, \; \text{and} \; y(x) \le 0
+              $
             \end{exampleblock}
-            \vspace{-1em}
-            This result is  a combination of the Hyperplane Separation Theorem, for which the conclusion \begin{equation}
-              \exists c\in \mathbb{R}, y \in V^*: y(a) \le c\ \forall x\in C, \ c < f(x)\ \forall b\in B
-            \end{equation} immediately follows, and a translation lemma for cones proven earlier in the project.
+            This result is  a combination of the Hyperplane Separation Theorem, for which the conclusion "There exists $
+              c\in \mathbb{R}, y \in V^* \text{ such that } y(a) \le c\; \text{for all } x\in C, \; c < f(x)\; \text{for all }  b\in B
+            $" immediately follows, and a translation lemma for cones proven earlier in the project.
 \begin{Verbatim}
 lemma farkas (u: V)(C: Set V) (convC: Convex ℝ C) (closedC: IsClosed C)
 (coneC: Cone C): u ∉ C → ∃(y : V →ₗ[ℝ] ℝ), (y u > 0) ∧ (∀ x ∈ C, y x ≤ 0)
