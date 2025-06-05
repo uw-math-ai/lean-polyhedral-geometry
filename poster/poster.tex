@@ -20,6 +20,8 @@
 \usepackage{anyfontsize}
 
 \setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]
+\usepackage{fancyvrb}
+\fvset{fontsize=\small}
 
 \usepackage{tikz}
 \usetikzlibrary{cd,decorations.markings,arrows.meta,calc}
@@ -157,7 +159,7 @@
 
             \begin{block}{Definitions translated to Lean}
             \vspace{-0.5em}
-\begin{verbatim}
+\begin{Verbatim}
 def Halfspace : Prop := ∃ (f : V →ₗ[ℝ] ℝ) (c : ℝ), s = { x | f x ≤ c }
 def Polyhedron : Prop := ∃ (I : Type*) (H : I → Set V), Finite I ∧ 
   (∀ i : I, Halfspace (H i)) ∧ s = ⋂ (i : I), H i
@@ -167,8 +169,7 @@ def isConicalCombo (x : V) : Prop :=  ∃ (ι : Type*) (t : Finset ι)
   (a : ι → ℝ) (v : ι → V), isConicalCombo' s x t a v
 def isConicalCombo' (x : V) {ι : Type*} (t : Finset ι) (a : ι → ℝ) (v : ι → V)
   : Prop := (∀ i ∈ t, a i = 0 ∨ 0 ≤ a i ∧ v i ∈ s) ∧ x = ∑ i ∈ t, a i • v i
-
-\end{verbatim}
+\end{Verbatim}
             \end{block}
            
             
@@ -179,7 +180,7 @@ def isConicalCombo' (x : V) {ι : Type*} (t : Finset ι) (a : ι → ℝ) (v : �
         \begin{column}{\colwidth}
             \begin{block}{A prelimiary sample proof}
             \vspace{-0.5em}
-\begin{verbatim}
+\begin{Verbatim}
   theorem poly_convex : ∀ (s : Set V), Polyhedron s → Convex ℝ s := by
     intro s h_s_poly
     unfold Polyhedron at h_s_poly
@@ -187,7 +188,7 @@ def isConicalCombo' (x : V) {ι : Type*} (t : Finset ι) (a : ι → ℝ) (v : �
     apply convex_iInter
     intro i
     exact halfspace_convex _ (h_Hi_halfspace i)
-\end{verbatim}
+\end{Verbatim}
             \end{block}
 
 
@@ -205,10 +206,10 @@ def isConicalCombo' (x : V) {ι : Type*} (t : Finset ι) (a : ι → ℝ) (v : �
               An important introductory result of conical sets is the notion that any particular element in the hull of some set $S$ can be constructed as the conical combination of a smaller subset of $S$. This notion can then be extended to the convex case with an additional element.
 
               Our approach to formulating this into Lean is as follows:
-\begin{verbatim}
+\begin{Verbatim}
     theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, 
       isConicalCombo_aux s x (finrank ℝ V) 
-\end{verbatim}
+\end{Verbatim}
               \verb|isConicalCombo_aux| is our definition of the previously defined \verb|isConicalCombo| that exposes the number of elements needed in the \textbf{conical combination} of \verb|x|. Since \verb|finrank ℝ V| is simply the dimension of the space, it corresponds directly to $d$ in the original theorem.
 
               The proof of this in Lean involves the inducting on the dimension of $V$ and demonstrating that 
@@ -254,12 +255,12 @@ def isConicalCombo' (x : V) {ι : Type*} (t : Finset ι) (a : ι → ℝ) (v : �
 
 \begin{block}{Formal Statement in Lean4}
 \vspace{-0.5em}
-\begin{verbatim}
+\begin{Verbatim}
 theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex 
 ℝ B) (hclosed : IsClosed A ∧ IsClosed B )(hNempty : A.Nonempty ∧ B.Nonempty) 
 (hA_Bounded: IsBounded A) (hAB : Disjoint A B) : ∃ (f : V →ₗ[ℝ] ℝ) (c : ℝ),
 (∀ a ∈ A, f a < c) ∧ (  ∀ b ∈ B, c < f b)
-\end{verbatim}
+\end{Verbatim}
 \end{block}
 
             \begin{block}{Approaching Hyperplane Separation Theorem}
@@ -278,10 +279,10 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex
               \end{equation} This result is  a combination of the Hyperplane Separation Theorem, for which the conclusion \begin{equation}
                 \exists c\in \mathbb{R}, y \in V^*: y(a) \le c\ \forall x\in C, \ c < f(x)\ \forall b\in B
               \end{equation} immediately follows, and a translation lemma for cones proven earlier in the project.
-\begin{verbatim}
+\begin{Verbatim}
 lemma farkas (u: V)(C: Set V) (convC: Convex ℝ C) (closedC: IsClosed C)
 (coneC: Cone C): u ∉ C → ∃(y : V →ₗ[ℝ] ℝ), (y u > 0) ∧ (∀ x ∈ C, y x ≤ 0)
-\end{verbatim}  
+\end{Verbatim}  
            
             \end{exampleblock}
         \begin{block}{References}
