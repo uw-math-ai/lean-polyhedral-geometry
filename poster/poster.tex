@@ -129,19 +129,13 @@
 
         \begin{column}{\colwidth}
 
-            \begin{block}{Background}
-           
-                The primary focus of this quarter was in the formalization of two important theorems in polyhedral combinatorics:
-                Carath\'eordory's Theorem, and The Hyperplane Separation Theorem. The formalization of each was successfully accomplished in the
-                span of the ten-week cycle, as well as preliminary work in the formalization of Polar Spaces and Dual Topologies, with the enduring
-                focus of the project, to prove the "main" theorem of Polyhedral Geometry, that is, that a subset of a vector space, $V$, is a polyhedral cone
-                if and only if it is the conical hull of a finite subset of $V$.
+            \begin{block}{Background}    
+                The primary focus of this quarter was in the formalization of two important theorems in polyhedral combinatorics: Carath\'eordory's Theorem, and The Hyperplane Separation Theorem. The formalization of each was successfully accomplished in the span of the ten-week cycle, as well as preliminary work in the formalization of Polar Spaces and Dual Topologies, with the enduring focus of the project, to prove the ``main'' theorem of Polyhedral Geometry, that is, that a subset of a vector space is a polyhedral cone if and only if it is the conical hull of a finite set of vectors.
 
-                This result provides a combinatoric approach to the finite generation of polyhedra, allowing one to choose a subset of points from a vector space,
-                $V$, and in doing so, to uniquely determine a polyhedral cone.
+                This result provides a combinatorial approach to the finite generation of polyhedra, allowing one to choose a subset of points from a vector space and in doing so, to uniquely determine a polyhedral cone.
             \end{block}
 
-            \begin{block}{Textbook Formulations}
+            \begin{block}{Preliminaries}
                 Have $V = \RR^d$ be the ambient finite-dimensional vector space. The \textbf{halfspace} is commonly defined as the set of points on one side of an affine hyperplane:
                 $$ \{\mathbf{x} \in V \;|\; \mathbf{ax} \leq b\}$$
                 where $\mathbf{a} \in \RR^d$ is the normal vector of the hyperplane with $b \in \RR$ as the affine constant term.
@@ -183,7 +177,7 @@ def isConicalCombo' (x : V) {ι : Type*} (t : Finset ι) (a : ι → ℝ) (v : �
         \begin{column}{\colwidth}
           \vspace{1em}
           \begin{verbatim}
-theorem Metric.isCompact_iff_isClosed_bounded.{u} [Extra Qualifiers] :
+theorem Metric.isCompact_iff_isClosed_bounded.{u} [...] :
   IsCompact s ↔ IsClosed s ∧ Bornology.IsBounded s
 theorem IsCompact.exists_isMinOn : {s : Set β} (hs : IsCompact s) (ne_s :
   s.Nonempty) {f : β → α}(hf : ContinuousOn f s) : ∃ x ∈ s, IsMinOn f s x
@@ -192,7 +186,7 @@ theorem IsCompact.exists_isMinOn : {s : Set β} (hs : IsCompact s) (ne_s :
 \vspace{1em}
 
 
-            \begin{block}{A preliminary sample proof}
+            \begin{exampleblock}{A sample proof}
             \vspace{-0.5em}
 \begin{Verbatim}
   theorem poly_convex : ∀ (s : Set V), Polyhedron s → Convex ℝ s := by
@@ -203,7 +197,7 @@ theorem IsCompact.exists_isMinOn : {s : Set β} (hs : IsCompact s) (ne_s :
     intro i
     exact halfspace_convex _ (h_Hi_halfspace i)
 \end{Verbatim}
-            \end{block}
+            \end{exampleblock}
 
 
             \begin{alertblock}{Carath\'eodory's Theorem (1.3.2)}
@@ -225,8 +219,6 @@ theorem IsCompact.exists_isMinOn : {s : Set β} (hs : IsCompact s) (ne_s :
       isConicalCombo_aux s x (finrank ℝ V) 
 \end{Verbatim}
               \verb|isConicalCombo_aux| is our definition of the previously defined \verb|isConicalCombo| that exposes the number of elements needed in the conical combination of \verb|x|. Since \verb|finrank ℝ V| is simply the dimension of the space, it corresponds directly to $d$ in the original theorem.
-
-              The proof of this in Lean involves the inducting on the dimension of $V$ and demonstrating that 
 
               The proof of this in Lean involves a variety of mathematical tools. We have \verb|v| be the set of vectors involved in the conical combination of \verb|x| (which is a subset of \verb|s|). First, we induct on minimum number of elements \verb|N| in \verb|s| required in a conical combination to construct \verb|x|. Then, we do case work on the number of elements \verb|N+1| in \verb|s|: if \verb|N+1| is less than \verb|finrank ℝ V|, we are done; otherwise, we can show that there exists linear dependence in \verb|v| and work to remove the dependent vector while preserving nonnegativity of the coefficients of the remaining vectors in \verb|v|.  
             \end{block}    
@@ -252,7 +244,7 @@ theorem IsCompact.exists_isMinOn : {s : Set β} (hs : IsCompact s) (ne_s :
                 \caption{A separating hyperplane determined by infimal points. \label{fig:hyperplane-separation}}
             \end{figure}
 
-\begin{block}{Formal Statement in Lean4}
+\begin{block}{Formal Statement in Lean}
 \vspace{-0.5em}
 \begin{Verbatim}
 theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex 
