@@ -256,8 +256,8 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex
 
         \begin{block}{Approaching Hyperplane Separation Theorem}
             The Hyperplane Separation Theorem is a key result in proving the existence of certain polyhedral constructs.
-            \\\\The formal proof involves exhibiting an infimal distance between the sets, and the corresponding points, $a_{min}, b_{min} \in V$ which define this infimal distance.
-            $f:= b_{min}-a_{min}$ is thus a vector in $V$, and defining a functional by $\langle f, \_\rangle$ constructs a linear functional from $V\to \mathbb{R}$. Any hyperplane to which $f$
+            \\\\The formal proof involves exhibiting an infimal distance between the sets, and the corresponding points, $a_{\text{min}}, b_{\text{min}} \in V$ which define this infimal distance.
+            $f:= b_{\text{min}}-a_{\text{min}}$ is thus a vector in $V$, and defining a functional by $\langle f, \_\rangle$ constructs a linear functional from $V\to \mathbb{R}$. Any hyperplane to which $f$
             is normal, and which does not intersect $A$ or $B$, then separates the two sets as desired, after unraveling the convexity of each set.
             \\\\Convexity is used to provide contradiction, by providing a linear combination of points within each set which is simultaneously the norm of a vector,
             and negative for small coefficients. In the process of formalization, this means providing an explicit value for which the contradiction arises.         
