@@ -1,0 +1,43 @@
+\begin{tikzpicture}[scale=1.75, thick, >=Stealth, decoration={markings,mark=at position 0.5 with {\arrow[xshift={4pt + 2.25\pgflinewidth}]{Latex[scale=1.5]},}}]
+  \clip (-2.25,-2.25) rectangle (2.25, 2.25);
+
+  % 1) The six true vertices of a regular hexagon of radius 1
+  \foreach \i in {0,...,5} {
+    \coordinate (P\i) at ({2*cos(60*\i)},{2*sin(60*\i)});
+  }
+
+  % 2) Draw each extended edge in dotted style and name it E<i>
+  \foreach \i/\j in {0/1,1/2,2/3,3/4,4/5,5/0} {
+    \draw[name path=E\i,dotted]
+    ($(P\i)!-2!(P\j)$) -- ($(P\j)!-2!(P\i)$);
+  }
+
+  % 4) Shade the triangle P0–P2–P4
+  \fill[lightpurple] (P0) -- (P1) -- (P4) -- cycle;
+
+  % 5) Construct two medians of that triangle and name their intersection G
+  \coordinate (m02) at ($ (P0)!0.5!(P2) $);   % midpoint of P0–P2
+  \coordinate (m24) at ($ (P2)!0.5!(P4) $);   % midpoint of P2–P4
+
+  \path[name path=med1] (P4) -- (m02);  
+  \path[name path=med2] (P0) -- (m24);
+
+  \path[name intersections={of=med1 and med2, by=G}];
+
+  % 6) Draw a dot at the centroid G
+  \coordinate (Gshift) at (0.65cm,0.25cm);
+  \fill (Gshift) circle (2pt);
+
+  % 3) Over‐draw the actual hexagon edges in solid
+  \draw[very thick] (P0)--(P1)--(P2)--(P3)--(P4)--(P5)--cycle;
+
+  % (Optional) put dots at the true hexagon vertices, too
+  \foreach \i in {0,...,5} {
+    \fill (P\i) circle (2pt);
+  }
+\end{tikzpicture}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../poster"
+%%% End:

@@ -19,6 +19,10 @@
 \pgfplotsset{compat=1.14}
 \usepackage{anyfontsize}
 
+\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]
+\usepackage{fancyvrb}
+% \fvset{fontsize=\small}
+
 \usepackage{tikz}
 \usetikzlibrary{cd,decorations.markings,arrows.meta,calc}
 
@@ -26,7 +30,6 @@
   amsmath,
   amssymb,
   amsthm,
-%  amsrefs,
   amsfonts,
   mathtools,
   bbm,
@@ -42,7 +45,7 @@
 \usepackage{caption}
 \usepackage[normalsize]{subfigure}
 
-\usepackage[alphabetic, msc-links, nobysame, lite]{amsrefs}
+\usepackage[msc-links, nobysame, lite, url]{amsrefs}
 
 \usepackage[capitalize]{cleveref}
 \crefformat{section}{\S{#2#1#3}}
@@ -115,157 +118,185 @@
 
 \begin{document}
 
-\begin{frame}[t]
-\begin{columns}[t]
-\separatorcolumn
+\addtobeamertemplate{headline}{}{\begin{tikzpicture}[remember picture, overlay]
+  \node [anchor=north east, inner sep=1cm, xshift=-0.5cm] at (current page.north east)
+  {\includegraphics[height=6.8cm]{figures/qrcode.png}};
+\end{tikzpicture}}
 
-\begin{column}{\colwidth}
+\begin{frame}[fragile]
+    \begin{columns}[t]
+        \separatorcolumn
 
-\begin{block}{Background}
-Let $X$ be a compact Riemann surface of genus $g$.  The flat Hermitian metric on the space $H^{0}(X,\Omega_{X}^{1})$ of holomorphic $1$-forms is defined by $\ang{\alpha,\beta} \defeq \frac{i}{2}\int_{X} \alpha \wedge \overline{\beta}$.  Choosing an orthonormal basis $\omega_{1}, \ldots, \omega_{g}$, the Arakelov $(1,1)$-form on $X$ is then given by
-\begin{equation}
-  \nu_{X} \defeq \frac{i}{2} \sum_{i=1}^{g} \omega_{i} \wedge \overline{\omega}_{i},
-\end{equation}
-which one can show is independent of the choice of basis.
+        \begin{column}{\colwidth}
 
-Let $\Jac(X) \defeq H^{0}(X,\Omega_{X}^{1})^{\vee}/H_{1}(X,\ZZ)$ denote the Jacobian of $X$, with $\Phi_{q} \maps X \to \Jac(X)$ the corresponding Abel--Jacobi map based at $q \in X$.  Then the K\"ahler metric on $\Jac(X)$ induced by the flat metric on $H^{0}(X,\Omega_{X}^{1})$ has an associated $(1,1)$-form $\nu_{\Jac(X)}$ that satisfies
-\begin{equation}\label{eq:pullback}
-  \Phi_{q}^{*}(\nu_{\Jac(X)}) = \nu_{X}.
-\end{equation}
-We write $\wti W_{d}$ for the algebraic $d$-cycle on $\Jac(X)$ that parameterizes effective divisors on $X$ of degree $d$.  Then
-\begin{equation}\label{eq:integral}
-  \int_{\wti W_{d}} \frac{1}{d!}\,\nu_{\Jac(X)}^{\wedge d} = \binom{g}{d}.
-\end{equation}
-Our goal is to find the correct analogue of the form $\nu_{\Jac(X)}$ in the tropical setting.
+            \begin{block}{Background}    
+                The primary focus of this quarter was in the formalization of two important theorems in polyhedral combinatorics: Carath\'eordory's Theorem, and the Hyperplane Separation Theorem. The formalization of each was successfully accomplished in the span of the ten-week cycle, as well as preliminary work in the formalization of Polar Spaces and Dual Topologies, with the enduring focus of the project, to prove the ``main'' theorem of Polyhedral Geometry, that is, that a subset of a vector space is a polyhedral cone if and only if it is the conical hull of a finite set of vectors.
+
+                This result provides a combinatorial approach to the finite generation of polyhedra, allowing one to choose a subset of points from a vector space and in doing so, to uniquely determine a polyhedral cone.
+            \end{block}
+
+            \begin{block}{Preliminaries}
+                Have $V = \RR^d$ be the ambient finite-dimensional vector space. The \textbf{halfspace} is commonly defined as the set of points on one side of an affine hyperplane:
+                $$ \{\mathbf{x} \in V \;|\; \mathbf{ax} \leq b\}$$
+                where $\mathbf{a} \in \RR^d$ is the normal vector of the hyperplane with $b \in \RR$ as the affine constant term.
+
+                We define the \textbf{finite polyhedron} as the intersection of finitely many halfspaces $\{H_1,H_2,\dots,H_n\}$:
+                $$ \bigcap_{1 \leq i \leq n} H_i. $$
+                A \textbf{convex} set $S \subseteq V$ is any set with the property that given two elements $\mathbf{x}, \mathbf{y} \in S$, we have
+                $$ (1 - t)\mathbf{x} + t\mathbf{y} \in S \quad \text{ for all real } t \in [0,1].$$
+                A \textbf{convex hull} is the closure of any $S \subseteq V$ under the property of convexity. Equivalently, $\text{conv}\,S$ is the smallest convex set of $V$ which contains $S$. A \textbf{convex combination} of elements $x_1,x_2,\dots,x_n \in V$ is a linear combination where the coefficients $\lambda_i$ are nonnegative and sum to 1. 
+
+                A \textbf{polytope} can be defined as a bounded polyhedron or, equivalently, the convex hull of finitely many points in $\RR^d$. One eventual goal of our project is to prove this equivalency. 
+                
+                It turns out that conical sets are a nice generalization of the idea of a \textbf{convex set}. As a result, much of our formulation relies on the definitions of the following: A \textbf{conical combination} of elements $x_1,x_2,\dots,x_n \in V$ is a linear combination where the coefficients $\lambda_i$ are nonnegative. A \textbf{conical set} is simply closed under the operation of conical combination. A \textbf{conical hull} is the closer of the set under finite conical combinations.
+                 
+                In proving the Hyperplane Separation Theorem, two widely-known theorems were crucial: the \textbf{ Heine-Borel Theorem}, and the existence of an infimum on a compact set.
+            \end{block}
+
+            \begin{block}{Definitions translated to Lean}
+            \vspace{-0.5em}
+\begin{Verbatim}
+def Halfspace : Prop := ∃ (f : V →ₗ[ℝ] ℝ) (c : ℝ), s = { x | f x ≤ c }
+def Polyhedron : Prop := ∃ (I : Type*) (H : I → Set V), Finite I ∧ 
+  (∀ i : I, Halfspace (H i)) ∧ s = ⋂ (i : I), H i
+def Cone : Prop := s.Nonempty ∧ ∀ c ≥ (0 : ℝ), ∀ x ∈ s, c • x ∈ s
+def conicalHull.{u} : Set V := { x | isConicalCombo.{_, u} s x }
+def isConicalCombo (x : V) : Prop :=  ∃ (ι : Type*) (t : Finset ι) 
+  (a : ι → ℝ) (v : ι → V), isConicalCombo' s x t a v
+def isConicalCombo' (x : V) {ι : Type*} (t : Finset ι) (a : ι → ℝ) (v : ι → V)
+  : Prop := (∀ i ∈ t, a i = 0 ∨ 0 ≤ a i ∧ v i ∈ s) ∧ x = ∑ i ∈ t, a i • v i
+
+\end{Verbatim}
+        \end{block}
+           
+            
+        \end{column}
+
+        \separatorcolumn
+
+        \begin{column}{\colwidth}
+          \vspace{1em}
+          \begin{verbatim}
+theorem Metric.isCompact_iff_isClosed_bounded.{u} [...] :
+  IsCompact s ↔ IsClosed s ∧ Bornology.IsBounded s
+theorem IsCompact.exists_isMinOn : {s : Set β} (hs : IsCompact s) (ne_s :
+  s.Nonempty) {f : β → α}(hf : ContinuousOn f s) : ∃ x ∈ s, IsMinOn f s x
+\end{verbatim}
+
+\vspace{1em}
+
+
+            \begin{exampleblock}{A sample proof}
+            \vspace{-0.5em}
+\begin{Verbatim}
+  theorem poly_convex : ∀ (s : Set V), Polyhedron s → Convex ℝ s := by
+    intro s h_s_poly
+    unfold Polyhedron at h_s_poly
+    rcases h_s_poly with ⟨I, H, h_I_finite, h_Hi_halfspace, rfl⟩
+    apply convex_iInter
+    intro i
+    exact halfspace_convex _ (h_Hi_halfspace i)
+\end{Verbatim}
+            \end{exampleblock}
+
+
+            \begin{alertblock}{Carath\'eodory's Theorem (1.3.2)}
+              Let $S \subseteq V = \RR^d$. For all $x \in \text{cone}\,S$, $x$ is a conical combination of at most $d$ elements of $S$. For all $x \in \text{conv}\,S$, $x$ is a convex combination of at most $d + 1$ elements of $S$. 
+            \end{alertblock}
+
+            \begin{figure}[htbp]
+                    \centering
+                    \input{figures/caratheodory.tex}
+                    \caption{An arbitrary point in the convex hull of 6 points is the convex combination of 3.\label{fig:caratheodory}}
+            \end{figure}
+
+            \begin{block}{Formalizing Carath\'eodory's Theorem}
+              An important introductory result of conical sets is the notion that any particular vector in the hull of some set $S$ can be constructed as the conical combination of a smaller subset of $S$. This idea can then be extended to the convex case with one additional vector.
+
+              Our approach to formulating this into Lean is as follows:
+\begin{Verbatim}
+    theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, 
+      isConicalCombo_aux s x (finrank ℝ V) 
+\end{Verbatim}
+              \verb|isConicalCombo_aux| is our definition of the previously defined \verb|isConicalCombo| that exposes the number of elements needed in the conical combination of \verb|x|. Since \verb|finrank ℝ V| is simply the dimension of the space, it corresponds directly to $d$ in the original theorem.
+
+              The proof of this in Lean involves a variety of mathematical tools. We have \verb|v| be the set of vectors involved in the conical combination of \verb|x| (which is a subset of \verb|s|). First, we induct on minimum number of elements \verb|N| in \verb|s| required in a conical combination to construct \verb|x|. Then, we do case work on the number of elements \verb|N+1| in \verb|s|: if \verb|N+1| is less than \verb|finrank ℝ V|, we are done; otherwise, we can show that there exists linear dependence in \verb|v| and work to remove the dependent vector while preserving nonnegativity of the coefficients of the remaining vectors in \verb|v|.  
+            \end{block}    
+            
+            
+
+        \end{column}
+
+        \separatorcolumn
+
+        \begin{column}{\colwidth}
+
+            
+          \begin{alertblock}{Hyperplane Separation Theorem (1.4.1)}
+            Let $A$ and $B$ be two convex, closed subsets of $V$, with $A$ compact. Then $
+                \text{there exists } \; c\in \mathbb{R} \text{ and a linear functional } f : V\to \mathbb{R} \; \text{such that} \; f(a) < c \; \text{for all}\; a\in A \text{ and } \ c < f(b)\; \text{for all}\; b\in B.
+              $
+        \end{alertblock}
+
+        \begin{figure}[htbp]
+            \centering
+            \input{figures/hyperplane-separation.tex}
+            \caption{A separating hyperplane determined by infimal points. \label{fig:hyperplane-separation}}
+        \end{figure}
+
+\begin{block}{Formal Statement in Lean4}
+\vspace{-0.5em}
+\begin{Verbatim}
+theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A)(hB : Convex 
+ℝ B) (hclosed : IsClosed A ∧ IsClosed B )(hNempty : A.Nonempty ∧ B.Nonempty) 
+(hA_Bounded: IsBounded A) (hAB : Disjoint A B) : ∃ (f : V →ₗ[ℝ] ℝ) (c : ℝ),
+(∀ a ∈ A, f a < c) ∧ (  ∀ b ∈ B, c < f b)
+\end{Verbatim}
 \end{block}
 
-\begin{block}{Tropical preliminaries}
-
-Let $G$ be a finite graph with vertex set $V$ and edge set $E$, along with a length function $\ell \maps E \to \RR_{>0}$.  We associate to each edge $e$ the closed interval $[0,\ell(e)] \subset \RR$ and glue these intervals together at their endpoints according to the adjacency relations given in $G$.  The resulting topological graph, endowed with the shortest-path metric, is called a \defn{metric graph} $\Gamma$.  The pair $(G,\ell)$ is called a \defn{model} for $\Gamma$; notice that $\Gamma$ has many different models, which are related to each other by refinement of edges.
-
-Metric graphs are the tropical analogue of smooth algebraic curves.  Accordingly, to each metric graph $\Gamma$ of genus $g$ we can associate a $g$-dimensional real torus $\Jac(\Gamma)$ called its \defn{tropical Jacobian} as follows.  Fix a model $(G,\ell)$ of $\Gamma$ and an orientation on $E$.  The \defn{length pairing} $[\cdot,\cdot]$ on $C_{1}(G,\ZZ)$ is defined by
-\begin{equation}
-  [e, e'] \defeq
-  \begin{cases}
-    \ell(e) &\text{ if } e = e'  \\
-    0 &\text{ otherwise}
-  \end{cases}
-\end{equation}
-and extended bilinearly.  This descends to $H_1(\Gamma,\ZZ)$.  Let $N \defeq H^1(\Gamma,\ZZ) \cong H_1(\Gamma,\ZZ)^{\vee}$ and let $\Lambda$ denote the image of the embedding $H_{1}(\Gamma,\ZZ) \hookrightarrow N_{\RR}$ defined by $\gamma \mapsto [\gamma,\cdot]$.  Then we let $\Jac(\Gamma) \defeq N_{\RR}/\Lambda$.  Fixing a basis $\gamma_1,\ldots,\gamma_g$ for $H_1(G,\ZZ)$ yields the corresponding dual basis $n_{1},\ldots,n_{g}$ for $N$.  Write $\mathbf{G}$ for the Gram matrix of $[\cdot,\cdot]$ with respect to the basis $\gamma_{i}$.  Let $\mathbf{M}$ denote the $g \times \card{E}$ matrix satisfying $\gamma_{j} = \sum_{e} \mathbf{M}_{i,e}e$ and $\mathbf{D}$ the $\card{E} \times \card{E}$ diagonal matrix with $\mathbf{D}_{e,e} = \ell(e)$.  Then 
-\begin{equation}
-  \mathbf{G} = \mathbf{M}\mathbf{D}\mathbf{M}^{\transpose}.
-\end{equation}
-
-Fixing a basepoint $q \in \Gamma$, the $d$-th \defn{Abel--Jacobi map} $\Phi_{q}^{(d)} \maps \Gamma^{d} \to \Jac(\Gamma)$ sends $(p_{1},\ldots,p_{d}) \mapsto \sum_{i=1}^{d}[\gamma_{p_{i}},\cdot]$, where $\gamma_{p_{i}}$ is any path in $\Gamma$ from $q$ to $p_{i}$.  Its image, denoted $\wti W_{d}$, is the $d$-th \defn{effective locus} of $\Gamma$.  It is a rational polyhedral subset of $\Jac(\Gamma)$ of pure dimension $d$ \cite{gross2022effective}.  One can alternatively define the Jacobian in terms of tropical divisors and chip firing, in which case $\wti W_{d}$ is the precisely the locus of effective divisors of degree $d$ (under the identification $\Jac(\Gamma) \cong \Pic^{d}(\Gamma)$ given by $D \mapsto D + d[q]$).  We note that the $\wti W_{g-1}$ coincides with the tropical theta divisor $\Theta$ of \cite{gross2023tautological}.
-\end{block}
-\end{column}
-
-\separatorcolumn
-
-\begin{column}{\colwidth}
-
-\begin{block*}
-In \cite{lagerberg2012super}, Lagerberg introduced superforms as a way of mimicking the bigraded nature of Dolbeault cohomology, along with notions of positivity, in a real affine space with a fixed integral structure.  This is well-suited for application to tropical geometry; we use this formalism to define the complex analogue of the canonical $(1,1)$-form.
-
-We let $\cA^{p}(N_{\RR})$ denote the space of smooth $p$-forms on an affine space $N_{\RR}$, with coordinates $x_{i}$ associated to the basis vectors $n_{i} \in N$.  Then the space of \defn{$(p,q)$-superforms} is 
-\begin{equation}
-  \Cd^{p,q}(N_{\RR}) \defeq \cA^{p}(N_{\RR}) \otimes_{\RR} \cA^{q}(N_{\RR}) \cong C^{\infty}(N_{\RR}) \otimes_{\ZZ} \bigwedge^{p}N^{\vee} \otimes_{\ZZ} \bigwedge^{q}N^{\vee}.
-\end{equation}
-We write a $(p,q)$ superform as $h d'x_{I} \wedge d''x_{J}$, and by abuse of notation, allow anticommuting: $d'x_{i} \wedge d''x_{j} = -d''x_{j} \wedge d'x_{i}$.  There are natural exterior derivatives $d'$ and $d''$ akin to $\partial$ and $\bar\partial$, a wedge product, and a pullback along integral affine maps.  Likewise, the integral of a superform $h d'x_{[g]} \wedge d''x_{[g]}$ with compact support is defined in terms of a smooth integral by
-\begin{equation}
-  \int_{N_{\RR}} h d'x_{[g]} \wedge d''x_{[g]} \defeq (-1)^{\binom{g}{2}} \int_{N_{\RR}} h dx_{[g]}.
-\end{equation}
-These notions all carry over to tropical spaces, and in particular, to metric graphs $\Gamma$ and their Jacobians.
-\end{block*}
-
-\begin{block}{The canonical $\mathbf{(1,1)}$-form}
-
-We define the \defn{canonical $(1,1)$-form} on $\Jac(\Gamma)$ is 
-\begin{equation}
-  \nu_{\Jac(\Gamma)} \defeq \sum_{i,j} (\mathbf{G}^{-1})_{i,j} d'x_{i} \wedge d''x_{j}.
-\end{equation}
-This is independent of the choice of coordinates; indeed, a more intrinsic definition is that $\nu_{\Jac(\Gamma)}$ is the unique translation-invariant $(1,1)$-form whose contraction operation on $(1,1)$-vectors coincides with the principal polarization $N \otimes \Lambda \to \ZZ$ on $\Jac(\Gamma)$.  From another point of view, the image of $\nu_{\Jac(\Gamma)}$ under the tropical de Rham map is the first Chern class of the theta divisor $\Theta$.
-
-\end{block}
-
-\begin{alertblock}{Theorem A}
-
-Let $t_{e}$ denote the standard coordinate on $e$, where we have identified $e$ with $[0,\ell(e)]$. Then locally on $e$, the pullback of $\nu_{\Jac(\Gamma)}$ by the Abel--Jacobi map has the form
-\begin{equation}
-  (\Phi_{q}^{(1)})^{*}(\nu_{\Jac(\Gamma)})|_{e} = \ell(e)^{-1} \mathbf{P}_{e,e} d't_{e} \wedge d''t_{e},
-\end{equation}
-where $\mathbf{P} \defeq \mathbf{M}^{\transpose}\mathbf{G}^{-1}\mathbf{MD}$ coincides with Kirchhoff's orthogonal projection matrix $C_{1}(G,\ZZ) \to H_{1}(G,\ZZ)$ with respect to the $E$ basis.
-\end{alertblock}
-
-\begin{block*}
-  Our $(\Phi_{q}^{(1)})^{*}(\nu_{\Jac(\Gamma)})$ relates closely to the measure defined by Zhang in \cite{zhang1993admissible}, which \cite{baker2011metric} suggests is the correct tropical analogue of the Arakelov $(1,1)$-form $\nu_{X}$ on a Riemann surface $X$.  In this sense, we have a satisfactory replacement for \cref{eq:pullback} in our setting.
-\end{block*}  
-
-\begin{exampleblock}{Random spanning trees}
-We remark that $\mathbf{P}_{e,e}$ equals the Foster coefficient of $e$.  This value, and $\mathbf{P}$ more generally, has surprising interpretations in terms of electrical networks, random walks, and spanning trees.  For example, given a spanning tree $T$ of $G$, we write $w(T) \defeq \prod_{e \not\in T} \ell(e)$ for its \defn{weight}, with $w(G) \defeq \sum_{T} w(T)$.  Then the random spanning tree model defined by the probability measure $\PP(T) \defeq \frac{w(T)}{w(G)}$ determines a determinantal point process on $E$; in particular, the probability that a fixed subset $E' \subset E$ is disjoint from a randomly sampled spanning tree $T$ is the equal to the minor $\det(\mathbf{P}_{E',E'})$ \cite{dejong2022cross}.  This is a reformulation of the transfer-current theorem.
-\end{exampleblock}
-\end{column}
-
-\separatorcolumn
-
-\begin{column}{\colwidth}
-
-\begin{alertblock}{Theorem B}
-As for \cref{eq:integral} in the complex setting, we have that
-\begin{equation}
-  \int_{\wti W_{d}} \frac{1}{d!}\,\nu^{\wedge d}_{\Jac(\Gamma)} = \binom{g}{d}.
-\end{equation}
-In particular, we recover Foster's theorem for $d = 1$ and (essentially) Kirchhoff's matrix tree theorem for $d = g$.
-\end{alertblock}
-
-\begin{block*}
-  By the theory of tropical Poincar\'e duality established in \cite{jell2019superforms,gross2023sheaf}, we may associate to each tropical $k$-cycle $Z$ in $\Jac(\Gamma)$ a superform $\nu_{Z} \in \Cd^{g-k,g-k}(\Jac(\Gamma))$ for which $\int_{X} \nu_{Z} \wedge \alpha = \int_{Z} \alpha$ for all $d''$-closed $\alpha \in \Cd^{k,k}(\Jac(\Gamma))$.
-
-The tropical Poincar\'e formula $[\wti{W}_{d}] = \frac{[\Theta]^{\cdot(g-d)}}{(g-d)!}$ was first proved in \cite{gross2023tautological} in the context of singular tropical homology.  By establishing a tropical de Rham theorem, we are able to reprove this by way of a corresponding formula for superforms:
-\end{block*}
-
-\begin{alertblock}{Theorem C}
-We have that $\nu_{\Jac(\Gamma)} = \nu_{\Theta}$ and $(g-d)!\nu_{\wti{W}_{d}} = \nu_{\Theta}^{\wedge(g-d)}$.
-\end{alertblock}
-
-\begin{exampleblock}{Example}
-  Let $G$ be the theta graph with edges $e_{i}$ as in \cref{fig:theta} and edge lengths $\ell_{i} \defeq \ell(e_{i})$.  Define a basis of $H_{1}(G,\ZZ)$ via $\gamma_{1} \defeq e_{1} + e_{3}$ and $\gamma_{2} \defeq e_{2} + e_{3}$.
-\begin{figure}
-  \subfigure[$G$\label{fig:theta}]{\input{figures/theta.tex}}
-  \qquad
-  \subfigure[$\Jac(\Gamma)$\label{fig:theta-jac}]{\input{figures/theta-jac.tex}}
-\end{figure}
-Then the Gram matrix $\mathbf{G}$ of the length pairing $[\cdot,\cdot]$ with respect to this basis is
-\begin{equation}
-  \mathbf{G} =
-  \begin{pmatrix}
-  \ell_{1} + \ell_{3} & \ell_{3} \\
-  \ell_{3} & \ell_{2} + \ell_{3}
-  \end{pmatrix}
-  \qquad
-  \mathbf{G}^{-1} = 
-  \frac{1}{\ell_{1}\ell_{2} + \ell_{1}\ell_{3} + \ell_{2}\ell_{3}}
-  \begin{pmatrix}
-  \ell_{2} + \ell_{3} & -\ell_{3} \\
-    -\ell_{3} & \ell_{1} + \ell_{3}
-  \end{pmatrix}.
-\end{equation}
-Concretely, the columns of $\mathbf{G}$ generate a lattice $\Lambda$ inside of $N_{\RR} \cong \RR^{2}$, and the resulting quotient is $\Jac(\Gamma)$, with tropical structure defined by the natural lattice $N \cong \ZZ^{2}$.  A fundamental domain for $\Jac(\Gamma)$ in the case $\ell_{1} = \ell_{2} = \ell_{3} = 1$ is depicted in \cref{fig:theta-jac}.  The dotted line is $\wti W_{1}$.
-\end{exampleblock}
-
-\begin{block}{References}
-  
-\bibliographystyle{alpha}
-\bibliography{poster}
-
-\end{block}
-
+        \begin{block}{Approaching Hyperplane Separation Theorem }
+            The Hyperplane Separation Theorem is a key result in proving the existence of certain polyhedral constructs.
+            \\\\The formal proof involves exhibiting an infimal distance between the sets, and the corresponding points, $a_{\text{min}}, b_{\text{min}} \in V$ which define this infimal distance.
+            $f:= b_{\text{min}}-a_{\text{min}}$ is thus a vector in $V$, and defining a functional by $\langle f, \_\rangle$ constructs a linear functional from $V\to \mathbb{R}$. Any hyperplane to which $f$
+            is normal, and which does not intersect $A$ or $B$, then separates the two sets as desired, after unraveling the convexity of each set.
+            
+            Convexity is used to provide contradiction, by providing a linear combination of points within each set which is simultaneously the norm of a vector,
+            and negative for small coefficients. In the process of formalization, this means providing an explicit value for which the contradiction arises.         
+        \end{block}
+        
+         
+        \begin{exampleblock}{Farkas's Lemma (Corollary 1.4.2)}
+          Let $C$ be a closed, convex cone in $V$, $u\in V\setminus C$. Then there exists a separating hyperplane between $u$ and $C$, defined by a linear functional $y$ in the space of functions $V\to \mathbb{R}$, such that $
+          y(u)> 0 \; \text{for all } x\in C, \; \text{and} \; y(x) \le 0
+          $.
+        \end{exampleblock}
+            This result is  a combination of the Hyperplane Separation Theorem, for which the conclusion ``There exists $
+              c\in \mathbb{R}, $ and a linear functional, $ y: V\to \mathbb{R} $ such that $ y(a) \le c\; $for all $ x\in C, \; c < f(x)\; $for all $  b\in B
+            $'' immediately follows, and a translation lemma for cones proven earlier in the project.
+\begin{Verbatim}
+lemma farkas (u: V)(C: Set V) (convC: Convex ℝ C) (closedC: IsClosed C)
+(coneC: Cone C): u ∉ C → ∃(y : V →ₗ[ℝ] ℝ), (y u > 0) ∧ (∀ x ∈ C, y x ≤ 0)
+\end{Verbatim}  
+           
+            
+        \begin{block}{References}
+        \nocite{liunotes}
+        \begin{bibdiv}
+        \begin{biblist}
+          \bib{liunotes}{webpage}{
+              title={Polyhedral combinatorics},
+              author={Liu, Gaku},
+              accessdate={3 June 2023},
+              url={https://sites.google.com/view/gakuliu/home}
+            }
+        \end{biblist}
+        \end{bibdiv}
+        \end{block}
 \end{column}
 
 \separatorcolumn
 \end{columns}
 \end{frame}
-
 \end{document}
 
 %%% Local Variables:
