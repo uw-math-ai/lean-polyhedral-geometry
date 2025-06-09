@@ -9,31 +9,27 @@ import Mathlib.Analysis.Normed.Module.FiniteDimension
 -- import Mathlib.Topology.Defs.Basic
 
 section
-variable {V : Type*} [AddCommGroup V] [Module ℝ V] (s : Set V)
+variable {V : Type*} [AddCommMonoid V] [Module ℝ V] (s : Set V)
 
-/-- a term `h : Halfspace s` is a proof that `s` is a halfspace -/
 def Halfspace : Prop :=
-  -- "there exists a linear functional f and a constant c such that s equals the set of all points x in V such that f(x) ≤ c"
   ∃ (f : V →ₗ[ℝ] ℝ) (c : ℝ), s = { x | f x ≤ c }
 
--- why does making `I` of Type* screw up `Polytope`?
-def Polyhedron : Prop :=
-  ∃ (I : Type*) (H : I → Set V), Finite I ∧ (∀ i : I, Halfspace (H i)) ∧ s = ⋂ (i : I), H i
+def IsPolyhedron : Prop :=
+  ∃ (ι : Type*) (H : ι → Set V), Finite ι ∧ (∀ i : ι, Halfspace (H i)) ∧ s = ⋂ (i : ι), H i
 
---todo: eliminate the need to have an explicit inner product on V; i.e., show that it doesn't depend on the choice of inner product, so the definition can be made without such a choice)
+variable (V) in
+@[ext]
+structure Polyhedron where
+  carrier : Set V
+  protected is_polyhedron' : ∃ (ι : Type*) (H : ι → Set V), Finite ι ∧ (∀ i : ι, Halfspace (H i)) ∧ carrier = ⋂ (i : ι), H i
 
--- def Polytope' (s : Set V) : Prop :=
---   Polyhedron s ∧ ∀ _ : SeminormedAddCommGroup V, ∀ _ : InnerProductSpace ℝ V, Bornology.IsBounded s
-
--- theorem bounded_iff_bounded_all (s : Set V) : Polytope' s ↔ Polyhedron s ∧ ∃ (_ : SeminormedAddCommGroup V) (_ : InnerProductSpace ℝ V), Bornology.IsBounded s := by sorry
+theorem isPolyhedron_def (s : Polyhedron.{_,u} V) : IsPolyhedron.{_,u} s.carrier := s.is_polyhedron'
 
 def Cone : Prop :=
   s.Nonempty ∧ ∀ c ≥ (0 : ℝ), ∀ x ∈ s, c • x ∈ s
 
 def PolyhedralCone.{u} : Prop :=
-  Polyhedron.{_, u} s ∧ Cone s
-
-#print convexHull
+  IsPolyhedron.{_, u} s ∧ Cone s
 
 def isConicalCombo' (x : V) {ι : Type*} (t : Finset ι) (a : ι → ℝ) (v : ι → V) : Prop :=
   (∀ i ∈ t, a i = 0 ∨ 0 ≤ a i ∧ v i ∈ s) ∧ x = ∑ i ∈ t, a i • v i
@@ -52,19 +48,13 @@ def conicalHull.{u} : Set V :=
 
 end
 
---figure out how closure operators work (to define conicalHull like mathlib's convexHull)
-
---make alt defs of polyhedron and polytope in terms of convex hulls
-
 section
 
 variable {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [FiniteDimensional ℝ V] (s : Set V)
 
-#check (inferInstance : PseudoMetricSpace V)
-#check (inferInstance : T2Space V)
-#check (inferInstance : ProperSpace V)
-
 def Polytope.{u} : Prop :=
-  Polyhedron.{_, u} s ∧ Bornology.IsBounded s
+  IsPolyhedron.{_, u} s ∧ Bornology.IsBounded s
+
+-- theorem bounded_iff_bounded_all (s : Set V) : Polytope' s ↔ IsPolyhedron s ∧ ∃ (_ : SeminormedAddCommGroup V) (_ : InnerProductSpace ℝ V), Bornology.IsBounded s := by sorry
   
 end

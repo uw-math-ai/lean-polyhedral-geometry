@@ -13,88 +13,60 @@ import Mathlib.Analysis.InnerProductSpace.LinearMap
 import Mathlib.LinearAlgebra.LinearIndependent.Defs
 
 section
-variable {V : Type*} [AddCommGroup V] [Module ℝ V]
+variable {V : Type*} [AddCommMonoid V] [Module ℝ V]
 
-lemma halfspace_convex : ∀ (s : Set V), Halfspace s → Convex ℝ s := by
-  intro s h_s_halfspace
-  unfold Convex
-  intro x h_x_in_s
-  unfold StarConvex
-  intro y h_y_in_s a b h_a_nonneg h_b_nonneg h_a_b_one
-  show a • x + b • y ∈ s
-  unfold Halfspace at h_s_halfspace
-  rcases h_s_halfspace with ⟨f, ⟨c, rfl⟩⟩
-  -- rw [Set.mem_def] at h_x_in_s
-  -- dsimp at h_x_in_s -- doesn't work!
-  have h_x_in_s : f x ≤ c := by assumption
-  have h_y_in_s : f y ≤ c := by assumption
-  show f (a • x + b • y) ≤ c
+theorem zero_mem_of_cone {s : Set V} (h_cone_s : Cone s) : 0 ∈ s :=
+  have ⟨⟨x, h_xs⟩, h_smul_closed⟩ := h_cone_s
+  zero_smul ℝ x ▸ h_smul_closed 0 (le_refl 0) x h_xs
+
+lemma halfspace_convex (s : Set V) (h_halfspace_s : Halfspace s) : Convex ℝ s := by
+  intro x _ y _ a b _ _ h_a_b_one
+  rcases h_halfspace_s with ⟨f, ⟨c, rfl⟩⟩
+  simp only [Set.mem_setOf_eq, map_add, map_smul, smul_eq_mul]
   calc
-    f (a • x + b • y) = f (a • x) + f (b • y) := by
-      apply LinearMap.map_add
-    _ = a * f x + b * f y := by
-      repeat rw [LinearMap.map_smul]
-      rfl
-    _ ≤ a * c + b * c := by
-      apply add_le_add
-      <;> apply mul_le_mul_of_nonneg_left
-      <;> assumption
+    a * f x + b * f y
+      ≤ a * c + b * c := by apply add_le_add <;> apply mul_le_mul_of_nonneg_left <;> assumption
     _ = (a + b) * c := by rw [add_mul]
     _ = 1 * c := by rw [h_a_b_one]
     _ = c := one_mul c
 
-theorem poly_convex : ∀ (s : Set V), Polyhedron s → Convex ℝ s := by
-  intro s h_s_poly
-  unfold Polyhedron at h_s_poly
-  rcases h_s_poly with ⟨I, H, h_I_finite, h_Hi_halfspace, rfl⟩
-  apply convex_iInter
-  intro i
-  exact halfspace_convex _ (h_Hi_halfspace i)
+theorem poly_convex (s : Set V) (h_poly_s : IsPolyhedron s) : Convex ℝ s := by
+  rcases h_poly_s with ⟨_, _, _, h_halfspace, rfl⟩
+  exact convex_iInter fun i => halfspace_convex _ (h_halfspace i)
 
 --lemma 1.2.2
-lemma translate_halfspace_of_cone_subset (s : Set V) (f : V →ₗ[ℝ] ℝ) (c : ℝ) : Cone s → (∀ x ∈ s, f x ≤ c) → c ≥ 0 ∧ ∀ x ∈ s, f x ≤ 0 := by
-  intro h_s_cone h_s_fc
+lemma translate_halfspace_of_cone_subset (s : Set V) (f : V →ₗ[ℝ] ℝ) (c : ℝ) (h_s_cone : Cone s) (h : ∀ x ∈ s, f x ≤ c) : c ≥ 0 ∧ ∀ x ∈ s, f x ≤ 0 := by
   constructor
-  · revert h_s_fc
-    contrapose!
-    intro h_c_lt_0
-    use 0
-    constructor
-    · unfold Cone at h_s_cone
-      obtain ⟨x, hx⟩ := h_s_cone.left
-      have h₀ : (0 : ℝ) • x ∈ s := h_s_cone.right (0 : ℝ) (by norm_num) x hx
-      rw [Module.zero_smul x] at h₀
-      exact h₀
-    · rw [LinearMap.map_zero f]
-      exact h_c_lt_0
-  · intro x₀ x_in_s
-    apply not_lt.mp
-    intro assump_0_le_fx
-    have h_0_le_inv_fx : 0 < (f x₀)⁻¹ := by exact inv_pos_of_pos assump_0_le_fx
-    unfold Cone at h_s_cone
-    have lt_c : f x₀ ≤ c := h_s_fc x₀ x_in_s
-    have ge_0_c : 0 < c := lt_of_lt_of_le assump_0_le_fx lt_c
-    have gq_2c_fxinv : 0 < 2 * c * (f x₀)⁻¹ := by
-      apply mul_pos
-      norm_num
-      apply ge_0_c
-      norm_num
-      apply assump_0_le_fx
-    have : (2 * c * (f x₀)⁻¹) • x₀ ∈ s := h_s_cone.right (2 * c * (f x₀)⁻¹) (by linarith) x₀ x_in_s
-    have le_c : f ((2 * c * (f x₀)⁻¹) • x₀) ≤ c := h_s_fc ((2 * c * (f x₀)⁻¹) • x₀) this
-    have : f x₀ ≠ 0 := Ne.symm (ne_of_lt assump_0_le_fx)
-    rw [LinearMap.map_smul] at le_c
-    dsimp at le_c
-    rw [mul_assoc, inv_mul_cancel₀ this, mul_one] at le_c
-    show False
-    linarith
+  . contrapose! h
+    exact ⟨0, zero_mem_of_cone h_s_cone, LinearMap.map_zero f ▸ h⟩
+  intro x₀ x_in_s
+  apply not_lt.mp
+  intro h_0_le_fx
+  have h_0_le_inv_fx : 0 < (f x₀)⁻¹ := inv_pos_of_pos h_0_le_fx
+  unfold Cone at h_s_cone
+  have lt_c : f x₀ ≤ c := h x₀ x_in_s
+  have ge_0_c : 0 < c := lt_of_lt_of_le h_0_le_fx lt_c
+  have gq_2c_fxinv : 0 < 2 * c * (f x₀)⁻¹ := by
+    apply mul_pos
+    norm_num
+    apply ge_0_c
+    norm_num
+    apply h_0_le_fx
+  have : (2 * c * (f x₀)⁻¹) • x₀ ∈ s := h_s_cone.right (2 * c * (f x₀)⁻¹) (by linarith) x₀ x_in_s
+  have le_c : f ((2 * c * (f x₀)⁻¹) • x₀) ≤ c := h ((2 * c * (f x₀)⁻¹) • x₀) this
+  have : f x₀ ≠ 0 := Ne.symm (ne_of_lt h_0_le_fx)
+  rw [LinearMap.map_smul] at le_c
+  dsimp at le_c
+  rw [mul_assoc, inv_mul_cancel₀ this, mul_one] at le_c
+  show False
+  linarith
 
 -- theorem min_elt (s : Set ℕ) (h_s_nonempty : s.Nonempty) : ∃ n ∈ s, ∀ m < n, m ∉ s := by
 --   rcases h_s_nonempty with ⟨n, h⟩
 --   induction' n using Nat.strong_induction_on with n ih
 --   by_cases h' : ∀ m < n, m ∉ s
---   . use n
---   . push_neg at h'
+--   · use n
+--   · push_neg at h'
 --     rcases h' with ⟨n', h₁, h₂⟩
 --     exact ih n' h₁ h₂
 
@@ -103,19 +75,18 @@ section
 lemma sum_bijon {α β γ : Type*} [AddCommMonoid γ] {t : Finset α} {s : Finset β} {T : α → β} (h_bij : Set.BijOn T t s) {f : α → γ} {g : β → γ} (h_fg : f = g ∘ T) : ∑ i ∈ t, f i = ∑ j ∈ s, g j := by
   rcases h_bij with ⟨h_mapsto, h_inj, h_surj⟩
   apply Finset.sum_bij
-  . apply h_mapsto
-  . apply h_inj
-  . convert h_surj
+  · apply h_mapsto
+  · apply h_inj
+  · convert h_surj
     simp [Set.SurjOn]
     rfl
-  . tauto
-
-open Classical
+  · tauto
 
 lemma Finset.sum_enlarge {ι α : Type*} [AddCommMonoid α] {t s : Finset ι} {f : ι → α} (h_ts : t ⊆ s) (h_f : ∀ i ∉ t, f i = 0) : ∑ i ∈ t, f i = ∑ i ∈ s, f i := by
+  classical
   induction' s using Finset.strongInductionOn with s ih
   by_cases h : t = s
-  . rw [h]
+  · rw [h]
   have : t ⊂ s := ssubset_of_subset_of_ne h_ts h
   rcases (Finset.ssubset_iff_of_subset h_ts).mp this with ⟨x, h_xs, h_xt⟩
   let s' := s.erase x
@@ -133,7 +104,7 @@ lemma reindex_conicalCombo' {s : Set V} {x : V} {ι : Type*} (t : Finset ι) (a 
   have := (Finset.equivFin t).symm
   set N := t.card
   by_cases hN : N = 0
-  . rw [hN]
+  · rw [hN]
     use (λ n ↦ 0), (λ n ↦ 0), by simp
     rw [Finset.sum_range_zero, h_x_combo]
     have : t = ∅ := Finset.card_eq_zero.mp hN
@@ -143,8 +114,8 @@ lemma reindex_conicalCombo' {s : Set V} {x : V} {ι : Type*} (t : Finset ι) (a 
   set F : ℕ → ι := Subtype.val ∘ (Finset.equivFin t).symm ∘ λ n ↦ if hn : n < N then (⟨n, hn⟩ : Fin N) else (⟨0, hN⟩ : Fin N)
   have h_F : Set.BijOn F (Finset.range N) t := by
     repeat' constructor
-    . simp [Set.MapsTo, F]
-    . simp [Set.InjOn, F]
+    · simp [Set.MapsTo, F]
+    · simp [Set.InjOn, F]
       intro n₁ hn₁ n₂ hn₂ h_eq
       rw [dif_pos hn₁, dif_pos hn₂] at h_eq
       have : Function.Injective (Subtype.val : { x // x ∈ t } → ι) := by simp
@@ -152,7 +123,7 @@ lemma reindex_conicalCombo' {s : Set V} {x : V} {ι : Type*} (t : Finset ι) (a 
       have : Function.Injective t.equivFin.symm := t.equivFin.symm.injective
       have := this h_eq
       exact Fin.val_congr this
-    . intro i h_it
+    · intro i h_it
       simp
       have : Function.Surjective t.equivFin.symm := t.equivFin.symm.surjective
       rcases this ⟨i, h_it⟩ with ⟨⟨n, hn⟩, h_eq⟩
@@ -163,24 +134,24 @@ lemma reindex_conicalCombo' {s : Set V} {x : V} {ι : Type*} (t : Finset ι) (a 
   set v' : ℕ → V := v ∘ F
   use a', v'
   repeat' constructor
-  . intro i _
+  · intro i _
     dsimp [a', v']
     apply h_av
     apply h_F.1
     simpa
-  . dsimp [a', v']
+  · dsimp [a', v']
     rw [h_x_combo]
     symm
     apply sum_bijon
-    . simp; convert h_F; simp [h_F]
-    . ext; simp
+    · simp; convert h_F; simp [h_F]
+    · ext; simp
 
 lemma reindex_conicalCombo (s : Set V) (x : V) : isConicalCombo s x ↔ ∃ n, isConicalCombo_aux s x n := by
   constructor
-  . rintro ⟨ι, t, a, v, h⟩
+  · rintro ⟨ι, t, a, v, h⟩
     use t.card
     exact reindex_conicalCombo' _ _ _ h
-  . rintro ⟨n, a, v, h_av, h_x_combo⟩
+  · rintro ⟨n, a, v, h_av, h_x_combo⟩
     let ℕ' := ULift ℕ
     let I := Finset.map (Function.Embedding.mk (@ULift.up Nat) (@ULift.up.inj Nat)) (Finset.range n)
     let a' : ℕ' → ℝ := fun i ↦ a i.down
@@ -192,15 +163,15 @@ lemma reindex_conicalCombo (s : Set V) (x : V) : isConicalCombo s x ↔ ∃ n, i
 lemma reduce_conicalCombo (s : Set V) (x : V) {n : ℕ} {a : ℕ → ℝ} (v : ℕ → V) : (∃ j < n + 1, a j = 0) → isConicalCombo_aux' s x (n + 1) a v → isConicalCombo_aux s x n := by
   rintro ⟨j, h_j⟩ ⟨h_av, h_x_combo⟩
   convert reindex_conicalCombo' ((Finset.range (n + 1)).erase j) a v ?_
-  . have := Finset.card_erase_add_one (Finset.mem_range.mpr h_j.1)
+  · have := Finset.card_erase_add_one (Finset.mem_range.mpr h_j.1)
     simp at this
     rw [this]
-  . unfold isConicalCombo'
+  · unfold isConicalCombo'
     constructor
-    . intro i h_i
+    · intro i h_i
       rw [Finset.mem_erase, Finset.mem_range] at h_i
       exact h_av i h_i.2
-    . have : a j • v j = 0 := by rw [h_j.2]; simp
+    · have : a j • v j = 0 := by rw [h_j.2]; simp
       rw[Finset.sum_erase (Finset.range (n + 1)) this]
 
 def ULift.list.{u, v} {α : Type v} : List α → List (ULift.{u, v} α)
@@ -213,39 +184,42 @@ lemma isconicalCombo_aux_le (s : Set V) (x : V) : m ≤ n → isConicalCombo_aux
   let a' : ℕ → ℝ := fun i => if h_im : i < m then a i else 0
   use a', v
   repeat' constructor
-  . intro i h_in
+  · intro i h_in
     by_cases h_im : i < m
-    . simp [a', if_pos h_im]
+    · simp [a', if_pos h_im]
       exact h_av i h_im
-    . simp [a', if_neg h_im]
-  . have h₁ : Finset.range m ⊆ Finset.range n := by simp; linarith
+    · simp [a', if_neg h_im]
+  · have h₁ : Finset.range m ⊆ Finset.range n := by simp; linarith
     have h₂ : ∀ i ∈ Finset.range n, i ∉ Finset.range m → a' i • v i = 0 := by
       simp [a']
       intros
       linarith
-    rw [←Finset.sum_subset h₁ h₂]
+    rw [← Finset.sum_subset h₁ h₂]
     simp [a']
     rw [Finset.sum_ite_of_true, h_x_combo]
     intro i hi
     rw [Finset.mem_range] at hi
     exact hi
 
-variable [FiniteDimensional ℝ V]
+end
+
+section
+variable {V : Type*} [AddCommGroup V] [Module ℝ V] [FiniteDimensional ℝ V]
 open Finset Module
 
 theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalCombo_aux s x (finrank ℝ V) := by
   rintro x h
   rcases (reindex_conicalCombo s x).mp h with ⟨n, h⟩
   induction' n with N ih
-  . exact isconicalCombo_aux_le s x (Nat.zero_le _) h
+  · exact isconicalCombo_aux_le s x (Nat.zero_le _) h
   by_cases hN : N + 1 ≤ finrank ℝ V
-  . exact isconicalCombo_aux_le s x hN h
+  · exact isconicalCombo_aux_le s x hN h
   push_neg at hN
   rcases h with ⟨a, v, h_av, h_x_combo⟩
   apply ih
 
   wlog h_a_all_pos : ∀ i < N + 1, a i ≠ 0 generalizing
-  . push_neg at h_a_all_pos
+  · push_neg at h_a_all_pos
     apply reduce_conicalCombo s x v h_a_all_pos
     exact ⟨h_av, h_x_combo⟩
 
@@ -263,33 +237,33 @@ theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalComb
   push_neg at this
   rcases this with ⟨t, b, h_t_sub_range, h_b_comp, h_b_combo_eq_0, j, h_jt, h_j_ne_0⟩
   wlog h' : t = range (N + 1) generalizing t
-  . apply this (range (N + 1))
+  · apply this (range (N + 1))
     all_goals clear this h'; try simp
-    . intro i hiN
+    · intro i hiN
       have : i ∉ t := by
         intro h_it
         have := h_t_sub_range h_it
         have := mem_range.mp this
         linarith
       exact h_b_comp i this
-    . rw [←h_b_combo_eq_0]
+    · rw [← h_b_combo_eq_0]
       symm
       apply sum_enlarge
-      . assumption
-      . intro i h_it
+      · assumption
+      · intro i h_it
         rw [h_b_comp i h_it]
         simp
-    . have := h_t_sub_range h_jt
+    · have := h_t_sub_range h_jt
       apply mem_range.mp
       exact this
   rw [h'] at h_b_combo_eq_0 h_jt
   clear h_t_sub_range h_b_comp h' t
   wlog h_b_j_pos : b j > 0 generalizing b
-  . let b' := -b
+  · let b' := -b
     apply this b' <;> simp [b']
-    . assumption
-    . simp [h_b_combo_eq_0]
-    . simp at h_b_j_pos
+    · assumption
+    · simp [h_b_combo_eq_0]
+    · simp at h_b_j_pos
       exact lt_of_le_of_ne h_b_j_pos h_j_ne_0
   clear h_j_ne_0
 
@@ -377,57 +351,54 @@ theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalComb
     simp [hbi₀_nonzero]
 
   have : i₀ < N + 1 := by
-    rw [←mem_range]
+    rw [← mem_range]
     exact (mem_filter.mp i₀_in_range).1
   apply reduce_conicalCombo s x v ⟨i₀, this, h_i₀_ai_βbi_zero⟩
   refine ⟨?_, x_plus_zero⟩
   intro i h_i
   right
   constructor
-  . exact h_all_ai_βbi_nonneg i h_i
-  . rcases h_av i h_i with h | h
-    . absurd h
+  · exact h_all_ai_βbi_nonneg i h_i
+  · rcases h_av i h_i with h | h
+    · absurd h
       exact h_a_all_pos i h_i
-    . exact h.2
+    · exact h.2
 
 end
 
 section
 variable {ι : Type u}
 
-lemma nonneg_orthant_closed : IsClosed {x : ι → ℝ | ∀ i, 0 ≤ x i } := by
-  rw [Set.setOf_forall fun i (x : ι → ℝ) => 0 ≤ x i]
-  apply isClosed_iInter
-  intro i
-  apply IsClosed.preimage (continuous_apply i) isClosed_Ici
+lemma nonneg_orthant_closed : IsClosed {x : ι → ℝ | ∀ i, 0 ≤ x i } :=
+  (Set.setOf_forall fun i (x : ι → ℝ) => 0 ≤ x i) ▸
+  isClosed_iInter fun i => IsClosed.preimage (continuous_apply i) isClosed_Ici
 
 variable [Finite ι] [DecidableEq ι]
 
-def std_basis : ι → (ι → ℝ) := fun i j => if i = j then 1 else 0
+abbrev std_basis : ι → (ι → ℝ) := fun i j => if i = j then 1 else 0
 
-lemma nonneg_orthant_gens : {x : ι → ℝ | ∀ i, 0 ≤ x i } = conicalHull.{_, u} (std_basis '' Set.univ) := by
+lemma nonneg_orthant_gens : {x : ι → ℝ | ∀ i, 0 ≤ x i } = conicalHull.{_, u} (Set.range std_basis) := by
   ext x; constructor <;> intro h
-  have := Fintype.ofFinite ι
-  . use ι, Finset.univ, x, std_basis
+  haveI := Fintype.ofFinite ι
+  · use ι, Finset.univ, x, std_basis
     constructor
-    . intro i h'
+    · intro i h'
       right
       constructor
-      . exact h i
-      . use i, ?_
-        apply Set.mem_univ
-    . exact pi_eq_sum_univ x
-  . rcases h with ⟨α, t, a, v, h₁, rfl⟩
+      · exact h i
+      · use i
+    · exact pi_eq_sum_univ x
+  · rcases h with ⟨α, t, a, v, h₁, rfl⟩
     intro i
     simp
     apply Finset.sum_nonneg
     intro x h_xt
     rcases h₁ x h_xt with h | h
-    . simp [h]
-    . apply mul_nonneg
-      . exact h.left
-      . rcases h.right with ⟨j, _, h⟩
-        rw [←h]
+    · simp [h]
+    · apply mul_nonneg
+      · exact h.left
+      · rcases h.right with ⟨j, h⟩
+        rw [← h]
         unfold std_basis
         apply ite_nonneg <;> norm_num
 
@@ -435,10 +406,49 @@ lemma nonneg_orthant_gens : {x : ι → ℝ | ∀ i, 0 ≤ x i } = conicalHull.{
 end
 
 section
-variable {V : Type*} [NormedAddCommGroup V] [Module ℝ V] [FiniteDimensional ℝ V]
+variable {V W : Type*} [AddCommMonoid V] [Module ℝ V] [AddCommMonoid W] [Module ℝ W] (f : V →ₗ[ℝ] W)
+
+theorem zero_mem_conicalHull (s : Set V) : 0 ∈ conicalHull s := by
+  use ULift Empty, ∅, fun x => Empty.elim (ULift.down x), fun x => Empty.elim (ULift.down x)
+  simp [isConicalCombo']
+
+theorem conicalHull_image (s : Set V) : f '' (conicalHull.{_,u} s) = conicalHull.{_,u} (f '' s) := by
+  sorry
+
+#check convexHull
+
+theorem conicalHull_preimage_subset_preimage_conicalHull (s : Set W) : conicalHull.{_,u} (f ⁻¹' s) ⊆ f ⁻¹' (conicalHull.{_,u} s) := by
+  rintro x ⟨ι, t, a, v, h₁, h₂⟩
+  use ι, t, a, f ∘ v
+  constructor
+  · exact h₁
+  rw [h₂]
+  simp only [map_sum, map_smul, Function.comp_apply]
+
+example (a b : W) : f ⁻¹' {a + b} = f ⁻¹' {a} + f ⁻¹' {b}
+
+theorem conicalHull_preimage_of_surjective (h : Function.Surjective f) (s : Set W) : conicalHull.{_,u} (f ⁻¹' s) = f ⁻¹' (conicalHull.{_,u} s) := by
+  apply subset_antisymm
+  · exact conicalHull_preimage_subset_preimage_conicalHull f s
+  rintro x ⟨ι, t, a, v, h₁, h₂⟩
+  -- induction' t using Finset.induction_on with i t' hit' ih generalizing a v
+  -- · have : f x = 0 := by rw [h₂]; simp
+  --   sorry
+  -- letI : DecidableEq ι := Classical.decEq ι
+  -- apply ih
+  -- · intro j hjt'
+  --   apply h₁ j
+  --   exact @Finset.mem_insert_of_mem _ inferInstance _ _ _ hjt'
+  -- rw [h₂, Finset.sum_insert]
+  sorry
+
+end
+
+section
+variable {V : Type*} [DecidableEq V] [NormedAddCommGroup V] [InnerProductSpace ℝ V] [FiniteDimensional ℝ V]
 open Set Module
 
-private def d_subsets (s : Set V) := {t : Finset V | ↑t ⊆ s ∧ t.card = finrank ℝ V}
+private abbrev d_subsets (s : Set V) := {t : Finset V | ↑t ⊆ s ∧ t.card = finrank ℝ V}
 
 lemma d_subsets_finite (s : Set V) : s.Finite → (d_subsets s).Finite := by
   sorry
@@ -447,14 +457,19 @@ lemma conical_hull_union_conical_hull_d_subsets.{u} (s : Set V) : conicalHull.{_
   --use caratheordory to get a finset t of s of card n+1
   sorry
 
+--worth including this in Mathlib.Data.Finsupp.Single?
+theorem Finsupp.single_map [Zero M] {a : α} {b : M} [DecidableEq α] : Finsupp.single a b = fun a' => if a = a' then b else 0 := by
+  ext a'
+  exact single_apply
+
 --proposition 1.3.3(b)
 theorem conical_hull_closed_of_finite.{u} (s : Set V) : s.Finite → IsClosed (conicalHull.{_,u} s) := by
   generalize h_dim : finrank ℝ V = n
   revert V
   induction' n using Nat.strong_induction_on with n ih
-  intro V _ _ _ s h_dim h_s
+  intro V _ _ _ _ s h_dim h_s
   by_cases h_n : n = 0
-  . rw [h_n] at h_dim
+  · rw [h_n] at h_dim
     rw [finrank_zero_iff] at h_dim
     have : s = ∅ ∨ ∃ (x : V), s = {x} := Subsingleton.eq_empty_or_singleton subsingleton_of_subsingleton
     rcases this with h | h <;> exact isClosed_discrete (conicalHull s)
@@ -463,16 +478,37 @@ theorem conical_hull_closed_of_finite.{u} (s : Set V) : s.Finite → IsClosed (c
   apply Finite.isClosed_biUnion (d_subsets_finite s h_s)
   intro t ⟨h_ts, h_tcard⟩
   clear h_ts h_s s
-  let t' : { x // x ∈ t} → V := Subtype.val
+  let t' : {x // x ∈ t} → V := Subtype.val
+  haveI : Nonempty {x // x ∈ t} := by
+    simp only [nonempty_subtype]
+    have : Set.Nonempty t.toSet := by
+      apply nonempty_of_ncard_ne_zero
+      rw [ncard_coe_Finset, h_tcard, h_dim]
+      exact Nat.ne_zero_of_lt h_n
+    exact this
   by_cases h_t_lin_ind : LinearIndependent ℝ t'
-  . sorry
+  · let B : Basis { x // x ∈ t } ℝ V := (basisOfLinearIndependentOfCardEqFinrank h_t_lin_ind (h_tcard ▸ Fintype.card_coe t))
+    let φ : V ≃ₗ[ℝ] { x // x ∈ t } → ℝ := B.equivFun
+    have h_φ (x : V) (hxt : x ∈ t) : φ x = std_basis ⟨x, hxt⟩ := by
+      unfold φ
+      have : x = B ⟨x, hxt⟩ := by
+        simp only [coe_basisOfLinearIndependentOfCardEqFinrank, B, t']
+      nth_rewrite 1 [this]
+      simp only [Basis.equivFun_apply, Basis.repr_self]
+      exact Finsupp.single_map
+    have h_cont_φ : Continuous φ := continuous_equivFun_basis B
+    have := nonneg_orthant_closed (ι := { x // x ∈ t })
+    rw [nonneg_orthant_gens] at this
+    convert IsClosed.preimage h_cont_φ this
+    
+    sorry
   --if not, induct
   --else:
   --use basisOfLinearIndependentOfCardEqFinrank
   --unpack the Basis to get the linear equiv to ℝ^n that we want
   --use nonneg_orthant_gens and nonneg_orthant_closed
-  . have h_eq_t : range t' = t := Subtype.range_val
-    rw [←h_eq_t]
+  · have h_eq_t : range t' = t := Subtype.range_val
+    rw [← h_eq_t]
     let V' := Submodule.span ℝ (range t')
     rw [linearIndependent_iff_card_eq_finrank_span.not, Fintype.card_coe, h_tcard] at h_t_lin_ind
     push_neg at h_t_lin_ind
@@ -480,7 +516,7 @@ theorem conical_hull_closed_of_finite.{u} (s : Set V) : s.Finite → IsClosed (c
     have : V' < ⊤ := Submodule.lt_top_of_finrank_lt_finrank h_t_lin_ind
     replace h_t_lin_ind : finrank ℝ V' < n := h_dim ▸ h_t_lin_ind
     let t'' : { x // x ∈ t } → V' := fun x => ⟨t' x, Submodule.subset_span (mem_range_self x)⟩
-    have := ih (finrank ℝ V') h_t_lin_ind (range t'') rfl
+    --have := ih (finrank ℝ V') h_t_lin_ind (range t'') rfl
     sorry
 
 -- theorem linearIndepOn_iff_card_eq_finrank_span (s : Finset V) :
@@ -517,10 +553,10 @@ lemma infDist_points (A B : Set V) (h_closed : IsClosed A ∧ IsClosed B) (h_non
     simp[dist_nonneg]
     use b
     constructor
-    . dsimp [K]
+    · dsimp [K]
       apply Metric.infDist_le_dist_of_mem
       exact h_aA
-    . exact h_bB
+    · exact h_bB
   have h_continuous : Continuous (fun x ↦ Metric.infDist x A) := by
     exact Metric.continuous_infDist_pt A
   have Kclosed (r: ℝ) (hr : r ≥ 0) : IsClosed (K r) := by
@@ -573,13 +609,13 @@ lemma infDist_points (A B : Set V) (h_closed : IsClosed A ∧ IsClosed B) (h_non
   use a', ha'.1, b', hb'.1.2
   intro a h_aA b h_bB
   by_cases h_bK : b ∈ K r₀
-  . rw [dist_comm, ←ha'.2, dist_comm]
+  · rw [dist_comm, ← ha'.2, dist_comm]
     have min_infDist := isMinOn_iff.mp hb'.2 b ⟨h_bK, h_bB⟩
     suffices h : Metric.infDist b A ≤ dist b a by linarith
     exact Metric.infDist_le_dist_of_mem h_aA
   calc
     dist a' b' ≤ r₀ := by
-      rw [dist_comm, ←ha'.2]
+      rw [dist_comm, ← ha'.2]
       exact hb'.1.1
     _ ≤ Metric.infDist b A := by
       apply le_of_not_ge
@@ -643,7 +679,7 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
       rw[← equality_inner_prods]; simp[norm_nonneg]; exact hγ; exact hγ'
 
     have ineq2 (γ : ℝ)(hγ: γ ≥ 0) (hγ': γ ≤ 1):  ‖b' - a'‖ ≤ ‖(γ • b' + (1-γ) • b₀) - a'‖ := by
-      rw[←dist_eq_norm, ←dist_eq_norm, dist_comm, dist_comm _ a']
+      rw[← dist_eq_norm, ← dist_eq_norm, dist_comm, dist_comm _ a']
       apply h_a'b'_min_dist _ h_a'A _ (lin_dep γ ⟨hγ, hγ'⟩)
 
     have combo_inequalities (γ : ℝ)(hγ: γ ≥ 0) (hγ': γ ≤ 1) : 0 ≤ (1-γ)^2*‖b₀-b'‖^2 + 2*(1-γ) * ⟪b'-a', b₀ - b'⟫ := by
@@ -655,7 +691,7 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
       linarith
 
     by_cases h : ⟪b'-a', b₀ - b'⟫ = 0
-    . suffices h' : f b₀ = f b' by linarith
+    · suffices h' : f b₀ = f b' by linarith
       rw[inner_sub_right] at h
       linarith
     have hb_ne_b : b₀ ≠ b' := by
@@ -763,7 +799,7 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
       rw[← equality_inner_prods]; simp[norm_nonneg]; exact hγ; exact hγ'
 
     have ineq2 (γ : ℝ)(hγ: γ ≥ 0) (hγ': γ ≤ 1):  ‖b' - a'‖ ≤ ‖(γ • a' + (1-γ) • a₀) - b'‖ := by
-      repeat rw[ ←dist_eq_norm]
+      repeat rw[← dist_eq_norm]
       rw[dist_comm]
       apply h_a'b'_min_dist
       exact (lin_dep γ ⟨hγ, hγ'⟩); exact h_b'B
@@ -777,7 +813,7 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
       linarith
 
     by_cases h : ⟪a'-b', a₀ - a'⟫ = 0
-    . suffices h' : f a₀ = f a' by linarith
+    · suffices h' : f a₀ = f a' by linarith
       rw[inner_sub_right] at h
       unfold f
       have this_neg_case : ⟪-(b' - a'), a₀⟫ = ⟪-(b' - a'), a'⟫ := by simp; linarith
@@ -929,10 +965,10 @@ theorem conical_hull_closed_of_finite' (s : Set V) : s.Finite → IsClosed (coni
   generalize h_dim : finrank ℝ V = n
   revert V
   induction' n with n ih <;> intro V _ _ _ s h_dim h_s
-  . rw [finrank_zero_iff] at h_dim
+  · rw [finrank_zero_iff] at h_dim
     have : s = ∅ ∨ ∃ (x : V), s = {x} := Subsingleton.eq_empty_or_singleton subsingleton_of_subsingleton
     rcases this with h | h <;> exact isClosed_discrete (conicalHull s)
-  . by_cases hs : s.Nonempty
+  · by_cases hs : s.Nonempty
     · rcases hs with ⟨x, hx⟩
       rcases caratheordory s x with h
       have hCon: x ∈  conicalHull s := by

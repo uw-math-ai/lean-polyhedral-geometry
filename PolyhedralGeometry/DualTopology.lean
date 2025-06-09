@@ -4,6 +4,8 @@ import Mathlib.LinearAlgebra.Dual.Lemmas
 import Mathlib.Topology.Defs.Basic
 import Mathlib.Algebra.Module.Equiv.Defs
 import Mathlib.Topology.Algebra.Module.ModuleTopology
+import Mathlib.Topology.Algebra.Module.FiniteDimension
+import Mathlib.Analysis.InnerProductSpace.Basic
 
 open Module TopologicalSpace
 
@@ -129,3 +131,4 @@ theorem continuous_functional (f : Dual R M) : Continuous f where
   isOpen_preimage := fun _ h => eq_DualTopology R M ▸ (Iff.subst (p := id) TopologicalSpace.le_def (DualTopology_le R M f)) _ (isOpen_induced h)
       
 end DualTopology
+
