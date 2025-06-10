@@ -19,6 +19,39 @@ theorem zero_mem_of_cone {s : Set V} (h_cone_s : Cone s) : 0 ∈ s :=
   have ⟨⟨x, h_xs⟩, h_smul_closed⟩ := h_cone_s
   zero_smul ℝ x ▸ h_smul_closed 0 (le_refl 0) x h_xs
 
+lemma cone_conicalHull (s : Set V) : Cone (conicalHull s) := by
+  constructor
+  · use 0, ULift Empty, ∅, fun x => Empty.elim (ULift.down x), fun x => Empty.elim (ULift.down x)
+    simp [isConicalCombo']
+  · rintro c h_c _ ⟨ι, t, a, v, h_av, rfl⟩
+    use ι, t, c • a, v
+    constructor
+    · intro i h_it
+      rcases h_av i h_it with h | ⟨h₁, h₂⟩
+      · left
+        simp
+        right
+        exact h
+      · right
+        refine ⟨mul_nonneg h_c h₁, h₂⟩
+    · rw [Finset.smul_sum]
+      congr
+      ext i
+      rw [← smul_assoc]
+      simp
+
+lemma conicalHull_eq_zero_of_empty {s : Set V} (h_s : s = ∅) : conicalHull s = {0} := by
+  rw [h_s]
+  refine subset_antisymm ?_ (by simp; exact zero_mem_of_cone (cone_conicalHull _))
+  intro x h_x
+  simp
+  rcases h_x with ⟨ι, t, a, v, h_av, rfl⟩
+  apply Finset.sum_eq_zero
+  intro i h_it
+  rcases h_av i h_it with h | ⟨_, h⟩
+  · simp [h]
+  contradiction
+
 lemma halfspace_convex (s : Set V) (h_halfspace_s : Halfspace s) : Convex ℝ s := by
   intro x _ y _ a b _ _ h_a_b_one
   rcases h_halfspace_s with ⟨f, ⟨c, rfl⟩⟩
@@ -37,13 +70,12 @@ theorem poly_convex (s : Set V) (h_poly_s : IsPolyhedron s) : Convex ℝ s := by
 --lemma 1.2.2
 lemma translate_halfspace_of_cone_subset (s : Set V) (f : V →ₗ[ℝ] ℝ) (c : ℝ) (h_s_cone : Cone s) (h : ∀ x ∈ s, f x ≤ c) : c ≥ 0 ∧ ∀ x ∈ s, f x ≤ 0 := by
   constructor
-  . contrapose! h
+  · contrapose! h
     exact ⟨0, zero_mem_of_cone h_s_cone, LinearMap.map_zero f ▸ h⟩
   intro x₀ x_in_s
-  apply not_lt.mp
+  rw [← not_lt]
   intro h_0_le_fx
   have h_0_le_inv_fx : 0 < (f x₀)⁻¹ := inv_pos_of_pos h_0_le_fx
-  unfold Cone at h_s_cone
   have lt_c : f x₀ ≤ c := h x₀ x_in_s
   have ge_0_c : 0 < c := lt_of_lt_of_le h_0_le_fx lt_c
   have gq_2c_fxinv : 0 < 2 * c * (f x₀)⁻¹ := by
@@ -70,8 +102,6 @@ lemma translate_halfspace_of_cone_subset (s : Set V) (f : V →ₗ[ℝ] ℝ) (c 
 --     rcases h' with ⟨n', h₁, h₂⟩
 --     exact ih n' h₁ h₂
 
-section
-
 lemma sum_bijon {α β γ : Type*} [AddCommMonoid γ] {t : Finset α} {s : Finset β} {T : α → β} (h_bij : Set.BijOn T t s) {f : α → γ} {g : β → γ} (h_fg : f = g ∘ T) : ∑ i ∈ t, f i = ∑ j ∈ s, g j := by
   rcases h_bij with ⟨h_mapsto, h_inj, h_surj⟩
   apply Finset.sum_bij
@@ -82,22 +112,21 @@ lemma sum_bijon {α β γ : Type*} [AddCommMonoid γ] {t : Finset α} {s : Finse
     rfl
   · tauto
 
-lemma Finset.sum_enlarge {ι α : Type*} [AddCommMonoid α] {t s : Finset ι} {f : ι → α} (h_ts : t ⊆ s) (h_f : ∀ i ∉ t, f i = 0) : ∑ i ∈ t, f i = ∑ i ∈ s, f i := by
-  classical
-  induction' s using Finset.strongInductionOn with s ih
-  by_cases h : t = s
-  · rw [h]
-  have : t ⊂ s := ssubset_of_subset_of_ne h_ts h
-  rcases (Finset.ssubset_iff_of_subset h_ts).mp this with ⟨x, h_xs, h_xt⟩
-  let s' := s.erase x
-  have h_ts' : t ⊆ s' := by
-    refine Finset.subset_erase.mpr ?_
-    constructor <;> assumption
-  rw [ih s' (Finset.erase_ssubset h_xs) h_ts']
-  apply Finset.sum_erase
-  exact h_f x h_xt
-
-end
+-- use Finset.sum_subset!
+-- lemma Finset.sum_enlarge {ι α : Type*} [AddCommMonoid α] {t s : Finset ι} {f : ι → α} (h_ts : t ⊆ s) (h_f : ∀ i ∉ t, f i = 0) : ∑ i ∈ t, f i = ∑ i ∈ s, f i := by
+--   classical
+--   induction' s using Finset.strongInductionOn with s ih
+--   by_cases h : t = s
+--   · rw [h]
+--   have : t ⊂ s := ssubset_of_subset_of_ne h_ts h
+--   rcases (Finset.ssubset_iff_of_subset h_ts).mp this with ⟨x, h_xs, h_xt⟩
+--   let s' := s.erase x
+--   have h_ts' : t ⊆ s' := by
+--     refine Finset.subset_erase.mpr ?_
+--     constructor <;> assumption
+--   rw [ih s' (Finset.erase_ssubset h_xs) h_ts']
+--   apply Finset.sum_erase
+--   exact h_f x h_xt
 
 lemma reindex_conicalCombo' {s : Set V} {x : V} {ι : Type*} (t : Finset ι) (a : ι → ℝ) (v : ι → V) : isConicalCombo' s x t a v → isConicalCombo_aux s x t.card := by
   rintro ⟨h_av, h_x_combo⟩
@@ -248,9 +277,9 @@ theorem caratheordory (s : Set V) : ∀ x ∈ conicalHull.{_,0} s, isConicalComb
       exact h_b_comp i this
     · rw [← h_b_combo_eq_0]
       symm
-      apply sum_enlarge
+      apply sum_subset
       · assumption
-      · intro i h_it
+      · intro i _ h_it
         rw [h_b_comp i h_it]
         simp
     · have := h_t_sub_range h_jt
@@ -413,9 +442,49 @@ theorem zero_mem_conicalHull (s : Set V) : 0 ∈ conicalHull s := by
   simp [isConicalCombo']
 
 theorem conicalHull_image (s : Set V) : f '' (conicalHull.{_,u} s) = conicalHull.{_,u} (f '' s) := by
-  sorry
-
-#check convexHull
+  apply subset_antisymm <;> rintro y h_y
+  · rcases h_y with ⟨x, ⟨ι, t, a, v, h_av, h_combo⟩, rfl⟩
+    use ι, t, a, f ∘ v
+    constructor
+    · intro i h_it
+      rcases h_av i h_it with h | ⟨h₁, h₂⟩
+      · exact Or.inl h
+      · exact Or.inr ⟨h₁, v i, h₂, rfl⟩
+    · rw [h_combo]
+      simp
+  · rcases h_y with ⟨ι, t, a, w, h_av, rfl⟩
+    let t' := Finset.filter (fun i ↦ a i ≠ 0) t
+    classical
+    have key := fun i (h : i ∈ t') ↦
+      h_av i (Finset.mem_of_mem_filter i h)
+      |>.resolve_left (by simp [t'] at h; exact h.2)
+    let v : ι → V := fun i ↦ if h : i ∈ t' then (key i h).2.choose else 0
+    have : ∀ i ∈ t', f (v i) = w i := fun i h ↦ by
+      simp [v, h]
+      exact Exists.choose_spec (key i h).2 |>.2
+    have : ∀ i ∈ t, a i • f (v i) = a i • w i := by
+      intro i h_it
+      by_cases h_it' : i ∈ t'
+      · simp [this i h_it']
+      simp [t'] at h_it'
+      simp [h_it' h_it]
+    use ∑ i ∈ t, a i • v i
+    constructor; swap
+    · simp [this]
+      exact Finset.sum_congr rfl this
+    use ι, t', a, v
+    constructor
+    . intro i h_it'
+      right
+      constructor
+      . exact (key i h_it').1
+      simp [v, h_it']
+      exact Exists.choose_spec (key i h_it').2 |>.1
+    symm
+    apply Finset.sum_subset (Finset.filter_subset _ _)
+    intro i h_it h_it'
+    simp at h_it'
+    simp [h_it' h_it]
 
 theorem conicalHull_preimage_subset_preimage_conicalHull (s : Set W) : conicalHull.{_,u} (f ⁻¹' s) ⊆ f ⁻¹' (conicalHull.{_,u} s) := by
   rintro x ⟨ι, t, a, v, h₁, h₂⟩
@@ -425,22 +494,54 @@ theorem conicalHull_preimage_subset_preimage_conicalHull (s : Set W) : conicalHu
   rw [h₂]
   simp only [map_sum, map_smul, Function.comp_apply]
 
-example (a b : W) : f ⁻¹' {a + b} = f ⁻¹' {a} + f ⁻¹' {b}
+end
 
-theorem conicalHull_preimage_of_surjective (h : Function.Surjective f) (s : Set W) : conicalHull.{_,u} (f ⁻¹' s) = f ⁻¹' (conicalHull.{_,u} s) := by
-  apply subset_antisymm
-  · exact conicalHull_preimage_subset_preimage_conicalHull f s
-  rintro x ⟨ι, t, a, v, h₁, h₂⟩
-  -- induction' t using Finset.induction_on with i t' hit' ih generalizing a v
-  -- · have : f x = 0 := by rw [h₂]; simp
-  --   sorry
-  -- letI : DecidableEq ι := Classical.decEq ι
-  -- apply ih
-  -- · intro j hjt'
-  --   apply h₁ j
-  --   exact @Finset.mem_insert_of_mem _ inferInstance _ _ _ hjt'
-  -- rw [h₂, Finset.sum_insert]
-  sorry
+section
+variable {V W : Type*} [AddCommGroup V] [Module ℝ V] [AddCommGroup W] [Module ℝ W] (f : V →ₗ[ℝ] W)
+
+instance : Add (Set V) where
+  add := fun s t ↦ { x | ∃ a ∈ s, ∃ b ∈ t, x = a + b }
+
+instance : SMul ℝ (Set V) where
+  smul := fun c s ↦ { x | ∃ a ∈ s, x = c • a }
+
+example (a b : W) (h_f_surj : Function.Surjective f): f ⁻¹' {a + b} = f ⁻¹' {a} + f ⁻¹' {b} :=
+  subset_antisymm
+    (fun x h_x ↦
+      have ⟨a', h_a'⟩ := h_f_surj a
+      ⟨a', h_a', x - a', by simp at h_x; simp [h_x, h_a'], by simp⟩)
+    (by rintro _ ⟨_, h_a', _, h_b', rfl⟩; simp; rw [h_a', h_b'])
+
+example (c : ℝ) (a : W) (h_f : Function.Bijective f): f ⁻¹' {c • a} = c • f ⁻¹' {a} :=
+  subset_antisymm
+    (fun x h_x ↦ by
+      simp at *
+      rcases h_f.surjective a with ⟨a', h_a'⟩
+      by_cases h_c : c = 0
+      · rw [h_c]
+        simp [h_c] at h_x
+        rw [LinearMap.map_eq_zero_iff f h_f.injective |>.mp h_x]
+        use a', h_a'
+        simp
+      use c⁻¹ • x
+      constructor <;> simp [h_x, h_c])
+    (by rintro _ ⟨a', h_a', rfl⟩; simp; rw [h_a'])
+
+-- I think this requires bijective
+-- theorem conicalHull_preimage_of_surjective (h : Function.Surjective f) (s : Set W) : conicalHull.{_,u} (f ⁻¹' s) = f ⁻¹' (conicalHull.{_,u} s) := by
+--   apply subset_antisymm
+--   · exact conicalHull_preimage_subset_preimage_conicalHull f s
+--   rintro x ⟨ι, t, a, v, h₁, h₂⟩
+--   -- induction' t using Finset.induction_on with i t' hit' ih generalizing a v
+--   -- · have : f x = 0 := by rw [h₂]; simp
+--   --   sorry
+--   -- letI : DecidableEq ι := Classical.decEq ι
+--   -- apply ih
+--   -- · intro j hjt'
+--   --   apply h₁ j
+--   --   exact @Finset.mem_insert_of_mem _ inferInstance _ _ _ hjt'
+--   -- rw [h₂, Finset.sum_insert]
+--   sorry
 
 end
 
