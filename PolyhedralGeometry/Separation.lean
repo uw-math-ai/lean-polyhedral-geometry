@@ -2,11 +2,11 @@ import PolyhedralGeometry.Cone
 import Mathlib.Analysis.InnerProductSpace.LinearMap
 import Mathlib.Analysis.Normed.Module.FiniteDimension
 
-open Bornology RealInnerProductSpace
 variable {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V]
 
 --lemma 1.2.2
-lemma translate_halfspace_of_cone_subset (s : Set V) (f : V →ₗ[ℝ] ℝ) (c : ℝ) (h_s_cone : Cone s) (h : ∀ x ∈ s, f x ≤ c) : c ≥ 0 ∧ ∀ x ∈ s, f x ≤ 0 := by
+lemma translate_halfspace_of_cone_subset (s : Set V) (f : V →ₗ[ℝ] ℝ) (c : ℝ) (h_s_cone : Cone s)
+    (h : ∀ x ∈ s, f x ≤ c) : c ≥ 0 ∧ ∀ x ∈ s, f x ≤ 0 := by
   constructor
   · contrapose! h
     exact ⟨0, zero_mem_of_cone h_s_cone, LinearMap.map_zero f ▸ h⟩
@@ -27,72 +27,61 @@ lemma translate_halfspace_of_cone_subset (s : Set V) (f : V →ₗ[ℝ] ℝ) (c 
   have : f x₀ ≠ 0 := Ne.symm (ne_of_lt h_0_le_fx)
   rw [LinearMap.map_smul] at le_c
   dsimp at le_c
-  rw [mul_assoc, inv_mul_cancel₀ this, mul_one] at le_c
-  show False
+  simp [this] at le_c
   linarith
 
+open Bornology RealInnerProductSpace Metric
 variable [FiniteDimensional ℝ V]
 
-lemma infDist_points (A B : Set V) (h_closed : IsClosed A ∧ IsClosed B) (h_nonempty : A.Nonempty ∧ B.Nonempty) (hA_Bounded : IsBounded A) : ∃ a₀ ∈ A, ∃ b₀ ∈ B, ∀ a ∈ A, ∀ b ∈ B, dist a₀ b₀ ≤ dist a b := by
-  rcases h_nonempty.left with ⟨a, h_aA⟩
-  rcases h_nonempty.right with ⟨b, h_bB⟩
-  let K (r : ℝ) : Set V := { x : V | Metric.infDist x A ≤ r}
-  have BcapK : ∃ r ≥ 0, ((K r) ∩ B).Nonempty := by
-    use (dist b a)
-    simp[dist_nonneg]
-    use b
-    constructor
-    · dsimp [K]
-      apply Metric.infDist_le_dist_of_mem
-      exact h_aA
-    · exact h_bB
-  have h_continuous : Continuous (fun x ↦ Metric.infDist x A) := by
-    exact Metric.continuous_infDist_pt A
-  have Kclosed (r: ℝ) (hr : r ≥ 0) : IsClosed (K r) := by
-    have h_closed_Iic : IsClosed (Set.Iic r) := isClosed_Iic
-    exact IsClosed.preimage h_continuous h_closed_Iic
+lemma exists_dist_min_points_of_closed_of_bounded ⦃A : Set V⦄ (h_nonempty_A : A.Nonempty)
+    (h_isClosed_A : IsClosed A) (h_isBounded_A : IsBounded A) ⦃B : Set V⦄
+    (h_nonempty_B : B.Nonempty) (h_isClosed_B : IsClosed B) :
+    ∃ a₀ ∈ A, ∃ b₀ ∈ B, ∀ a ∈ A, ∀ b ∈ B, dist a₀ b₀ ≤ dist a b := by
+  rcases h_nonempty_A with ⟨a, h_aA⟩
+  rcases h_nonempty_B with ⟨b, h_bB⟩
+  let K (r : ℝ) : Set V := { x : V | infDist x A ≤ r}
+  have BcapK : ∃ r ≥ 0, ((K r) ∩ B).Nonempty :=
+    ⟨dist b a, dist_nonneg, b, infDist_le_dist_of_mem h_aA, h_bB⟩
+  have h_continuous : Continuous (fun x ↦ infDist x A) := continuous_infDist_pt A
+  have Kclosed (r: ℝ) (hr : r ≥ 0) : IsClosed (K r) := IsClosed.preimage h_continuous isClosed_Iic
   have Kbounded (r: ℝ) (hr: r ≥ 0) : IsBounded (K r) := by
-    have subset: K r ⊆ Metric.ball a (Metric.diam A + r+1) := by
-      dsimp[K,Metric.ball]
-      simp
-      intro b
-      have ex_a' : ∃ a', a' ∈ A ∧ Metric.infDist b A  = dist b a' := by
-        apply IsClosed.exists_infDist_eq_dist h_closed.1 h_nonempty.1 b
-      obtain ⟨a', ha', hdist⟩ := ex_a'
-      rw[hdist]
-      intro hba'
-      calc
-        dist b a  ≤  dist b a' + dist a' a:= by apply dist_triangle
-        _ ≤ r +  dist a' a:= by simp[hba']
-        _ ≤ r +  Metric.diam A:= by linarith[Metric.dist_le_diam_of_mem hA_Bounded ha' h_aA]
-      linarith
-    rw [Metric.isBounded_iff_subset_ball a]
-    use (Metric.diam A + r+1)
+    rw [isBounded_iff_subset_ball a]
+    use (diam A + r + 1)
+    simp[K, ball]
+    intro b hba'
+    rcases IsClosed.exists_infDist_eq_dist h_isClosed_A ⟨a, h_aA⟩ b with ⟨a', ha', hdist⟩
+    rw [hdist] at hba'
+    calc
+      dist b a
+        ≤ dist b a' + dist a' a := by apply dist_triangle
+      _ ≤ r + dist a' a:= by simp [hba']
+      _ ≤ r + diam A:= by linarith [dist_le_diam_of_mem h_isBounded_A ha' h_aA]
+    linarith
   have Kcompact (r : ℝ) (hr : r ≥ 0) : IsCompact (K r) := by
-    rw [Metric.isCompact_iff_isClosed_bounded]
+    rw [isCompact_iff_isClosed_bounded]
     exact ⟨Kclosed r hr, Kbounded r hr⟩
   have Knempty (r : ℝ) (hr : r ≥ 0) : (K r).Nonempty := by
     use a
     dsimp [K]
-    rw[Metric.infDist_zero_of_mem]
+    rw[infDist_zero_of_mem]
     exact hr
     exact h_aA
   have closedInter (r: ℝ) {hr: r ≥ 0} : IsClosed ((K r) ∩ B) := by
-    exact IsClosed.inter (Kclosed r hr) (h_closed.2)
+    exact IsClosed.inter (Kclosed r hr) h_isClosed_B
   rcases BcapK with ⟨r₀, h_r₀_ge_0, h_inter_nonempty⟩
-  let distBtoA := Set.image (fun b => Metric.infDist b A) ((K r₀) ∩ B)
+  let distBtoA := Set.image (fun b => infDist b A) ((K r₀) ∩ B)
   --maybe this instead
-  --let distBtoA := (fun b => Metric.infDist b A)'' B
+  --let distBtoA := (fun b => infDist b A)'' B
   --show that (K r) ∩ B is bounded, therefore compact
   have h_compact : IsCompact (K r₀ ∩ B) := by
-    rw[Metric.isCompact_iff_isClosed_bounded]
-    simp[IsClosed.inter (Kclosed r₀ h_r₀_ge_0) (h_closed.2)]
+    rw[isCompact_iff_isClosed_bounded]
+    simp[IsClosed.inter (Kclosed r₀ h_r₀_ge_0) h_isClosed_B]
     have h: (K r₀ ∩ B) ⊆ K r₀ := by exact Set.inter_subset_left
-    exact Bornology.IsBounded.subset (Kbounded r₀ h_r₀_ge_0) h
+    exact IsBounded.subset (Kbounded r₀ h_r₀_ge_0) h
   have := IsCompact.exists_isMinOn h_compact h_inter_nonempty (Continuous.continuousOn h_continuous)
   rcases this with ⟨b', hb'⟩
-  have min_a : ∃ a, a ∈ A ∧ Metric.infDist b' A  = dist b' a := by
-    apply IsClosed.exists_infDist_eq_dist h_closed.1 h_nonempty.1 b'
+  have min_a : ∃ a, a ∈ A ∧ infDist b' A  = dist b' a := by
+    apply IsClosed.exists_infDist_eq_dist h_isClosed_A ⟨a, h_aA⟩ b'
   rcases min_a with ⟨a', ha'⟩
   clear! a b
   use a', ha'.1, b', hb'.1.2
@@ -100,46 +89,27 @@ lemma infDist_points (A B : Set V) (h_closed : IsClosed A ∧ IsClosed B) (h_non
   by_cases h_bK : b ∈ K r₀
   · rw [dist_comm, ← ha'.2, dist_comm]
     have min_infDist := isMinOn_iff.mp hb'.2 b ⟨h_bK, h_bB⟩
-    suffices h : Metric.infDist b A ≤ dist b a by linarith
-    exact Metric.infDist_le_dist_of_mem h_aA
+    suffices h : infDist b A ≤ dist b a by linarith
+    exact infDist_le_dist_of_mem h_aA
   calc
-    dist a' b' ≤ r₀ := by
-      rw [dist_comm, ← ha'.2]
-      exact hb'.1.1
-    _ ≤ Metric.infDist b A := by
-      apply le_of_not_ge
-      exact h_bK
-    _ ≤ dist a b := by
-      rw [dist_comm]
-      exact Metric.infDist_le_dist_of_mem h_aA
+    dist a' b'
+      ≤ r₀                 := by rw [dist_comm, ← ha'.2]; exact hb'.1.1
+    _ ≤ infDist b A := le_of_not_ge h_bK
+    _ ≤ dist a b           := dist_comm a b ▸ infDist_le_dist_of_mem h_aA
 
 theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex ℝ B) (hclosed : IsClosed A ∧ IsClosed B ) (hNempty : A.Nonempty ∧ B.Nonempty) (hA_Bounded: IsBounded A) (hAB : Disjoint A B) : ∃ (f : V →ₗ[ℝ] ℝ) (c : ℝ), (∀ a ∈ A, f a < c) ∧ (∀ b ∈ B, c < f b) := by
-  rcases infDist_points A B hclosed hNempty hA_Bounded with ⟨a', h_a'A, b', h_b'B, h_a'b'_min_dist⟩
-  let f: V → ℝ  := fun x => ⟪b'-a', x⟫
-  have a_not_b: a' ≠ b' := by
-    intro h
-    have h_a'B: a' ∈ B := by
-      rw [h]
-      exact h_b'B
-    have h_inter: a' ∈ A ∩ B := by exact Set.mem_inter h_a'A h_a'B
-    rw[Set.disjoint_iff_inter_eq_empty] at hAB
-    have contra: A ∩ B ≠ ∅  := by
-      simp[Set.nonempty_of_mem h_inter, ← Set.nonempty_iff_ne_empty]
-    contradiction
-
-  have h_prods_ineq: f b' > f a' := by
-    have h_greater_zero: 0 < ‖b'-a'‖^2:= by
-      have h1: 0 ≤   ‖b'-a'‖^2 := by simp[sq_nonneg]
-      have h2 :  ‖b' - a'‖ ≠ 0 := by
-        intro h
-        rw[norm_eq_zero] at h
-        rw[sub_eq_zero] at h
-        symm at h
-        contradiction
-      simp[h1, h2, sq_pos_iff]
-    have intermediate_step: 0 < f b' - f a' := by
+  rcases exists_dist_min_points_of_closed_of_bounded hNempty.1 hclosed.1 hA_Bounded
+    hNempty.2 hclosed.2 with ⟨a', h_a'A, b', h_b'B, h_a'b'_min_dist⟩
+  let f : V → ℝ := fun x => ⟪b' - a', x⟫
+  have a_not_b : b' ≠ a' := by
+    rintro rfl
+    absurd hAB
+    rw [Set.not_disjoint_iff]
+    exact ⟨b', h_a'A, h_b'B⟩
+  have h_prods_ineq: f a' < f b' := by
+    have : 0 < f b' - f a' := by
       calc
-        0 < ‖b'-a'‖^2 := by exact h_greater_zero
+        0 < ‖b'-a'‖^2 := by rw [sq_pos_iff, norm_ne_zero_iff]; exact sub_ne_zero_of_ne a_not_b
         _ = ⟪b', b'⟫ - 2*⟪b', a'⟫ + ⟪a', a'⟫ := by
           simp [norm_sub_sq_real, real_inner_self_eq_norm_sq]
         _ = ⟪b', b'⟫ - ⟪b', a'⟫ - (⟪b', a'⟫ - ⟪a', a'⟫) := by linarith
@@ -148,11 +118,17 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
         _ = ⟪b'-a', b'⟫ - ⟪b'-a', a'⟫ := by rw [← inner_sub_left]
         _ = f b' - f a' := by simp[f]
     linarith
+  -- use this to simplify minf and minf'
+  -- maybe move this to a separate lemma eventually? probably just requires convexity of A and B
+  have foo {a₀ b₀ b : V} (h_a₀ : a₀ ∈ A) (h_b₀ : b₀ ∈ B)
+      (h_infDist : ∀ a ∈ A, ∀ b ∈ B, dist a₀ b₀ ≤ dist a b) (h_b : b ∈ B) :
+      ⟪b₀ - a₀, b₀⟫ ≤ ⟪b₀ - a₀, b⟫ := by
+    sorry
   have minf : ∀ b₀ ∈ B, f b₀ ≥ f b' := by
     intro b₀ hb₀
     have lin_dep (γ : ℝ) : (0 ≤ γ) ∧ (γ ≤ 1) → γ • b' + (1-γ) • b₀ ∈ B :=
       fun ⟨h, _⟩ => hB h_b'B hb₀ h (by linarith) (by simp)
-    have equality_inner_prods (γ : ℝ) (hγ: γ ≥ 0) (hγ': γ ≤ 1): ‖γ•b' + (1-γ)•b₀-a'‖^2 = ‖b'-a'‖^2 + (1-γ)^2*‖b₀-b'‖^2 + 2*(1-γ) * ⟪b'-a', b₀ - b'⟫  := by
+    have equality_inner_prods (γ : ℝ) (hγ: γ ≥ 0) (hγ': γ ≤ 1): ‖γ•b' + (1-γ)•b₀-a'‖^2 = ‖b'-a'‖^2 + (1-γ)^2*‖b₀-b'‖^2 + 2*(1-γ) * ⟪b'-a', b₀ - b'⟫ := by
       calc
         ‖γ•b' + (1-γ)•b₀-a'‖^2 = ‖γ•b' + b' - b' + (1-γ)•b₀-a'‖^2 := by simp
         _ = ‖(b' - a') + (1-γ )•(b₀- b')‖^2 := by congr 2; module
@@ -222,8 +198,8 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
         have h: 0 ≤ (1-γ)*((1-γ)*‖b₀-b'‖^2 + 2 * ⟪b'-a', b₀ - b'⟫) := by
            calc
              0 ≤ (1-γ)^2*‖b₀-b'‖^2 + 2*(1-γ) * ⟪b'-a', b₀ - b'⟫ := by apply combo_inequalities; exact hγ; exact hγ'
-             _ = (1-γ)*(1-γ)*‖b₀-b'‖^2 + (1-γ) * 2 * ⟪b'-a', b₀ - b'⟫ := by simp[sq, mul_comm]
-             _ = (1-γ)*((1-γ)*‖b₀-b'‖^2) + (1-γ) * (2 * ⟪b'-a', b₀ - b'⟫) := by repeat rw[mul_assoc]
+             _ = (1-γ)*(1-γ)*‖b₀-b'‖^2 + (1-γ) * 2 * ⟪b'-a', b₀ - b'⟫ := by simp [sq, mul_comm]
+             _ = (1-γ)*((1-γ)*‖b₀-b'‖^2) + (1-γ) * (2 * ⟪b'-a', b₀ - b'⟫) := by repeat rw [mul_assoc]
              _ = (1-γ)*((1-γ)*‖b₀-b'‖^2 + 2*⟪b'-a', b₀ - b'⟫) := by rw[← mul_add]
         have simplify: 0 ≤ ((1-γ )*‖b₀-b'‖^2 + 2 * ⟪b'-a', b₀ - b'⟫) := by apply nonneg_of_mul_nonneg_right h h_pos_γ
         simp[simplify]; linarith
@@ -284,7 +260,7 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
         _ = ‖a'-b'‖^2 + (1-γ)^2 * ‖a₀-a'‖^2  + 2*(1-γ) * ⟪a'-b', a₀ - a'⟫ := by simp [real_inner_self_eq_norm_sq]
         _ = ‖b'-a'‖^2 + (1-γ)^2 * ‖a₀-a'‖^2  + 2*(1-γ) * ⟪a'-b', a₀ - a'⟫ := by simp[norm_sub_rev]
 
-    have ineq1 (γ : ℝ)(hγ: γ ≥ 0) (hγ': γ ≤ 1): 0 ≤  ‖b'-a'‖^2 + (1-γ)^2 * ‖a₀-a'‖^2  + 2*(1-γ) * ⟪a'-b', a₀ - a'⟫ := by
+    have ineq1 (γ : ℝ) (hγ : γ ≥ 0) (hγ' : γ ≤ 1) : 0 ≤ ‖b'-a'‖^2 + (1-γ)^2 * ‖a₀-a'‖^2 + 2*(1-γ) * ⟪a'-b', a₀ - a'⟫ := by
       rw[← equality_inner_prods]; simp[norm_nonneg]; exact hγ; exact hγ'
 
     have ineq2 (γ : ℝ)(hγ: γ ≥ 0) (hγ': γ ≤ 1):  ‖b' - a'‖ ≤ ‖(γ • a' + (1-γ) • a₀) - b'‖ := by
@@ -402,9 +378,7 @@ theorem hyperplane_separation  (A B : Set V) (hA : Convex ℝ A) (hB : Convex �
   let inner_bilin := @bilinFormOfRealInner V inferInstance inferInstance
   unfold LinearMap.BilinForm LinearMap.BilinMap at inner_bilin
   let f_lin := inner_bilin (b' - a')
-  have f_eq : f_lin = f := by
-    ext v
-    rfl
+  have f_eq : f_lin = f := rfl
   use f_lin, fc
   rw [f_eq]
   exact ⟨gt_a, lt_b⟩

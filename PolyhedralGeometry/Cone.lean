@@ -1,11 +1,19 @@
 import PolyhedralGeometry.Defs
 import Mathlib.Analysis.Convex.Cone.Basic
 
-section Definitions
-variable {V : Type*} [AddCommMonoid V] [Module ℝ V] (s : Set V)
+variable {V W : Type*} [AddCommMonoid V] [Module ℝ V] [AddCommMonoid W] [Module ℝ W] (s : Set V) (f : V →ₗ[ℝ] W)
 
 def Cone : Prop :=
   s.Nonempty ∧ ∀ c ≥ (0 : ℝ), ∀ x ∈ s, c • x ∈ s
+
+theorem zero_mem_of_cone {s : Set V} (h_cone_s : Cone s) : 0 ∈ s :=
+  have ⟨⟨x, h_xs⟩, h_smul_closed⟩ := h_cone_s
+  zero_smul ℝ x ▸ h_smul_closed 0 (le_refl 0) x h_xs
+
+def IsConvexCone : Prop :=
+  Convex ℝ s ∧ Cone s
+
+#check ConvexCone
 
 def PolyhedralCone.{u} : Prop :=
   IsPolyhedron.{_, u} s ∧ Cone s
@@ -19,20 +27,31 @@ def isConicalCombo (x : V) : Prop :=
 def isConicalCombo_aux' (x : V) (n : ℕ) (a : ℕ → ℝ) (v : ℕ → V) : Prop :=
   (∀ i < n, a i = 0 ∨ 0 ≤ a i ∧ v i ∈ s) ∧ x = ∑ i ∈ Finset.range n, a i • v i
 
+theorem isConvexCone_setOf_isConicalCombo : IsConvexCone { x | isConicalCombo s x } := by sorry
+
+theorem subset_setOf_isConicalCombo : s ⊆ { x | isConicalCombo s x } := by sorry
+
 def isConicalCombo_aux (x : V) (n : ℕ) : Prop :=
   ∃ (a : ℕ → ℝ) (v : ℕ → V), isConicalCombo_aux' s x n a v
 
 def conicalHull.{u} : Set V :=
   { x | isConicalCombo.{_, u} s x }
 
-end Definitions
+theorem isConvexCone_sInter {S : Set (Set V)} (h : ∀ s ∈ S, IsConvexCone s) :
+    IsConvexCone (⋂₀ S) where
+      left := convex_sInter fun s hs ↦ (h s hs).1
+      right.left := ⟨0, fun s hs ↦ zero_mem_of_cone (h s hs).2⟩
+      right.right := fun c hc x hxS s hs ↦ (h s hs).2.2 c hc x (hxS s hs)
 
-section Lemmas
-variable {V W : Type*} [AddCommMonoid V] [Module ℝ V] [AddCommMonoid W] [Module ℝ W] (s : Set V) (f : V →ₗ[ℝ] W)
+--not sure what the simps! attribute does
+@[simps! isClosed]
+def conicalHull' : ClosureOperator (Set V) := .ofCompletePred IsConvexCone fun _ ↦ isConvexCone_sInter
 
-theorem zero_mem_of_cone {s : Set V} (h_cone_s : Cone s) : 0 ∈ s :=
-  have ⟨⟨x, h_xs⟩, h_smul_closed⟩ := h_cone_s
-  zero_smul ℝ x ▸ h_smul_closed 0 (le_refl 0) x h_xs
+theorem mem_conicalHull'_iff : x ∈ conicalHull' s ↔ isConicalCombo s x := by
+  constructor <;> simp [conicalHull']
+  . exact fun h ↦ h _ (subset_setOf_isConicalCombo s) (isConvexCone_setOf_isConicalCombo s)
+  . rintro ⟨ι, t, a, v, h_av, h_combo⟩ u h_su h_isConvexCone_u
+    sorry
 
 lemma cone_conicalHull (s : Set V) : Cone (conicalHull s) := by
   constructor
@@ -242,5 +261,3 @@ theorem conicalHull_preimage_subset_preimage_conicalHull (s : Set W) : conicalHu
 --might be useful:
 example (s : Set V) : PolyhedralCone s → ∃ s' : ConvexCone ℝ V, s'.carrier = s := sorry
 example (s : Set V) : ∃ s' : ConvexCone ℝ V, s'.carrier = conicalHull s := by sorry
-
-end Lemmas
